@@ -1,0 +1,12 @@
+[user]
+	name = Pawel Lipski
+	email = pawel.p.lipski@gmail.com
+[core]
+	autocrlf = input
+[color]
+	ui = auto
+[alias]
+	cam = commit -am
+	co = checkout
+	l = log
+	s = status
