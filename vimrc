@@ -47,12 +47,12 @@ set completeopt=longest,menuone
 set path+=**
 
 " persistent undo
-"if has('undofile')
+if has('undofile')
     set undofile
     set undodir=$HOME/.vim/undo
     set undolevels=1000
     set undoreload=10000
-"endif
+endif
 
 " automatic cwd change for each file
 "autocmd BufEnter * silent! lcd %:p:h
