@@ -10,3 +10,6 @@
 	co = checkout
 	l = log
 	s = status
+[push]
+	default = simple
+
