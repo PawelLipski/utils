@@ -19,6 +19,11 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 
+# Vars
+
+export EDITOR=vim
+
+
 # Marks/jumping
 
 export MARKPATH=$HOME/.marks
