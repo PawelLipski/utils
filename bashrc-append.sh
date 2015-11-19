@@ -134,6 +134,8 @@ copy() {
 
 alias cp='cp -i'
 
+alias gnuplot-colors='gnuplot -e "show palette colornames" 2>&1 | sort'
+
 alias gri='grep -Ri'
 
 alias l='ls -CF'
