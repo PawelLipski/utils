@@ -86,6 +86,10 @@ current-branch() {
 
 alias gaa='git add -A .'
 
+gar() {
+	git archive --format=zip --output=../$1.zip --prefix=$1/ -v HEAD
+}
+
 gcm() {
 	if git status | grep Untracked > /dev/null; then
 		git status
@@ -133,6 +137,8 @@ copy() {
 }
 
 alias cp='cp -i'
+
+alias disk-control='sudo smartctl -a /dev/sda'
 
 alias gnuplot-colors='gnuplot -e "show palette colornames" 2>&1 | sort'
 
