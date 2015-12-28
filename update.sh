@@ -2,7 +2,7 @@
 
 git commit -a
 git push
-cp bashrc-append.sh ~/.bashrc-append.sh
+command cp bashrc-append.sh ~/.bashrc-append.sh
 . ~/.bashrc-append.sh
-cp gitconfig ~/.gitconfig
-cp vimrc ~/.vimrc
+command cp gitconfig ~/.gitconfig
+command cp vimrc ~/.vimrc
