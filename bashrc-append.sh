@@ -21,7 +21,7 @@ fi
 
 # Shell options
 
-shopt -s autocd dotglob
+shopt -s dotglob
 
 # Vars
 
