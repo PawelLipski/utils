@@ -19,6 +19,10 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 
+# Shell options
+
+shopt -s autocd dotglob
+
 # Vars
 
 export EDITOR=vim
