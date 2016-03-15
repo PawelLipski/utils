@@ -91,7 +91,8 @@ current-branch() {
 alias gaa='git add -A .'
 
 gar() {
-	git archive --format=zip --output=../$1.zip --prefix=$1/ -v HEAD
+	name=${1-$(basename `pwd`)}
+	git archive --format=zip --output=../$name.zip --prefix=$name/ -v HEAD
 }
 
 gcm() {
