@@ -141,3 +141,5 @@ cabbr qw wq
 cabbr swq wq
 cabbr Wq wq
 
+autocmd BufRead,BufNewFile *.rb set filetype=ruby
+
