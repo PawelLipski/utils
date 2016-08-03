@@ -141,5 +141,6 @@ cabbr qw wq
 cabbr swq wq
 cabbr Wq wq
 
-autocmd BufRead,BufNewFile *.rb Vagrantfile set filetype=ruby
+autocmd BufRead,BufNewFile *.rb set filetype=ruby
+autocmd BufRead,BufNewFile Vagrantfile set filetype=ruby
 
