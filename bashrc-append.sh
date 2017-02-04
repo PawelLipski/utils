@@ -109,6 +109,9 @@ ginit() {
 	git commit -m 'Initial commit'
 }
 
+alias gl='git log'
+alias grv='git remote -v'
+alias gp='git push'
 alias gs='git status'
 
 onto() {
