@@ -109,6 +109,9 @@ ginit() {
 	git commit -m 'Initial commit'
 }
 
+alias g=git
+alias gco='git checkout'
+alias gd='git diff'
 alias gl='git log'
 alias grv='git remote -v'
 alias gp='git push'
