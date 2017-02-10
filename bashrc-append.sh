@@ -110,8 +110,10 @@ ginit() {
 }
 
 alias g=git
+alias gb='git branch'
 alias gco='git checkout'
 alias gd='git diff'
+alias gf='git fetch'
 alias gl='git log'
 alias grv='git remote -v'
 alias gp='git push'
