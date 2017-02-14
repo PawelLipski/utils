@@ -117,11 +117,14 @@ alias gdh='git diff HEAD'
 alias gdno='git diff --name-only'
 alias gds='git diff --staged'
 alias gf='git fetch'
+alias ggr='git grep'
 alias gl='git log'
+alias grb='git rebase'
 alias grbi='git rebase -i'
 alias grv='git remote -v'
 alias gp='git push'
 alias gs='git status'
+alias gsh='git show'
 
 onto() {
 	base_commit=$1
