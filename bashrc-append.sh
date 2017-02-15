@@ -121,6 +121,7 @@ alias ggr='git grep'
 alias gl='git log'
 alias grb='git rebase'
 alias grbi='git rebase -i'
+alias grbid='git rebase -i dev'
 alias grv='git remote -v'
 alias gp='git push'
 alias gs='git status'
@@ -136,13 +137,9 @@ onto() {
 # Misc aliases
 
 function .. {
-	if [ -z $1 ]; then
+	for i in `seq 1 ${1-1}`; do
 		cd ..;
-	else
-		for i in `seq 1 $1`; do
-			cd ..;
-		done
-	fi
+	done
 }
 
 # Add an "alert" alias for long running commands.  Use like so:
@@ -176,11 +173,13 @@ paste() {
 	cp -ir /tmp/__buffer/* .
 }
 
+alias reba='. ~/.bashrc'
+
 alias rm='rm -i'
 
 alias sagi='sudo apt-get install'
 
-alias vimba='vim ~/.bashrc; . ~/.bashrc'
+alias vimba='vim ~/.bashrc; reba'
 
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
 export HISTCONTROL=ignoredups:erasedups  # no duplicate entries
