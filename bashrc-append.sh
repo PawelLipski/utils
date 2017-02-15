@@ -124,6 +124,7 @@ alias grbi='git rebase -i'
 alias grbid='git rebase -i dev'
 alias grv='git remote -v'
 alias gp='git push'
+alias gpf='git push -f'
 alias gs='git status'
 alias gsh='git show'
 
