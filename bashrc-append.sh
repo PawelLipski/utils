@@ -111,6 +111,7 @@ ginit() {
 
 alias g=git
 alias gb='git branch'
+alias gcamend='git commit -a --amend --no-edit'
 alias gco='git checkout'
 alias gd='git diff'
 alias gdh='git diff HEAD'
