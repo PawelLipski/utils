@@ -88,8 +88,6 @@ current-branch() {
 	printf $current_branch
 }
 
-alias gaa='git add -A .'
-
 gar() {
 	name=${1-$(basename `pwd`)}
 	git archive --format=zip --output=../$name.zip --prefix=$name/ -v HEAD
@@ -109,7 +107,15 @@ ginit() {
 	git commit -m 'Initial commit'
 }
 
+onto() {
+	base_commit=$1
+	target_branch=lmp-dev$2
+	git rebase --onto $target_branch $base_commit $(current-branch)
+}
+
 alias g=git
+alias ga='git add'
+alias gaa='git add -A .'
 alias gb='git branch'
 alias gcamend='git commit -a --amend --no-edit'
 alias gco='git checkout'
@@ -124,17 +130,13 @@ alias gp='git push'
 alias gpf='git push -f'
 alias gpl='git pull'
 alias grb='git rebase'
+alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
 alias grbid='git rebase -i dev'
+alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
 alias gsh='git show'
-
-onto() {
-	base_commit=$1
-	target_branch=lmp-dev$2
-	git rebase --onto $target_branch $base_commit $(current-branch)
-}
 
 
 # Misc aliases
