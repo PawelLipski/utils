@@ -107,10 +107,10 @@ ginit() {
 	git commit -m 'Initial commit'
 }
 
-onto() {
-	base_commit=$1
-	target_branch=lmp-dev$2
-	git rebase --onto $target_branch $base_commit $(current-branch)
+grbonto() {
+	target_base_branch=$1
+	latest_excluded_commit=$2
+	git rebase -i --onto $target_base_branch $latest_excluded_commit $(current-branch)
 }
 
 alias @=current-branch
