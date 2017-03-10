@@ -113,6 +113,7 @@ onto() {
 	git rebase --onto $target_branch $base_commit $(current-branch)
 }
 
+alias @=current-branch
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
