@@ -81,6 +81,8 @@ use_java7() {
 
 # git aliases
 
+DEVELOP=develop
+
 current-branch() {
 	current_branch=$(git symbolic-ref -q HEAD)
 	current_branch=${current_branch##refs/heads/}
@@ -120,9 +122,12 @@ alias gaa='git add -A .'
 alias gb='git branch'
 alias gcamend='git commit -a --amend --no-edit'
 alias gco='git checkout'
+alias gcod="git checkout $DEVELOP"
 alias gd='git diff'
+alias gdd="git diff $DEVELOP"
 alias gdh='git diff HEAD'
 alias gdno='git diff --name-only'
+alias gdnod="git diff --name-only $DEVELOP"
 alias gds='git diff --staged'
 alias gf='git fetch'
 alias ggr='git grep'
@@ -133,7 +138,7 @@ alias gpl='git pull'
 alias grb='git rebase'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
-alias grbid='git rebase -i dev'
+alias grbontod="grbonto $DEVELOP"
 alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
@@ -196,4 +201,9 @@ shopt -s histappend                      # append to history, don't overwrite it
 export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
 export CDPATH='.:~'
+
+
+# sbt opts
+
+export SBT_OPTS="-Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
 
