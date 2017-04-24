@@ -74,6 +74,7 @@ set timeout timeoutlen=1000 ttimeoutlen=100
 " fix shift-typos :W, :Q
 :command! W w
 :command! Q q
+:command! pf %s/^pick/fixup
 
 """
 "   SYSTEM-SPECIFIC
