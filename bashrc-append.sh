@@ -203,7 +203,8 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 export CDPATH='.:~'
 
 
-# sbt opts
+# sbt opts and aliases
 
 export SBT_OPTS="-Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
+export allsbt='sbt ";clean;coverage;test;it:test;coverageReport;coverageAggregate"'
 
