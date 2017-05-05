@@ -109,7 +109,7 @@ ginit() {
 	git commit -m 'Initial commit'
 }
 
-grbonto() {
+grbio() {
 	target_base_branch=$1
 	latest_excluded_commit=$2
 	git rebase -i --onto $target_base_branch $latest_excluded_commit $(current-branch)
@@ -135,10 +135,11 @@ alias gl='git log'
 alias gp='git push'
 alias gpf='git push -f'
 alias gpl='git pull'
+alias gpld='gcod; gpl; gco -'
 alias grb='git rebase'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
-alias grbontod="grbonto $DEVELOP"
+alias grbiod="grbio $DEVELOP"
 alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
