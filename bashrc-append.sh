@@ -115,6 +115,10 @@ grbio() {
 	git rebase -i --onto $target_base_branch $latest_excluded_commit $(current-branch)
 }
 
+whoworksmost() {
+	git ls-files | grep 'scala$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | sort -n
+}
+
 alias @=current-branch
 alias g=git
 alias ga='git add'
@@ -132,6 +136,7 @@ alias gds='git diff --staged'
 alias gf='git fetch'
 alias ggr='git grep'
 alias gl='git log'
+alias gld="git log $DEVELOP"
 alias gp='git push'
 alias gpf='git push -f'
 alias gpl='git pull'
