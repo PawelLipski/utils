@@ -115,7 +115,7 @@ grbio() {
 	git rebase -i --onto $target_base_branch $latest_excluded_commit $(current-branch)
 }
 
-whoworksmost() {
+whocodesmost() {
 	git ls-files | grep 'scala$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | sort -n
 }
 
