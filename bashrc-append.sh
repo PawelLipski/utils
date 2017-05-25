@@ -110,7 +110,7 @@ ginit() {
 }
 
 grbio() {
-	target_base_branch=${1-@{-1\}}
+	target_base_branch=`git branch | grep "  $1"`
 	latest_excluded_commit=${2-@~}
 	git rebase -i --onto $target_base_branch $latest_excluded_commit $(current-branch)
 }
@@ -145,6 +145,7 @@ alias grb='git rebase'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
 alias grbiod="grbio $DEVELOP"
+alias grbiop="grbio @{-1}"
 alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
