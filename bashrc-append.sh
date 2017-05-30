@@ -110,7 +110,7 @@ ginit() {
 }
 
 grbio() {
-	target_base_branch=`git branch | grep "  $1"`
+	target_base_branch=${1-@{-1\}}
 	latest_excluded_commit=${2-@~}
 	git rebase -i --onto $target_base_branch $latest_excluded_commit $(current-branch)
 }
