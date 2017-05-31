@@ -92,7 +92,7 @@ current-branch() {
 
 gar() {
 	name=${1-$(basename `pwd`)}
-	git archive --format=zip --output=../$name.zip --prefix=$name/ -v HEAD
+	git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
 }
 
 gcm() {
@@ -112,28 +112,30 @@ ginit() {
 grbio() {
 	target_base_branch=${1-@{-1\}}
 	latest_excluded_commit=${2-@~}
-	git rebase -i --onto $target_base_branch $latest_excluded_commit $(current-branch)
+	git rebase -i --onto $target_base_branch $latest_excluded_commit @{0}
 }
 
-whocodesmost() {
+codestat() {
 	git ls-files | grep 'scala$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | sort -n
 }
 
-alias @=current-branch
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
 alias gb='git branch'
+alias gbr='git branch -r'
 alias gcamend='git commit -a --amend --no-edit'
+alias gcamende='git commit -a --amend'
 alias gco='git checkout'
+alias gcod="git checkout $DEVELOP"
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
-alias gcod="git checkout $DEVELOP"
 alias gd='git diff'
 alias gdd="git diff $DEVELOP"
-alias gdh='git diff HEAD'
+alias gdh='git diff @'
 alias gdno='git diff --name-only'
 alias gdnod="git diff --name-only $DEVELOP"
+alias gdp='git diff @~'
 alias gds='git diff --staged'
 alias gf='git fetch'
 alias ggr='git grep'
