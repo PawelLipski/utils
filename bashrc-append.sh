@@ -112,13 +112,14 @@ ginit() {
 grbio() {
 	target_base_branch=${1-@{-1\}}
 	latest_excluded_commit=${2-@~}
-	git rebase -i --onto $target_base_branch $latest_excluded_commit @{0}
+	git rebase -i --onto $target_base_branch $latest_excluded_commit `@`
 }
 
 codestat() {
 	git ls-files | grep 'scala$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | sort -n
 }
 
+alias @=current-branch
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
