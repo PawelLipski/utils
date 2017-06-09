@@ -116,7 +116,7 @@ grbio() {
 }
 
 codestat() {
-	git ls-files | grep 'scala$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | sort -n
+	git ls-files | egrep -v '(png|css|js)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | sort -n | tee >(awk '{sum+=$1} END{ print " ", sum}')
 }
 
 alias @=current-branch
