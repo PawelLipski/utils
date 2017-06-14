@@ -116,7 +116,8 @@ grbio() {
 }
 
 codestat() {
-	git ls-files $1 | egrep -v '(png|css|js)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | sort -n | tee >(awk '{sum+=$1} END{ print " ", sum}')
+	rev=${1-@}
+	git ls-tree -r --name-only $rev | egrep -v '(png|css|js)$' | xargs -L1 git blame $rev -- | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
 alias @=current-branch
