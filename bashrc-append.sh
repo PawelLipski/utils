@@ -90,6 +90,14 @@ current-branch() {
 	printf $current_branch
 }
 
+function @dn() {
+	grep -A1 $(@) .git/_branches | tail -1
+}
+
+function @up() {
+	grep -B1 $(@) .git/_branches | head -1
+}
+
 gar() {
 	name=${1-$(basename `pwd`)}
 	git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
@@ -130,6 +138,8 @@ alias gcamend='git commit -a --amend --no-edit'
 alias gcamende='git commit -a --amend'
 alias gco='git checkout'
 alias gcod="git checkout $DEVELOP"
+alias gcodn='gco `@dn`'
+alias gcoup='gco `@up`'
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
 alias gd='git diff'
@@ -142,6 +152,7 @@ alias gds='git diff --staged'
 alias gf='git fetch'
 alias ggr='git grep'
 alias gl='git log'
+alias gll='git log --oneline -7'
 alias gld="git log $DEVELOP"
 alias gp='git push'
 alias gpf='git push -f'
