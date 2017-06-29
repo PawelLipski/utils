@@ -98,6 +98,13 @@ function @up() {
 	grep -B1 $(@) .git/_branches | head -1
 }
 
+function prepend-branch() {
+	cat <<-EOF > .git/_branches
+		$(echo `@`)
+		$(cat .git/_branches)
+	EOF
+}
+
 gar() {
 	name=${1-$(basename `pwd`)}
 	git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
