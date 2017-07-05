@@ -94,15 +94,23 @@ function @dn() {
 	grep -A1 $(@) .git/_branches | tail -1
 }
 
-function @up() {
-	grep -B1 $(@) .git/_branches | head -1
+function @edit() {
+	vim .git/_branches
 }
 
-function prepend-branch() {
+function @ls() {
+	cat .git/_branches
+}
+
+function @push() {
 	cat <<-EOF > .git/_branches
 		$(echo `@`)
 		$(cat .git/_branches)
 	EOF
+}
+
+function @up() {
+	grep -B1 $(@) .git/_branches | head -1
 }
 
 gar() {
