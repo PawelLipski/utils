@@ -90,6 +90,10 @@ current-branch() {
 	printf $current_branch
 }
 
+function @base() {
+	git rev-parse $(gll | egrep -v ' [0-9]' | head -1 | cut -d' ' -f1)
+}
+
 function @dn() {
 	grep -A1 $(@) .git/_branches | tail -1
 }
@@ -134,7 +138,7 @@ ginit() {
 
 grbio() {
 	target_base_branch=${1-`@dn`}
-	latest_excluded_commit=${2-@~}
+	latest_excluded_commit=${2-`@base`}
 	git rebase -i --onto $target_base_branch $latest_excluded_commit `@`
 }
 
