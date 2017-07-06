@@ -113,6 +113,10 @@ function @push() {
 	EOF
 }
 
+function @rebase() {
+	grbo && gpf && gcoup
+}
+
 function @up() {
 	grep -B1 $(@) .git/_branches | head -1
 }
@@ -137,9 +141,14 @@ ginit() {
 }
 
 grbio() {
+	grbo -i $@
+}
+
+grbo() {
 	target_base_branch=${1-`@dn`}
 	latest_excluded_commit=${2-`@base`}
-	git rebase -i --onto $target_base_branch $latest_excluded_commit `@`
+	options=$3
+	git rebase $options --onto $target_base_branch $latest_excluded_commit `@`
 }
 
 codestat() {
@@ -180,8 +189,6 @@ alias gpld='gcod && gpl && gco -'
 alias grb='git rebase'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
-alias grbiod="grbio $DEVELOP"
-alias grbiodn='grbio `@dn`'
 alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
