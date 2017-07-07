@@ -141,7 +141,7 @@ ginit() {
 }
 
 grbio() {
-	grbo -i $@
+	grbo $@ -i
 }
 
 grbo() {
