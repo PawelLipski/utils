@@ -95,7 +95,7 @@ function @base() {
 }
 
 function @dn() {
-	grep -A1 $(@) .git/_branches | tail -1
+	grep -x -A1 $(@) .git/_branches | tail -1
 }
 
 function @edit() {
@@ -118,7 +118,7 @@ function @rebase() {
 }
 
 function @up() {
-	grep -B1 $(@) .git/_branches | head -1
+	grep -x -B1 $(@) .git/_branches | head -1
 }
 
 gar() {
