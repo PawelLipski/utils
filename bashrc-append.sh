@@ -114,7 +114,7 @@ function @push() {
 }
 
 function @rebase() {
-	grbo && gpf && gcoup
+	grbio && gpf && gcoup
 }
 
 function @up() {
@@ -141,14 +141,9 @@ ginit() {
 }
 
 grbio() {
-	grbo $@ -i
-}
-
-grbo() {
 	target_base_branch=${1-`@dn`}
 	latest_excluded_commit=${2-`@base`}
-	options=$3
-	git rebase $options --onto $target_base_branch $latest_excluded_commit `@`
+	git rebase -i --onto $target_base_branch $latest_excluded_commit `@`
 }
 
 codestat() {
