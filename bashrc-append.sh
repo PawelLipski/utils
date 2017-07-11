@@ -83,6 +83,50 @@ use_java7() {
 
 DEVELOP=develop
 
+alias @=current-branch
+alias g=git
+alias ga='git add'
+alias gaa='git add -A .'
+alias gb='git branch'
+alias gbr='git branch -r'
+alias gcamend='git commit -a --amend --no-edit'
+alias gcamende='git commit -a --amend'
+alias gco='git checkout'
+alias gcod="git checkout $DEVELOP"
+alias gcodn='gco `@dn`'
+alias gcoup='gco `@up`'
+alias gcp='git cherry-pick'
+alias gcpc='git cherry-pick --continue'
+alias gd='git diff'
+alias gdd="git diff $DEVELOP"
+alias gddx="git diff --stat $DEVELOP"
+alias gddno="git diff --name-only $DEVELOP"
+alias gdh='git diff @'
+alias gdhx='git diff --stat @'
+alias gdno='git diff --name-only'
+alias gdp='git diff @~'
+alias gdpx='git diff --stat @~'
+alias gds='git diff --staged'
+alias gdx='git diff --stat'
+alias gf='git fetch'
+alias ggr='git grep'
+alias gl='git log'
+alias gll='git log --oneline -7'
+alias gld="git log $DEVELOP"
+alias gp='git push'
+alias gpf='git push -f'
+alias gpl='git pull'
+alias gpld='gcod && gpl && gco -'
+alias grb='git rebase'
+alias grbc='git rebase --continue'
+alias grb='git rebase -i'
+alias grbbase='grbo `@dn` `@base`'
+alias grbdn='grbo `@dn` `@dn`'
+alias gre='git reset'
+alias grv='git remote -v'
+alias gs='git status'
+alias gsh='git show'
+
 current-branch() {
 	current_branch=$(git symbolic-ref -q HEAD)
 	current_branch=${current_branch##refs/heads/}
@@ -113,12 +157,12 @@ function @push() {
 	EOF
 }
 
-function @rebase() {
-	grbio && gpf && gcoup
-}
-
 function @up() {
 	grep -x -B1 $(@) .git/_branches | head -1
+}
+
+function @update() {
+	grbbase && gpf && gcoup
 }
 
 gar() {
@@ -140,9 +184,9 @@ ginit() {
 	git commit -m 'Initial commit'
 }
 
-grbio() {
-	target_base_branch=${1-`@dn`}
-	latest_excluded_commit=${2-`@base`}
+grbo() {
+	target_base_branch=${1}
+	latest_excluded_commit=${2}
 	git rebase -i --onto $target_base_branch $latest_excluded_commit `@`
 }
 
@@ -150,44 +194,6 @@ codestat() {
 	rev=${1-@}
 	git ls-tree -r --name-only $rev | egrep -v '(png|css|js)$' | xargs -L1 git blame $rev -- | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
-
-alias @=current-branch
-alias g=git
-alias ga='git add'
-alias gaa='git add -A .'
-alias gb='git branch'
-alias gbr='git branch -r'
-alias gcamend='git commit -a --amend --no-edit'
-alias gcamende='git commit -a --amend'
-alias gco='git checkout'
-alias gcod="git checkout $DEVELOP"
-alias gcodn='gco `@dn`'
-alias gcoup='gco `@up`'
-alias gcp='git cherry-pick'
-alias gcpc='git cherry-pick --continue'
-alias gd='git diff'
-alias gdd="git diff $DEVELOP"
-alias gdh='git diff @'
-alias gdno='git diff --name-only'
-alias gdnod="git diff --name-only $DEVELOP"
-alias gdp='git diff @~'
-alias gds='git diff --staged'
-alias gf='git fetch'
-alias ggr='git grep'
-alias gl='git log'
-alias gll='git log --oneline -7'
-alias gld="git log $DEVELOP"
-alias gp='git push'
-alias gpf='git push -f'
-alias gpl='git pull'
-alias gpld='gcod && gpl && gco -'
-alias grb='git rebase'
-alias grbc='git rebase --continue'
-alias grbi='git rebase -i'
-alias gre='git reset'
-alias grv='git remote -v'
-alias gs='git status'
-alias gsh='git show'
 
 
 # Misc aliases
