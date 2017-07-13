@@ -163,7 +163,7 @@ function @up() {
 }
 
 function @update() {
-	grbbase && gpf && gcoup
+	grb@base && gpf && gcoup
 }
 
 gar() {
