@@ -118,10 +118,11 @@ alias gpf='git push -f'
 alias gpl='git pull'
 alias gpld='gcod && gpl && gco -'
 alias grb='git rebase'
+alias grba='git rebase --abort'
 alias grbc='git rebase --continue'
-alias grb='git rebase -i'
-alias grbbase='grbo `@dn` `@base`'
-alias grbdn='grbo `@dn` `@dn`'
+alias grbi='git rebase -i'
+alias grb@base='grbo `@dn` `@base`'
+alias grb@dn='grbo `@dn` `@dn`'
 alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
@@ -216,6 +217,14 @@ copy() {
 }
 
 alias cp='cp -i'
+
+function dex() { 
+	docker exec -it $1 /usr/bin/env psql -h localhost -U xxx -W -d postgres "${@:2}";
+}
+
+function dexcl() {
+	dexsql $1 -c 'drop database pip; create database pip';
+}
 
 alias disk-control='sudo smartctl -a /dev/sda'
 
