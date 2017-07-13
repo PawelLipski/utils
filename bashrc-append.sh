@@ -218,7 +218,7 @@ copy() {
 
 alias cp='cp -i'
 
-function dex() { 
+function dex() {
 	docker exec -it $1 /usr/bin/env psql -h localhost -U xxx -W -d postgres "${@:2}";
 }
 
@@ -227,6 +227,10 @@ function dexcl() {
 }
 
 alias disk-control='sudo smartctl -a /dev/sda'
+
+alias drm='docker rm'
+
+alias dpsa='docker ps -a'
 
 alias gnuplot-colors='gnuplot -e "show palette colornames" 2>&1 | sort'
 
