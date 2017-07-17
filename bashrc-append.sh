@@ -136,7 +136,8 @@ current-branch() {
 }
 
 function @base() {
-	git rev-parse $(gll | egrep -v ' [0-9]' | head -1 | cut -d' ' -f1)~
+	#git rev-parse $(gll | egrep -v ' [0-9]' | head -1 | cut -d' ' -f1)~
+	git log --format=format:%H | grep -f <(git reflog `@dn` --format=format:%H) | head -1
 }
 
 function @dn() {
