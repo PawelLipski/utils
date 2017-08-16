@@ -136,8 +136,8 @@ current-branch() {
 }
 
 function @base() {
-	#git rev-parse $(gll | egrep -v ' [0-9]' | head -1 | cut -d' ' -f1)~
-	git log --format=format:%H | grep -f <(git reflog `@dn` --format=format:%H) | head -1
+	git rev-parse $(gll | egrep -v ' [0-9]' | head -1 | cut -d' ' -f1)~
+	#git log --format=%H | grep -f <(grep -x -A999 $(@) .git/_branches | tail -n+2 | xargs git reflog --format=%H) | head -1
 }
 
 function @dn() {
@@ -194,7 +194,25 @@ grbo() {
 
 codestat() {
 	rev=${1-@}
-	git ls-tree -r --name-only $rev | egrep -v '(png|css|js)$' | xargs -L1 git blame $rev -- | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+	git ls-tree -r --name-only $rev | egrep -v '(css|js|pdf|pem|png|xsd)$' | xargs -L1 git blame $rev -- | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+}
+
+
+# Docker aliases
+
+alias d='docker'
+alias dcu='docker-compose up'
+alias dex='docker exec -it'
+alias dpsa='docker ps -a'
+alias drm='docker rm'
+alias drmi='docker rmi'
+
+function dexdb() {
+	dex $1 /usr/bin/env psql -h localhost -U xxx -W -d $2
+}
+
+function dexdump() {
+	dex $1 /usr/bin/env pg_dump -h localhost -U xxx -W -d $2
 }
 
 
@@ -219,19 +237,7 @@ copy() {
 
 alias cp='cp -i'
 
-function dex() {
-	docker exec -it $1 /usr/bin/env psql -h localhost -U xxx -W -d postgres "${@:2}";
-}
-
-function dexcl() {
-	dexsql $1 -c 'drop database pip; create database pip';
-}
-
 alias disk-control='sudo smartctl -a /dev/sda'
-
-alias drm='docker rm'
-
-alias dpsa='docker ps -a'
 
 alias gnuplot-colors='gnuplot -e "show palette colornames" 2>&1 | sort'
 
