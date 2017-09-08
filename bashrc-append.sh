@@ -193,7 +193,7 @@ grbo() {
 
 codestat() {
 	#git ls-tree -r --name-only
-	git grep --cached -Il '' | egrep -v '(css|js|pem|xsd)$' | xargs -L1 git blame $rev -- | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+	git grep --cached -Il '' | egrep -v '(css|js|pem|xsd)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
 
