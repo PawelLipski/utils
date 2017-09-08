@@ -118,7 +118,6 @@ alias gpf='git push -f'
 alias gpl='git pull'
 alias gpld='gcod && gpl && gco -'
 alias grb='git rebase'
-alias grba='git rebase --abort'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
 alias grb@base='grbo `@dn` `@base`'
@@ -193,8 +192,8 @@ grbo() {
 }
 
 codestat() {
-	rev=${1-@}
-	git ls-tree -r --name-only $rev | egrep -v '(css|js|pdf|pem|png|xsd)$' | xargs -L1 git blame $rev -- | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+	#git ls-tree -r --name-only
+	git grep --cached -Il '' | egrep -v '(css|js|pem|xsd)$' | xargs -L1 git blame $rev -- | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
 
