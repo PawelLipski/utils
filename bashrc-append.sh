@@ -94,6 +94,7 @@ alias gcamende='git commit -a --amend'
 alias gco='git checkout'
 alias gcod="git checkout $DEVELOP"
 alias gcodn='gco `@dn`'
+alias gcotop='gco `@top`'
 alias gcoup='gco `@up`'
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
@@ -158,6 +159,10 @@ function @push() {
 	EOF
 }
 
+function @top() {
+	head -1 .git/_branches
+}
+
 function @up() {
 	grep -x -B1 $(@) .git/_branches | head -1
 }
@@ -193,7 +198,7 @@ grbo() {
 
 codestat() {
 	#git ls-tree -r --name-only
-	git grep --cached -Il '' | egrep -v '(css|js|pem|xsd)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+	git grep -Il '' | egrep -v '(pem|xsd)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
 
