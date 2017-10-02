@@ -114,6 +114,7 @@ alias ggr='git grep'
 alias gl='git log'
 alias gll='git log --oneline -20'
 alias gld="git log $DEVELOP"
+alias glod="git log origin/$DEVELOP"
 alias gp='git push'
 alias gpf='git push -f'
 alias gpl='git pull'
