@@ -1,0 +1,77 @@
+#!/bin/bash
+
+stack_file=.git/_branches
+
+_base() {
+	git log --format=%H | grep -f <(git reflog --format=%H `_down`) | head -1
+}
+
+_down() {
+	grep -x -A1 $(git @) $stack_file | tail -1
+}
+
+_go_down() {
+	git checkout $(_down)
+}
+
+_go_up() {
+	git checkout $(_up)
+}
+
+_list() {
+	cat $stack_file
+}
+
+_rebase() {
+	git rebase -i --onto `_down` `_base` `git @`
+}
+
+_up() {
+	grep -x -B1 $(git @) $stack_file | head -1
+}
+
+# TODO: what if the current branch is not on the stack? some commands like base/down/go/up etc. shouldn't work then
+case "$1" in
+	append)
+		# TODO: handle the case when the file does not exist yet
+		# TODO: prevent against re-pushing
+		# TODO: accept params - push given branch(es), not the current one
+		cat <<-EOF > $stack_file
+			$(git @)
+			$(cat $stack_file 2>/dev/null)
+		EOF
+		_list
+		;;
+	base)
+		# TODO: base for the lowest branch?
+		_base
+		;;
+	down)
+		_down
+		;;
+	edit)
+		vim $stack_file
+		;;
+	go)
+		case "$2" in
+			# TODO should prevent against accidental cleaning up a path or so
+			down) _go_down ;;
+			up) _go_up ;;
+		esac
+		;;
+	# TODO add an init command
+	list)
+		_list
+		;;
+	rebase)
+		_rebase
+		;;
+	up)
+		_up
+		;;
+	update)
+		# TODO (minor): don't go up if already on top
+		_rebase && git push -f && _go_up
+		;;
+esac
+

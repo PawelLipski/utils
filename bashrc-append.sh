@@ -83,7 +83,6 @@ use_java7() {
 
 DEVELOP=develop
 
-alias @=current-branch
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
@@ -123,51 +122,10 @@ alias gpld='gcod && gpl && gco -'
 alias grb='git rebase'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
-alias grb@base='grbo `@dn` `@base`'
-alias grb@dn='grbo `@dn` `@dn`'
 alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
 alias gsh='git show'
-
-current-branch() {
-	current_branch=$(git symbolic-ref -q HEAD)
-	current_branch=${current_branch##refs/heads/}
-	current_branch=${current_branch:-HEAD}
-	printf $current_branch
-}
-
-function @base() {
-	git rev-parse $(gll | egrep -v ' [0-9]' | head -1 | cut -d' ' -f1)~
-	#git log --format=%H | grep -f <(grep -x -A999 $(@) .git/_branches | tail -n+2 | xargs git reflog --format=%H) | head -1
-}
-
-function @dn() {
-	grep -x -A1 $(@) .git/_branches | tail -1
-}
-
-function @edit() {
-	vim .git/_branches
-}
-
-function @ls() {
-	cat .git/_branches
-}
-
-function @push() {
-	cat <<-EOF > .git/_branches
-		$(echo `@`)
-		$(cat .git/_branches)
-	EOF
-}
-
-function @top() {
-	head -1 .git/_branches
-}
-
-function @up() {
-	grep -x -B1 $(@) .git/_branches | head -1
-}
 
 function @update() {
 	grb@base && gpf && gcoup
@@ -195,11 +153,11 @@ ginit() {
 grbo() {
 	target_base_branch=${1}
 	latest_excluded_commit=${2}
-	git rebase -i --onto $target_base_branch $latest_excluded_commit `@`
+	git rebase -i --onto $target_base_branch $latest_excluded_commit `git @`
 }
 
 codestat() {
-	#git ls-tree -r --name-only
+	#git ls-tree -r --name-only | ...
 	git grep -Il '' | egrep '(conf|routes|sbt|scala|sql)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
