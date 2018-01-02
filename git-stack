@@ -3,15 +3,16 @@
 stack_file=.git/_branches
 
 _base() {
-	git log --format=%H | grep -f <(git reflog --format=%H `_down`) | head -1
+	#git log --format=%H | grep -f <(grep -A10000 $1 $stack_file | tail -n +2 | xargs git reflog --format=%H) | head -1
+	git log --format=%H | grep -f <(grep -v $1 $stack_file | xargs git reflog --format=%H) | head -1
 }
 
 _down() {
-	grep -x -A1 $(git @) $stack_file | tail -1
+	grep -x -A1 $1 $stack_file | tail -1
 }
 
 _go_down() {
-	git checkout $(_down)
+	git checkout $(_down `git @`)
 }
 
 _go_up() {
@@ -23,7 +24,8 @@ _list() {
 }
 
 _rebase() {
-	git rebase -i --onto `_down` `_base` `git @`
+	b=`git @`
+	git rebase -i --onto `_down $b` `_base $b` $b
 }
 
 _up() {
@@ -31,6 +33,7 @@ _up() {
 }
 
 # TODO: what if the current branch is not on the stack? some commands like base/down/go/up etc. shouldn't work then
+# TODO: completion!
 case "$1" in
 	append)
 		# TODO: handle the case when the file does not exist yet
@@ -44,10 +47,10 @@ case "$1" in
 		;;
 	base)
 		# TODO: base for the lowest branch?
-		_base
+		_base $(git @)
 		;;
 	down)
-		_down
+		_down $(git @)
 		;;
 	edit)
 		vim $stack_file
@@ -65,6 +68,13 @@ case "$1" in
 		;;
 	rebase)
 		_rebase
+		;;
+	slide-out)
+		# TODO What if there's nothing to be slid out?
+		base=$(tail -1 $stack_file)
+		old=$(tail -2 $stack_file | head -1)
+		new=$(tail -3 $stack_file | head -1)
+		git rebase -i --onto $base `_base $new` $new && sed -i "/^$old$/d" $stack_file && echo "$new rebased onto $base, $old slid removed from the stack"
 		;;
 	up)
 		_up

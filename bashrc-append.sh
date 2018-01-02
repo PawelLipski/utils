@@ -92,16 +92,11 @@ alias gcamend='git commit -a --amend --no-edit'
 alias gcamende='git commit -a --amend'
 alias gco='git checkout'
 alias gcod="git checkout $DEVELOP"
-alias gcodn='gco `@dn`'
-alias gcotop='gco `@top`'
-alias gcoup='gco `@up`'
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
 alias gd='git diff'
 alias gdd="git diff $DEVELOP"
 alias gddx="git diff --stat $DEVELOP"
-alias gddn='git diff `@dn`'
-alias gddnx='git diff --stat `@dn`'
 alias gdh='git diff @'
 alias gdhx='git diff --stat @'
 alias gdno='git diff --name-only'
@@ -126,10 +121,6 @@ alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
 alias gsh='git show'
-
-function @update() {
-	grb@base && gpf && gcoup
-}
 
 gar() {
 	name=${1-$(basename `pwd`)}
