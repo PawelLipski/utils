@@ -1,10 +1,10 @@
 #!/bin/bash
 
+#TODO: rename to heap!!!!!
 stack_file=.git/_branches
 
 _base() {
-	#git log --format=%H | grep -f <(grep -A10000 $1 $stack_file | tail -n +2 | xargs git reflog --format=%H) | head -1
-	git log --format=%H | grep -f <(grep -v $1 $stack_file | xargs git reflog --format=%H) | head -1
+	git log --format=%H | grep -m1 -f <(git branch | sed 's/^[* ] //' | grep -x -v "$1" | xargs git reflog --format=%H)
 }
 
 _down() {
