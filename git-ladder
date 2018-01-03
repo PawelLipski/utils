@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import subprocess
 import sys
 
@@ -12,8 +13,7 @@ def popen_cmd(cmd, *args):
     return subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE).stdout.read()
 
 def edit():
-    # TODO: $EDITOR
-    run_cmd("vim", ladder_file)
+    run_cmd(os.environ.get("EDITOR") or "vim", ladder_file)
 
 def run_git(git_cmd, *args):
     print " ".join(["git", git_cmd] + list(args))
@@ -30,8 +30,11 @@ def read_ladder():
     with open(ladder_file, "r") as f:
         return map(lambda l: l.strip(), f.readlines())
 
+def save_ladder(ladder):
+    with open(ladder_file, "w") as f:
+        f.write("\n".join(ladder))
+
 def shift(branch, offset):
-    # TODO: what if nothing down/up?
     ladder = read_ladder()
     idx = ladder.index(branch)
     new_idx = min(max(0, idx + offset), len(ladder) - 1)
@@ -66,36 +69,49 @@ def branches():
     return map(lambda b: b[2:], non_empty_lines(popen_git("branch")))
 
 def go(branch):
-    # TODO: never checkout file nor current branch....
-    return run_git("checkout", branch)
+    # TODO: don't go to current branch....
+    # Trailing -- to prevent git from ever interpreting `branch` as path
+    return run_git("checkout", branch, "--")
 
 def rebase(branch):
     return run_git("rebase", "-i", "--onto", down(branch), base(branch), branch)
 
+def push(branch):
+    ladder = read_ladder()
+    save_ladder([branch] + ladder)
+
 def main():
+    # TODO validate if present
     cmd = sys.argv[1]
     if cmd == "base":
+        # TODO: or sth else if param provided
         print base(head())
     elif cmd == "down":
+        # TODO: or sth else if param provided
         print shift(head(), 1)
     elif cmd == "edit":
         edit()
     elif cmd == "go":
-        # TODO validate
+        # TODO validate if present
         direction = sys.argv[2]
         if direction == "down": go(down(head()))
         elif direction == "up": go(up(head()))
         else: print "Wrong direction"
     elif cmd == "list":
         print "\n".join(read_ladder())
+    elif cmd == "push":
+        # TODO: or sth else if param provided
+        push(head())
     elif cmd == "rebase":
         rebase(head())
     elif cmd == "up":
+        # TODO: or sth else if param provided
         print shift(head(), -1)
     elif cmd == "update":
         h = head()
         rebase(h) and run_git("push", "--force") and go(up(h))
     else:
+        # TODO exit() or stuff
         print "Unknown command"
 
 main()
