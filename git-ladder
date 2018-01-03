@@ -3,35 +3,38 @@
 import subprocess
 import sys
 
-# TODO change to stems
-stem_file = ".git/_branches"
+ladder_file = ".git/ladder"
 
 def shell(cmd, *args):
-    subprocess.Popen([cmd] + args, stdout=subprocess.PIPE)
+    return subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE).stdout.read()
 
 def edit():
     # TODO: vim
-    shell("vim", stem_file)
+    shell("vim", ladder_file)
 
 def git(git_cmd, *args):
-    print " ".join(["git", cmd] + args)
-    shell("git", git_cmd, *args)
+    print " ".join(["git", git_cmd] + list(args))
+    return shell("git", git_cmd, *args)
 
 def current_branch():
-    git("symbolic-ref", "--quiet", "--short", "HEAD")
+    return git("symbolic-ref", "--quiet", "--short", "HEAD").strip()
 
-def read_stems():
-    with open(stem_file, "r") as f:
+def read_ladder():
+    with open(ladder_file, "r") as f:
         return map(lambda l: l.strip(), f.readlines())
 
-cmd = sys.argv[1]
-if cmd == "down":
-    cb = current_branch()
-    stems = read_stems()
-    cb_idx = stems.index(cb)
-    print stems[cb_idx + 1],
-elif cmd == "list":
-    print "\n".join(read_stems())
-else:
-    print "Unknown command"
+def main():
+    cmd = sys.argv[1]
+    if cmd == "down":
+        # TODO: what if nothing down?
+        cb = current_branch()
+        ladder = read_ladder()
+        cb_idx = ladder.index(cb)
+        print ladder[cb_idx + 1]
+    elif cmd == "list":
+        print "\n".join(read_ladder())
+    else:
+        print "Unknown command"
+
+main()
 
