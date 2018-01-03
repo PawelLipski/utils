@@ -46,18 +46,23 @@ def down(branch):
 def up(branch):
     return shift(branch, -1)
 
-def non_empty_lines(str):
-    return filter(None, str.split("\n"))
+def non_empty_lines(s):
+    return filter(None, s.split("\n"))
+
+def other_than(l, s):
+    return filter(lambda x: x != s, l)
+
+# Trailing -- to prevent git from ever interpreting `branch` as path
 
 def log(branch):
-    return non_empty_lines(popen_git("log", "--format=%H", branch))
+    return non_empty_lines(popen_git("log", "--format=%H", branch, "--"))
 
 def reflog(branch):
-    return non_empty_lines(popen_git("reflog", "--format=%H", branch))
+    return non_empty_lines(popen_git("reflog", "--format=%H", branch, "--"))
 
 def base(branch):
     log_this_branch = log(branch)
-    other_branches = filter(lambda b: b != branch, branches())
+    other_branches = other_than(branches(), branch)
     reflogs_other_branches = sum(map(reflog, other_branches), [])
     for h in log_this_branch:
         if h in reflogs_other_branches:
@@ -70,11 +75,10 @@ def branches():
 
 def go(branch):
     # TODO: don't go to current branch....
-    # Trailing -- to prevent git from ever interpreting `branch` as path
-    return run_git("checkout", branch, "--")
+    return run_git("checkout", "--quiet", branch, "--")
 
 def rebase(branch):
-    return run_git("rebase", "-i", "--onto", down(branch), base(branch), branch)
+    return run_git("rebase", "--interactive", "--onto", down(branch), base(branch), branch)
 
 def push(branch):
     ladder = read_ladder()
@@ -104,6 +108,15 @@ def main():
         push(head())
     elif cmd == "rebase":
         rebase(head())
+    elif cmd == "slide-out":
+        # TODO: or sth else if param provided
+        h = head()
+        u = up(h)
+        go(u)
+        ladder = read_ladder()
+        save_ladder(other_than(ladder, h))
+        rebase(u)
+        print "Note: branch " + h + " not removed. You can now decide to remove it manually."
     elif cmd == "up":
         # TODO: or sth else if param provided
         print shift(head(), -1)
