@@ -5,72 +5,96 @@ import sys
 
 ladder_file = ".git/ladder"
 
-def shell(cmd, *args):
+def run_cmd(cmd, *args):
+    return subprocess.call([cmd] + list(args)) == 0
+
+def popen_cmd(cmd, *args):
     return subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE).stdout.read()
 
 def edit():
-    # TODO: vim
-    shell("vim", ladder_file)
+    # TODO: $EDITOR
+    run_cmd("vim", ladder_file)
 
-def git(git_cmd, *args):
+def run_git(git_cmd, *args):
     print " ".join(["git", git_cmd] + list(args))
-    return shell("git", git_cmd, *args)
+    return run_cmd("git", git_cmd, *args)
 
-def current_branch():
-    return git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
+def popen_git(git_cmd, *args):
+    print " ".join(["git", git_cmd] + list(args))
+    return popen_cmd("git", git_cmd, *args)
+
+def head():
+    return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
 
 def read_ladder():
     with open(ladder_file, "r") as f:
         return map(lambda l: l.strip(), f.readlines())
 
-def shift(offset):
+def shift(branch, offset):
     # TODO: what if nothing down/up?
-    cb = current_branch()
     ladder = read_ladder()
-    cb_idx = ladder.index(cb)
-    return ladder[cb_idx + offset]
+    idx = ladder.index(branch)
+    new_idx = min(max(0, idx + offset), len(ladder) - 1)
+    return ladder[new_idx]
+
+def down(branch):
+    return shift(branch, 1)
+
+def up(branch):
+    return shift(branch, -1)
 
 def non_empty_lines(str):
     return filter(None, str.split("\n"))
 
 def log(branch):
-    return non_empty_lines(git("log", "--format=%H", branch))
+    return non_empty_lines(popen_git("log", "--format=%H", branch))
 
 def reflog(branch):
-    return non_empty_lines(git("reflog", "--format=%H", branch))
+    return non_empty_lines(popen_git("reflog", "--format=%H", branch))
 
 def base(branch):
     log_this_branch = log(branch)
     other_branches = filter(lambda b: b != branch, branches())
-    reflogs_other_branches = map(reflog, other_branches)
-    print reflogs_other_branches
+    reflogs_other_branches = sum(map(reflog, other_branches), [])
+    for h in log_this_branch:
+        if h in reflogs_other_branches:
+            return h
+    # TODO: handle that somehow...
+    return "0" * 32
 
 def branches():
-    return map(lambda b: b[2:], non_empty_lines(git("branch")))
+    return map(lambda b: b[2:], non_empty_lines(popen_git("branch")))
 
-def go(offset):
-    git("checkout", shift(offset))
+def go(branch):
+    # TODO: never checkout file nor current branch....
+    return run_git("checkout", branch)
 
-def rebase():
-    pass
-    #git("rebase", "-i", "--onto", )
+def rebase(branch):
+    return run_git("rebase", "-i", "--onto", down(branch), base(branch), branch)
 
 def main():
     cmd = sys.argv[1]
     if cmd == "base":
-        base(current_branch())
+        print base(head())
     elif cmd == "down":
-        print shift(1)
+        print shift(head(), 1)
+    elif cmd == "edit":
+        edit()
     elif cmd == "go":
         # TODO validate
         direction = sys.argv[2]
-        if direction == "down": go(1)
-        elif direction == "up": go(-1)
+        if direction == "down": go(down(head()))
+        elif direction == "up": go(up(head()))
         else: print "Wrong direction"
     elif cmd == "list":
         print "\n".join(read_ladder())
+    elif cmd == "rebase":
+        rebase(head())
     elif cmd == "up":
-        print shift(-1)
+        print shift(head(), -1)
+    elif cmd == "update":
+        h = head()
+        rebase(h) and run_git("push", "--force") and go(up(h))
     else:
         print "Unknown command"
 
