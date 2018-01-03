@@ -17,22 +17,60 @@ def git(git_cmd, *args):
     return shell("git", git_cmd, *args)
 
 def current_branch():
-    return git("symbolic-ref", "--quiet", "--short", "HEAD").strip()
+    return git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
 
 def read_ladder():
     with open(ladder_file, "r") as f:
         return map(lambda l: l.strip(), f.readlines())
 
+def shift(offset):
+    # TODO: what if nothing down/up?
+    cb = current_branch()
+    ladder = read_ladder()
+    cb_idx = ladder.index(cb)
+    return ladder[cb_idx + offset]
+
+def non_empty_lines(str):
+    return filter(None, str.split("\n"))
+
+def log(branch):
+    return non_empty_lines(git("log", "--format=%H", branch))
+
+def reflog(branch):
+    return non_empty_lines(git("reflog", "--format=%H", branch))
+
+def base(branch):
+    log_this_branch = log(branch)
+    other_branches = filter(lambda b: b != branch, branches())
+    reflogs_other_branches = map(reflog, other_branches)
+    print reflogs_other_branches
+
+def branches():
+    return map(lambda b: b[2:], non_empty_lines(git("branch")))
+
+def go(offset):
+    git("checkout", shift(offset))
+
+def rebase():
+    pass
+    #git("rebase", "-i", "--onto", )
+
 def main():
     cmd = sys.argv[1]
-    if cmd == "down":
-        # TODO: what if nothing down?
-        cb = current_branch()
-        ladder = read_ladder()
-        cb_idx = ladder.index(cb)
-        print ladder[cb_idx + 1]
+    if cmd == "base":
+        base(current_branch())
+    elif cmd == "down":
+        print shift(1)
+    elif cmd == "go":
+        # TODO validate
+        direction = sys.argv[2]
+        if direction == "down": go(1)
+        elif direction == "up": go(-1)
+        else: print "Wrong direction"
     elif cmd == "list":
         print "\n".join(read_ladder())
+    elif cmd == "up":
+        print shift(-1)
     else:
         print "Unknown command"
 

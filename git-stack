@@ -3,7 +3,7 @@
 stack_file=.git/ladder
 
 _base() {
-	git log --format=%H | grep -m1 -f <(git branch | sed 's/^[* ] //' | grep -x -v "$1" | xargs git reflog --format=%H)
+	git log --format=%H $1 | grep -m1 -f <(git branch | sed 's/^[* ] //' | grep -x -v "$1" | xargs git reflog --format=%H)
 }
 
 _down() {
