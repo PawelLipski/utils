@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+import subprocess
+import sys
+
+# TODO change to stems
+stem_file = ".git/_branches"
+
+def shell(cmd, *args):
+    subprocess.Popen([cmd] + args, stdout=subprocess.PIPE)
+
+def edit():
+    # TODO: vim
+    shell("vim", stem_file)
+
+def git(git_cmd, *args):
+    print " ".join(["git", cmd] + args)
+    shell("git", git_cmd, *args)
+
+def current_branch():
+    git("symbolic-ref", "--quiet", "--short", "HEAD")
+
+def read_stems():
+    with open(stem_file, "r") as f:
+        return map(lambda l: l.strip(), f.readlines())
+
+cmd = sys.argv[1]
+if cmd == "down":
+    cb = current_branch()
+    stems = read_stems()
+    cb_idx = stems.index(cb)
+    print stems[cb_idx + 1],
+elif cmd == "list":
+    print "\n".join(read_stems())
+else:
+    print "Unknown command"
+
