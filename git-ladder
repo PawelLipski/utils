@@ -58,14 +58,17 @@ def log(branch):
     return non_empty_lines(popen_git("log", "--format=%H", branch, "--"))
 
 def reflog(branch):
-    return non_empty_lines(popen_git("reflog", "--format=%H", branch, "--"))
+    # %H - full hash
+    # %gs - reflog subject
+    return [entry.split("|") for entry in non_empty_lines(popen_git("reflog", "--format=%H|%gs", branch, "--"))]
 
 def base(branch):
     log_this_branch = log(branch)
     other_branches = other_than(branches(), branch)
     reflogs_other_branches = sum(map(reflog, other_branches), [])
+    reflogs_other_branches_no_create = set(h for (h, gs) in reflogs_other_branches if "branch: Created" not in gs)
     for h in log_this_branch:
-        if h in reflogs_other_branches:
+        if h in reflogs_other_branches_no_create:
             return h
     # TODO: handle that somehow...
     return "0" * 32
