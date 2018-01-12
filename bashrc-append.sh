@@ -149,7 +149,7 @@ grbo() {
 
 codestat() {
 	#git ls-tree -r --name-only | ...
-	git grep -Il '' | egrep '(conf|routes|sbt|scala|sql)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+	git grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
 
