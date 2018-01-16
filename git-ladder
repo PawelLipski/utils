@@ -50,7 +50,7 @@ def non_empty_lines(s):
     return filter(None, s.split("\n"))
 
 def other_than(l, s):
-    return filter(lambda x: x != s, l)
+    return filter(lambda x: x not in s, l)
 
 # Trailing -- to prevent git from ever interpreting `branch` as path
 
@@ -64,7 +64,7 @@ def reflog(branches):
 
 def base(branch):
     log_this_branch = log(branch)
-    other_branches = other_than(branches(), branch)
+    other_branches = other_than(branches(), [branch])
     reflogs_other_branches = reflog(other_branches)
     reflogs_other_branches_no_create = set(h for (h, gs) in reflogs_other_branches if not (gs.startswith("branch: Created") or gs.startswith("branch: Reset to " + branch)))
     for h in log_this_branch:
@@ -90,6 +90,10 @@ def push(branch):
 def diff_base(branch):
     return run_git("diff", base(branch), branch, "--")
 
+def prune():
+    # TODO: ask to confirm + also mention about `rebase` possibly not working
+    return run_git("branch", "-d", *other_than(branches(), read_ladder()))
+
 def main():
     # TODO validate if present
     cmd = sys.argv[1]
@@ -111,6 +115,9 @@ def main():
         else: print "Wrong direction"
     elif cmd == "list":
         print "\n".join(read_ladder())
+    elif cmd == "prune":
+        # TODO: -f option that would call branch -D
+        prune()
     elif cmd == "push":
         # TODO: or sth else if param provided
         push(head())
@@ -122,7 +129,7 @@ def main():
         u = up(h)
         go(u)
         ladder = read_ladder()
-        save_ladder(other_than(ladder, h))
+        save_ladder(other_than(ladder, [h]))
         rebase(u)
         print "Note: branch " + h + " not removed. You can now decide to remove it manually."
     elif cmd == "up":
