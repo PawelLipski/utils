@@ -57,16 +57,16 @@ def other_than(l, s):
 def log(branch):
     return non_empty_lines(popen_git("log", "--format=%H", branch, "--"))
 
-def reflog(branch):
+def reflog(branches):
     # %H - full hash
     # %gs - reflog subject
-    return [entry.split("|") for entry in non_empty_lines(popen_git("reflog", "--format=%H|%gs", branch, "--"))]
+    return [entry.split("|") for entry in non_empty_lines(popen_git("reflog", "--format=%H|%gs", *(branches + ["--"])))]
 
 def base(branch):
     log_this_branch = log(branch)
     other_branches = other_than(branches(), branch)
-    reflogs_other_branches = sum(map(reflog, other_branches), [])
-    reflogs_other_branches_no_create = set(h for (h, gs) in reflogs_other_branches if "branch: Created" not in gs)
+    reflogs_other_branches = reflog(other_branches)
+    reflogs_other_branches_no_create = set(h for (h, gs) in reflogs_other_branches if not (gs.startswith("branch: Created") or gs.startswith("branch: Reset to " + branch)))
     for h in log_this_branch:
         if h in reflogs_other_branches_no_create:
             return h
@@ -87,12 +87,17 @@ def push(branch):
     ladder = read_ladder()
     save_ladder([branch] + ladder)
 
+def diff_base(branch):
+    return run_git("diff", base(branch), branch, "--")
+
 def main():
     # TODO validate if present
     cmd = sys.argv[1]
     if cmd == "base":
         # TODO: or sth else if param provided
         print base(head())
+    elif cmd == "diff-base":
+        diff_base(head())
     elif cmd == "down":
         # TODO: or sth else if param provided
         print shift(head(), 1)
