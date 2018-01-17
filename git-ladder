@@ -80,8 +80,9 @@ def go(branch):
     # TODO: don't go to current branch....
     return run_git("checkout", "--quiet", branch, "--")
 
-def rebase(branch):
-    return run_git("rebase", "--interactive", "--onto", down(branch), base(branch), branch)
+def rebase(branch, base_commit):
+    #return run_git("rebase", "--interactive", "--onto", down(branch), base_commit, branch)
+    return run_git("rebase", "--interactive", "--onto", down(branch), down(branch), branch) # Maybe it works? :o
 
 def push(branch):
     ladder = read_ladder()
@@ -122,7 +123,10 @@ def main():
         # TODO: or sth else if param provided
         push(head())
     elif cmd == "rebase":
-        rebase(head())
+        # TODO: parse -b option (or maybe call it differently, like -a for after?)
+        h = head()
+        b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
+        rebase(h, b)
     elif cmd == "slide-out":
         # TODO: or sth else if param provided
         h = head()
@@ -130,14 +134,15 @@ def main():
         go(u)
         ladder = read_ladder()
         save_ladder(other_than(ladder, [h]))
-        rebase(u)
+        rebase(u, base(u))
         print "Note: branch " + h + " not removed. You can now decide to remove it manually."
     elif cmd == "up":
         # TODO: or sth else if param provided
         print shift(head(), -1)
     elif cmd == "update":
         h = head()
-        rebase(h) and run_git("push", "--force") and go(up(h))
+        b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
+        rebase(h, b) and run_git("push", "--force") and go(up(h))
     else:
         # TODO exit() or stuff
         print "Unknown command"
