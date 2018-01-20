@@ -81,8 +81,7 @@ def go(branch):
     return run_git("checkout", "--quiet", branch, "--")
 
 def rebase(branch, base_commit):
-    #return run_git("rebase", "--interactive", "--onto", down(branch), base_commit, branch)
-    return run_git("rebase", "--interactive", "--onto", down(branch), down(branch), branch) # Maybe it works? :o
+    return run_git("rebase", "--interactive", "--onto", down(branch), base_commit, branch)
 
 def push(branch):
     ladder = read_ladder()
