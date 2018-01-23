@@ -147,7 +147,7 @@ grbo() {
 	git rebase -i --onto $target_base_branch $latest_excluded_commit `git @`
 }
 
-codestat() {
+blamestat() {
 	#git ls-tree -r --name-only | ...
 	git grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
