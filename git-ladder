@@ -49,7 +49,7 @@ def run_cmd(cmd, *args):
 
 
 def popen_cmd(cmd, *args):
-    process = subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE)
+    process = subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdoutdata, stderrdata = process.communicate()
     return process.returncode, stdoutdata
 
@@ -116,6 +116,16 @@ def down(b):
     return pb if pb else b
 
 
+def top():
+    if not trail_tops:
+        raise LadderException("Empty ladder. Use `git ladder push [<branch>]` or `git ladder edit`")
+    elif len(trail_tops) == 1:
+        return trail_tops[0]
+    else:
+        raise LadderException("Multiple trails, ambiguous trail top: %s" %
+                              " or ".join(map(lambda s: "`%s'" %s, trail_tops)))
+
+
 def up(b):
     expect_in_ladder(b)
     nb = nexts.get(b)
@@ -127,8 +137,21 @@ def up(b):
         raise LadderException("Ambiguous superbranch for `%s': %s" % (b, " or ".join(map(lambda s: "`%s'" %s, nb))))
 
 
-def push(b, onto=None):
-    if not onto: onto = trail_tops[0]
+def push(b):
+    global trail_tops
+
+    onto = opt_onto
+    if onto:
+        expect_in_ladder(onto)
+    if not trail_tops:
+        trail_tops = [b]
+        return
+
+    if not onto:
+        if len(trail_tops) > 1:
+            raise LadderException("Multiple trails, ambiguous push destination:"
+                                  "%s" % " or ".join(map(lambda s: "`%s'" % s, trail_tops)))
+        onto = trail_tops[0]
     if onto in trail_tops:
         replace_in_array(trail_tops, onto, b)
     else:
@@ -211,14 +234,16 @@ def update():
 # Main
 
 def usage():
+    # TODO!
     print >> sys.stderr, "Hello!!!!!!!!!!!!!!"
 
 
 try:
-    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fhv", ['base=', 'force', 'help', 'verbose'])
+    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:v", ['base=', 'force', 'help', 'onto=', 'verbose'])
 
     opt_base = None
     opt_force = False
+    opt_onto = None
     opt_verbose = False
 
     for opt, arg in opts:
@@ -229,6 +254,8 @@ try:
         elif opt in ("-h", "--help"):
             usage()
             sys.exit()
+        if opt in ("-o", "--onto"):
+            opt_onto = arg
         elif opt in ("-v", "--verbose"):
             opt_verbose = True
         else:
@@ -242,7 +269,7 @@ try:
     try:
         root = root_dir()
     except LadderException:
-        raise LadderException("git ladder doesn't work outside of git repositories")
+        raise LadderException("Not a git repository")
 
     ladder_file = os.path.join(root, ".git", "ladder")
     if not os.path.exists(ladder_file):
@@ -263,7 +290,6 @@ try:
 
     all_bs = set(sum(trails, []))
 
-
     def expect_no_param():
         if len(args) == 2:
             raise LadderException("No argument expected for `%s'" % cmd)
@@ -278,15 +304,16 @@ try:
         expect_no_param()
         edit()
     elif cmd == "help":
-        # TODO!
-        pass
+        usage()
     elif cmd == "go":
         if param == "down":
             go(down(head()))
+        elif param == "top":
+            go(top())
         elif param == "up":
             go(up(head()))
         else:
-            raise LadderException("Usage: git ladder go <down|up>")
+            raise LadderException("Usage: git ladder go <down|top|up>")
     elif cmd == "list":
         expect_no_param()
         print "\n".join(render_ladder())
@@ -315,6 +342,9 @@ try:
     #     save_ladder()
     #     rebase(u, base(u))
     #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
+    elif cmd == "top":
+        expect_no_param()
+        print top()
     elif cmd == "up":
         print up(param or head())
     elif cmd == "update":
@@ -322,7 +352,7 @@ try:
         expect_no_param()
         update()
     else:
-        # TODO or just call help
+        usage()
         raise LadderException("Unknown command: `%s'. Use `git ladder help` to list possible commands" % cmd)
 except Exception as e:
     print >> sys.stderr, str(e)
