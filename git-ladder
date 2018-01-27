@@ -74,6 +74,12 @@ def popen_git(git_cmd, *args):
 
 # Ladder manipulation
 
+def expect_in_ladder(b):
+    if b not in all_bs:
+        raise LadderException("Branch `%s' does not exist in the ladder. "
+                              "Use `git ladder push %s` or `git ladder edit`" % (b, b))
+
+
 def read_ladder():
     with open(ladder_file, "r") as f:
         return map(lambda l: l.strip(), f.readlines())
@@ -105,11 +111,13 @@ def save_ladder():
 
 
 def down(b):
+    expect_in_ladder(b)
     pb = prev.get(b)
     return pb if pb else b
 
 
 def up(b):
+    expect_in_ladder(b)
     nb = nexts.get(b)
     if not nb or len(nb) == 0:
         return b
@@ -157,8 +165,7 @@ def reflog(bs):
 
 
 def base(branch):
-    if branch not in all_bs:
-        raise LadderException("Branch `%s' does not exist in the ladder" % branch)
+    expect_in_ladder(branch)
     log_this_branch = log(branch)
     other_branches = excluding(branches(), [branch])
     reflogs_other_branches = reflog(other_branches)
@@ -238,6 +245,8 @@ try:
         raise LadderException("git ladder doesn't work outside of git repositories")
 
     ladder_file = os.path.join(root, ".git", "ladder")
+    if not os.path.exists(ladder_file):
+        open(ladder_file, 'w').close()
 
     trails = split_array(read_ladder(), '')
     trail_tops = map(lambda x: x[0], trails)
