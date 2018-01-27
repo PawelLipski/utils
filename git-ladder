@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 
+import getopt
 import os
 import subprocess
 import sys
 
 ladder_file = ".git/ladder"
 
-# Core utils
 
+# Core utils
 
 class LadderException(Exception):
     def __init__(self, value):
         self.parameter = value
+
+    def __str__(self):
+        return str(self.parameter)
 
 
 def non_empty_lines(s):
@@ -53,12 +57,14 @@ def popen_cmd(cmd, *args):
 # Git core
 
 def run_git(git_cmd, *args):
-    print " ".join(["git", git_cmd] + list(args))
+    if opt_verbose:
+        print >> sys.stderr, " ".join(["git", git_cmd] + list(args))
     return run_cmd("git", git_cmd, *args)
 
 
 def popen_git(git_cmd, *args):
-    print " ".join(["git", git_cmd] + list(args))
+    if opt_verbose:
+        print >> sys.stderr, " ".join(["git", git_cmd] + list(args))
     return popen_cmd("git", git_cmd, *args)
 
 
@@ -176,90 +182,124 @@ def diff_base(branch):
 def prune():
     # TODO: ask to confirm + also mention about `rebase` possibly not working
     to_prune = excluding(branches(), all_bs)
-    return run_git("branch", "-d", *to_prune) if to_prune else 0
+    opt_delete = "-D" if opt_force else "-d"
+    return run_git("branch", opt_delete, *to_prune) if to_prune else 0
+
+
+def update():
+    h = head()
+    b = opt_base or base(h)
+    opt_push_force = ["--force"] if opt_force else []
+    return rebase(h, b) and run_git("push", *opt_push_force) and go(up(h))
 
 
 # Main
 
-# TODO check if ladder file exists
-trails = split_array(read_ladder(), '')
-trail_tops = map(lambda x: x[0], trails)
-prev = {}
-for t in trails:
-    prev.update(dict(zip(t[:-1], t[1:])))
+def usage():
+    print >> sys.stderr, "Hello!!!!!!!!!!!!!!"
 
-nexts = {}
-for b, p in prev.items():
-    if p in nexts:
-        nexts[p].append(b)
-    else:
-        nexts[p] = [b]
+try:
+    # TODO check if ladder file exists
+    trails = split_array(read_ladder(), '')
+    trail_tops = map(lambda x: x[0], trails)
+    prev = {}
+    for t in trails:
+        prev.update(dict(zip(t[:-1], t[1:])))
 
-all_bs = set(sum(trails, []))
-
-
-def main():
-    try:
-        if len(sys.argv) < 2:
-            raise LadderException("Usage: git ladder <command> [params]")
-        param = sys.argv[2] if len(sys.argv) >= 3 else None
-
-        cmd = sys.argv[1]
-        if cmd == "base":
-            print base(param or head())
-        elif cmd == "diff-base":
-            diff_base(param or head())
-        elif cmd == "down":
-            print down(param or head())
-        elif cmd == "edit":
-            edit()
-        elif cmd == "help":
-            # TODO!
-            pass
-        elif cmd == "go":
-            if param == "down":
-                go(down(head()))
-            elif param == "up":
-                go(up(head()))
-            else:
-                raise LadderException("Usage: git ladder go <down|up>")
-        elif cmd == "list":
-            print "\n".join(render_ladder())
-        elif cmd == "prune":
-            # TODO: -f option that would call branch -D
-            prune()
-        elif cmd == "push":
-            b = param or head()
-            if b in all_bs:
-                raise LadderException("Branch `%s' already exists in the ladder" % b)
-            push(b)
-            save_ladder()
-        elif cmd == "rebase":
-            # TODO: parse -b option (or maybe call it differently, like -a for after?)
-            h = head()
-            rebase(h, param or base(h))
-        # elif cmd == "slide-out":
-        # TODO: needs some extra checks to implement
-        #     # TODO: or sth else if param provided
-        #     h = head()
-        #     # TODO: handle if multiple superbranches
-        #     u = up(h)
-        #     go(u)
-        #     save_ladder()
-        #     rebase(u, base(u))
-        #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
-        elif cmd == "up":
-            print up(param or head())
-        elif cmd == "update":
-            h = head()
-            b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
-            rebase(h, b) and run_git("push", "--force") and go(up(h))
+    nexts = {}
+    for b, p in prev.items():
+        if p in nexts:
+            nexts[p].append(b)
         else:
-            # TODO or just call help
-            raise LadderException("Unknown command: `%s'. Use `git ladder help` to list possible commands" % cmd)
-    except LadderException, e:
-        print >> sys.stderr, e.parameter
+            nexts[p] = [b]
 
+    all_bs = set(sum(trails, []))
 
-if __name__ == '__main__':
-    main()
+    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fhv", ['base=', 'force', 'help', 'verbose'])
+    print opts, ";;;", args
+
+    opt_base = None
+    opt_force = False
+    opt_verbose = False
+
+    for opt, arg in opts:
+        if opt in ("-b", "--base"):
+            opt_base = arg
+        elif opt in ("-f", "--force"):
+            opt_force = True
+        elif opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif opt in ("-v", "--verbose"):
+            opt_verbose = True
+        else:
+            raise LadderException("Unknown option: `%s'" % opt)
+
+    if len(args) == 0:
+        raise LadderException("Usage: git ladder <command> [argument]")
+    param = args[1] if len(args) == 2 else None
+    cmd = args[0]
+
+    def expect_no_param():
+        if len(args) == 2:
+            raise LadderException("No argument expected for `%s'" % cmd)
+
+    if cmd == "base":
+        print base(param or head())
+    elif cmd == "diff-base":
+        diff_base(param or head())
+    elif cmd == "down":
+        print down(param or head())
+    elif cmd == "edit":
+        expect_no_param()
+        edit()
+    elif cmd == "help":
+        # TODO!
+        pass
+    elif cmd == "go":
+        if param == "down":
+            go(down(head()))
+        elif param == "up":
+            go(up(head()))
+        else:
+            raise LadderException("Usage: git ladder go <down|up>")
+    elif cmd == "list":
+        expect_no_param()
+        print "\n".join(render_ladder())
+    elif cmd == "prune":
+        expect_no_param()
+        prune()
+    elif cmd == "push":
+        b = param or head()
+        if b in all_bs:
+            raise LadderException("Branch `%s' already exists in the ladder" % b)
+        push(b)
+        save_ladder()
+    elif cmd == "rebase":
+        # TODO: explain --base
+        expect_no_param()
+        h = head()
+        rebase(h, opt_base or base(h))
+    # elif cmd == "slide-out":
+    # TODO: needs some extra checks to implement
+    #     expect_no_param()
+    #     # TODO: or sth else if param provided
+    #     h = head()
+    #     # TODO: handle if multiple superbranches
+    #     u = up(h)
+    #     go(u)
+    #     save_ladder()
+    #     rebase(u, base(u))
+    #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
+    elif cmd == "up":
+        print up(param or head())
+    elif cmd == "update":
+        # TODO: explain --base
+        expect_no_param()
+        update()
+    else:
+        # TODO or just call help
+        raise LadderException("Unknown command: `%s'. Use `git ladder help` to list possible commands" % cmd)
+except Exception as e:
+    print >> sys.stderr, str(e)
+    sys.exit(1)
