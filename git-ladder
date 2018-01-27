@@ -45,7 +45,7 @@ def replace_in_array(arr, orig, dest):
 
 
 def run_cmd(cmd, *args):
-    return subprocess.call([cmd] + list(args)) == 0
+    return subprocess.call([cmd] + list(args))
 
 
 def popen_cmd(cmd, *args):
@@ -57,9 +57,12 @@ def popen_cmd(cmd, *args):
 # Git core
 
 def run_git(git_cmd, *args):
+    flat_cmd = " ".join(["git", git_cmd] + list(args))
     if opt_verbose:
         print >> sys.stderr, " ".join(["git", git_cmd] + list(args))
-    return run_cmd("git", git_cmd, *args)
+    status = run_cmd("git", git_cmd, *args)
+    if status != 0:
+        raise LadderException("`%s' returned %i" % (flat_cmd, status))
 
 
 def popen_git(git_cmd, *args):
@@ -206,30 +209,34 @@ def branches():
 
 def go(branch):
     # TODO: don't go to current branch....
-    return run_git("checkout", "--quiet", branch, "--")
+    run_git("checkout", "--quiet", branch, "--")
 
 
 def rebase(branch, base_commit):
-    return run_git("rebase", "--interactive", "--onto", down(branch), base_commit, branch)
+    run_git("rebase", "--interactive", "--onto", down(branch), base_commit, branch)
 
 
 def diff_base(branch):
-    return run_git("diff", base(branch), branch, "--")
+    run_git("diff", base(branch), branch, "--")
 
 
 def prune():
     # TODO: ask to confirm + also mention about `rebase` possibly not working
     to_prune = excluding(branches(), all_bs)
-    opt_delete = "-D" if opt_force else "-d"
-    return run_git("branch", opt_delete, *to_prune) if to_prune else 0
+    if to_prune:
+        opt_delete = "-D" if opt_force else "-d"
+        run_git("branch", opt_delete, *to_prune)
 
 
 def update():
     h = head()
     b = opt_base or base(h)
-    opt_push_force = ["--force"] if opt_force else []
-    return rebase(h, b) and run_git("push", *opt_push_force) and go(up(h))
+    rebase(h, b)
 
+    opt_push_force = ["--force"] if opt_force else []
+    run_git("push", *opt_push_force)
+
+    go(up(h))
 
 # Main
 
