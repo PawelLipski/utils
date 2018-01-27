@@ -137,7 +137,7 @@ def up(b):
     elif len(nb) == 1:
         return nb[0]
     else:
-        raise LadderException("Ambiguous superbranch for `%s': %s" % (b, " or ".join(map(lambda s: "`%s'" %s, nb))))
+        raise LadderException("Ambiguous up branch for `%s': %s" % (b, " or ".join(map(lambda s: "`%s'" %s, nb))))
 
 
 def push(b):
@@ -301,8 +301,9 @@ try:
             pairs = zip(t[:-1], t[1:])
             for b, p in pairs:
                 if b in prev and prev[b] != p:
-                    raise LadderException("Invalid ladder structure: `%s' first placed on the top of `%s'"
-                                          " and later on the top of `%s'" % (b, prev[b], p))
+                    raise LadderException("Invalid ladder structure: `%s' first placed on the top of `%s' and later on "
+                                          "the top of `%s'. Consider fixing the ladder file manually with "
+                                          "`git ladder edit`" % (b, prev[b], p))
                 prev[b] = p
 
         nexts = {}
@@ -321,8 +322,10 @@ try:
                     p = prev.get(i)
                     if not p: break
                     if p in path:
-                        flat_cycle = " -> ".join(map(lambda x: "`%s'" % x, path + [p]))
-                        raise LadderException("Invalid ladder structure: found a cycle on the path %s" % flat_cycle)
+                        cycle = path[path.index(p):]
+                        flat_cycle = " -> ".join(map(lambda x: "`%s'" % x, cycle + [p]))
+                        raise LadderException("Invalid ladder structure: found a cycle %s. Consider fixing the ladder "
+                                              "file manually with `git ladder edit`" % flat_cycle)
                     elif p in visited:
                         break
                     path += [p]
@@ -360,6 +363,7 @@ try:
             go(dest)
     elif cmd == "list":
         expect_no_param()
+        process_ladder()
         print "\n".join(render_ladder())
     elif cmd == "prune":
         expect_no_param()
