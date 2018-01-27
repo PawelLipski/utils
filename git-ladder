@@ -75,7 +75,13 @@ def read_ladder():
 def render_ladder():
     rendered = set()
     res = []
+    first = True
     for tt in trail_tops:
+        if first:
+            first = False
+        else:
+            res.append('')
+
         while True:
             res.append(tt)
             if tt in rendered: break
@@ -83,12 +89,11 @@ def render_ladder():
             p = prev.get(tt)
             if not p: break
             tt = p
-        res.append('')
     return res
 
 
 def flat_ladder():
-    excluding(render_ladder(), [''])
+    return excluding(render_ladder(), [''])
 
 
 def save_ladder():
@@ -108,7 +113,7 @@ def up(b):
     elif len(nb) == 1:
         return nb[0]
     else:
-        raise LadderException("Ambiguous superbranch for %s: %s" % (b, ", ".join(nb)))
+        raise LadderException("Ambiguous superbranch for `%s': %s" % (b, " or ".join(map(lambda s: "`%s'" %s, nb))))
 
 
 def push(b, onto=None):
@@ -176,12 +181,12 @@ def diff_base(branch):
 
 def prune():
     # TODO: ask to confirm + also mention about `rebase` possibly not working
-    return run_git("branch", "-d", *excluding(branches(), flat_ladder()))
+    return run_git("branch", "-d", *excluding(branches(), all_bs))
 
 
 # Main
 
-# TODO check if exists
+# TODO check if ladder file exists
 trails = split_array(read_ladder(), '')
 trail_tops = map(lambda x: x[0], trails)
 prev = {}
@@ -194,65 +199,69 @@ for b, p in prev.items():
         nexts[p].append(b)
     else:
         nexts[p] = [b]
-print nexts
+
+all_bs = flat_ladder()
 
 
 def main():
-    # TODO validate if present
-    cmd = sys.argv[1]
-    if cmd == "base":
-        # TODO: or sth else if param provided
-        print base(head())
-    elif cmd == "diff-base":
-        diff_base(head())
-    elif cmd == "down":
-        # TODO: or sth else if param provided
-        print down(head())
-    elif cmd == "edit":
-        edit()
-    elif cmd == "go":
-        # TODO validate if present
-        direction = sys.argv[2]
-        if direction == "down":
-            go(down(head()))
-        elif direction == "up":
-            go(up(head()))
+    try:
+        if len(sys.argv) < 2:
+            raise LadderException("Usage: git ladder <command> [params]")
+        param = sys.argv[2] if len(sys.argv) >= 3 else None
+
+        cmd = sys.argv[1]
+        if cmd == "base":
+            print base(param or head())
+        elif cmd == "diff-base":
+            diff_base(param or head())
+        elif cmd == "down":
+            # TODO: or sth else if param provided
+            print down(head())
+        elif cmd == "edit":
+            edit()
+        elif cmd == "go":
+            if param == "down":
+                go(down(head()))
+            elif param == "up":
+                go(up(head()))
+            else:
+                raise LadderException("Usage: git ladder go <down|up>")
+        elif cmd == "list":
+            print "\n".join(render_ladder())
+        elif cmd == "prune":
+            # TODO: -f option that would call branch -D
+            prune()
+        elif cmd == "push":
+            b = sys.argv[2] if len(sys.argv) >= 3 else head()
+            if b in all_bs: raise LadderException("Branch `%s' already exists in the ladder" % b)
+            push(b)
+            save_ladder()
+        elif cmd == "rebase":
+            # TODO: parse -b option (or maybe call it differently, like -a for after?)
+            h = head()
+            b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
+            rebase(h, b)
+        # elif cmd == "slide-out":
+        # TODO: needs some extra checks to implement
+        #     # TODO: or sth else if param provided
+        #     h = head()
+        #     # TODO: handle if multiple superbranches
+        #     u = up(h)
+        #     go(u)
+        #     save_ladder()
+        #     rebase(u, base(u))
+        #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
+        elif cmd == "up":
+            # TODO: or sth else if param provided
+            print up(head())
+        elif cmd == "update":
+            h = head()
+            b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
+            rebase(h, b) and run_git("push", "--force") and go(up(h))
         else:
-            print "Wrong direction"
-    elif cmd == "list":
-        print "\n".join(render_ladder())
-    elif cmd == "prune":
-        # TODO: -f option that would call branch -D
-        prune()
-    elif cmd == "push":
-        # TODO: or sth else if param provided
-        push(head())
-        save_ladder()
-    elif cmd == "rebase":
-        # TODO: parse -b option (or maybe call it differently, like -a for after?)
-        h = head()
-        b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
-        rebase(h, b)
-    # elif cmd == "slide-out":
-    # TODO: needs some extra checks to implement
-    #     # TODO: or sth else if param provided
-    #     h = head()
-    #     # TODO: handle if multiple superbranches
-    #     u = up(h)
-    #     go(u)
-    #     save_ladder()
-    #     rebase(u, base(u))
-    #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
-    elif cmd == "up":
-        # TODO: or sth else if param provided
-        print up(head())
-    elif cmd == "update":
-        h = head()
-        b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
-        rebase(h, b) and run_git("push", "--force") and go(up(h))
-    else:
-        # TODO exit() or stuff
-        print "Unknown command"
+            raise LadderException("Unknown command `%s'" % cmd)
+    except LadderException, e:
+        print >> sys.stderr, e.parameter
 
 
 if __name__ == '__main__':
