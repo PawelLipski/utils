@@ -51,8 +51,9 @@ def run_cmd(cmd, *args):
 
 
 def popen_cmd(cmd, *args):
-    return subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE).stdout.read()
-
+    process = subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE)
+    stdoutdata, stderrdata = process.communicate()
+    return process.returncode, stdoutdata
 
 # Git core
 
@@ -63,10 +64,13 @@ def run_git(git_cmd, *args):
 
 
 def popen_git(git_cmd, *args):
+    flat_cmd = " ".join(["git", git_cmd] + list(args))
     if opt_verbose:
-        print >> sys.stderr, " ".join(["git", git_cmd] + list(args))
-    return popen_cmd("git", git_cmd, *args)
-
+        print >> sys.stderr, flat_cmd
+    status, stdout = popen_cmd("git", git_cmd, *args)
+    if status != 0:
+        raise "`%s' returned %i" % (flat_cmd, status)
+    return stdout
 
 # Ladder manipulation
 
@@ -133,6 +137,8 @@ def push(b, onto=None):
 def edit():
     return run_cmd(os.environ.get("EDITOR") or "vim", ladder_file)
 
+def root_dir():
+    pass
 
 def head():
     return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
