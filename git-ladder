@@ -38,10 +38,10 @@ def split_array(arr, sep):
     return res
 
 
-def replace_in_array(arr, orig, dest):
+def replace_in_array(arr, orig, dst):
     for i in range(len(arr)):
         if arr[i] == orig:
-            arr[i] = dest
+            arr[i] = dst
 
 
 def run_cmd(cmd, *args):
@@ -224,8 +224,8 @@ def prune():
     if to_prune:
         if not opt_force:
             bs = ", ".join(map(lambda s: "`%s'" % s, to_prune))
-            if raw_input("This will remove the following branches: %s; continue? [y/n] " % bs).lower() not in (
-            'y', 'yes'):
+            msg = "This will remove the following branches: %s; continue? [y/n] " % bs
+            if raw_input(msg).lower() not in ('y', 'yes'):
                 return
         opt_delete = "-D" if opt_force else "-d"
         run_git("branch", opt_delete, *to_prune)
@@ -289,19 +289,29 @@ try:
         open(ladder_file, 'w').close()
 
     trails = split_array(read_ladder(), '')
-    trail_tops = map(lambda x: x[0], trails)
-    prev = {}
-    for t in trails:
-        prev.update(dict(zip(t[:-1], t[1:])))
-
-    nexts = {}
-    for b, p in prev.items():
-        if p in nexts:
-            nexts[p].append(b)
-        else:
-            nexts[p] = [b]
-
     all_bs = set(sum(trails, []))
+
+
+    def process_ladder():
+        global trail_tops, prev, nexts
+
+        trail_tops = map(lambda x: x[0], trails)
+        prev = {}
+        for t in trails:
+            pairs = zip(t[:-1], t[1:])
+            for b, p in pairs:
+                if b in prev and prev[b] != p:
+                    raise LadderException("Invalid ladder structure: `%s' first placed on the top of `%s'"
+                                          " and later on the top of `%s'" % (b, prev[b], p))
+                prev[b] = p
+
+        nexts = {}
+        for b, p in prev.items():
+            if p in nexts:
+                nexts[p].append(b)
+            else:
+                nexts[p] = [b]
+
 
     def expect_no_param(extra_explanation = ''):
         if len(args) == 2:
@@ -312,6 +322,7 @@ try:
     elif cmd == "diff-base":
         diff_base(param or head())
     elif cmd == "down":
+        process_ladder()
         print down(param or head())
     elif cmd == "edit":
         expect_no_param()
@@ -319,6 +330,7 @@ try:
     elif cmd == "help":
         usage()
     elif cmd == "go":
+        process_ladder()
         h = head()
         if param == "down":
             dest = down(h)
@@ -337,6 +349,7 @@ try:
         expect_no_param()
         prune()
     elif cmd == "push":
+        process_ladder()
         b = param or head()
         if b in all_bs:
             raise LadderException("Branch `%s' already exists in the ladder" % b)
@@ -344,6 +357,7 @@ try:
         save_ladder()
     elif cmd == "rebase":
         expect_no_param(". Use `-b` or `--base` to specify the base commit")
+        process_ladder()
         h = head()
         rebase(h, opt_base or base(h))
     # elif cmd == "slide-out":
@@ -359,12 +373,14 @@ try:
     #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
     elif cmd == "top":
         expect_no_param()
+        process_ladder()
         print top()
     elif cmd == "up":
+        process_ladder()
         print up(param or head())
     elif cmd == "update":
-        # TODO: explain --base
         expect_no_param(". Use `-b` or `--base` to specify the base commit")
+        process_ladder()
         update()
     else:
         usage()
