@@ -312,6 +312,22 @@ try:
             else:
                 nexts[p] = [b]
 
+        visited = set()
+        for b in all_bs:
+            if b not in visited:
+                i = b
+                path = [b]
+                while True:
+                    p = prev.get(i)
+                    if not p: break
+                    if p in path:
+                        flat_cycle = " -> ".join(map(lambda x: "`%s'" % x, path + [p]))
+                        raise LadderException("Invalid ladder structure: found a cycle on the path %s" % flat_cycle)
+                    elif p in visited:
+                        break
+                    path += [p]
+                    visited.add(p)
+                    i = p
 
     def expect_no_param(extra_explanation = ''):
         if len(args) == 2:
