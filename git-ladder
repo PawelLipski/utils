@@ -5,8 +5,6 @@ import os
 import subprocess
 import sys
 
-ladder_file = ".git/ladder"
-
 
 # Core utils
 
@@ -55,6 +53,7 @@ def popen_cmd(cmd, *args):
     stdoutdata, stderrdata = process.communicate()
     return process.returncode, stdoutdata
 
+
 # Git core
 
 def run_git(git_cmd, *args):
@@ -69,8 +68,9 @@ def popen_git(git_cmd, *args):
         print >> sys.stderr, flat_cmd
     status, stdout = popen_cmd("git", git_cmd, *args)
     if status != 0:
-        raise "`%s' returned %i" % (flat_cmd, status)
+        raise LadderException("`%s' returned %i" % (flat_cmd, status))
     return stdout
+
 
 # Ladder manipulation
 
@@ -137,8 +137,10 @@ def push(b, onto=None):
 def edit():
     return run_cmd(os.environ.get("EDITOR") or "vim", ladder_file)
 
+
 def root_dir():
-    pass
+    return popen_git("rev-parse", "--show-toplevel").strip()
+
 
 def head():
     return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
@@ -204,25 +206,9 @@ def update():
 def usage():
     print >> sys.stderr, "Hello!!!!!!!!!!!!!!"
 
+
 try:
-    # TODO check if ladder file exists
-    trails = split_array(read_ladder(), '')
-    trail_tops = map(lambda x: x[0], trails)
-    prev = {}
-    for t in trails:
-        prev.update(dict(zip(t[:-1], t[1:])))
-
-    nexts = {}
-    for b, p in prev.items():
-        if p in nexts:
-            nexts[p].append(b)
-        else:
-            nexts[p] = [b]
-
-    all_bs = set(sum(trails, []))
-
     opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fhv", ['base=', 'force', 'help', 'verbose'])
-    print opts, ";;;", args
 
     opt_base = None
     opt_force = False
@@ -245,6 +231,29 @@ try:
         raise LadderException("Usage: git ladder <command> [argument]")
     param = args[1] if len(args) == 2 else None
     cmd = args[0]
+
+    try:
+        root = root_dir()
+    except LadderException:
+        raise LadderException("git ladder doesn't work outside of git repositories")
+
+    ladder_file = os.path.join(root, ".git", "ladder")
+
+    trails = split_array(read_ladder(), '')
+    trail_tops = map(lambda x: x[0], trails)
+    prev = {}
+    for t in trails:
+        prev.update(dict(zip(t[:-1], t[1:])))
+
+    nexts = {}
+    for b, p in prev.items():
+        if p in nexts:
+            nexts[p].append(b)
+        else:
+            nexts[p] = [b]
+
+    all_bs = set(sum(trails, []))
+
 
     def expect_no_param():
         if len(args) == 2:
