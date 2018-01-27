@@ -3,6 +3,14 @@
 ladder_file = "ladder"
 
 
+class FooException(Exception):
+    def __init__(self, value):
+        self.parameter = value
+
+    def __str__(self):
+        return repr(self.parameter)
+
+
 def split_array(arr, sep):
     res = []
     start_new = True
@@ -43,29 +51,47 @@ for b, p in prev.items():
 print nexts
 
 
-def push(name, onto=None):
+def push(b, onto=None):
     if not onto: onto = trail_tops[0]
     if onto in trail_tops:
-        replace_in_array(trail_tops, onto, name)
+        replace_in_array(trail_tops, onto, b)
     else:
-        trail_tops.append(name)
-    prev[name] = onto
+        trail_tops.append(b)
+    prev[b] = onto
 
 
-def print_ladder():
-    printed = set()
+def up(b):
+    nb = nexts.get(b)
+    if not nb or len(nb) == 0:
+        return b
+    elif len(nb) == 1:
+        return nb[0]
+    else:
+        raise FooException("Ambiguous superbranch for %s: %s" % (b, ", ".join(nb)))
+
+
+def render_ladder():
+    rendered = set()
+    res = []
     for tt in trail_tops:
         while True:
-            print tt
-            if tt in printed: break
-            printed.add(tt)
+            res.append(tt)
+            if tt in rendered: break
+            rendered.add(tt)
             p = prev.get(tt)
             if not p: break
             tt = p
-        print
+        res.append('')
+    return res
 
 
 push("foo")
 push("bar", onto="feature/pip-467-cancel-withdrawal")
 push("qux", onto="bugfix/fee-margin-20p")
-print_ladder()
+
+print up("bar")
+print up("feature/pip-467-cancel-withdrawal")
+print up("develop")
+
+for l in render_ladder():
+    print l

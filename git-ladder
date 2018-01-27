@@ -6,6 +6,15 @@ import sys
 
 ladder_file = ".git/ladder"
 
+# Core utils
+
+def non_empty_lines(s):
+    return filter(None, s.split("\n"))
+
+
+def excluding(l, s):
+    return filter(lambda x: x not in s, l)
+
 
 def run_cmd(cmd, *args):
     return subprocess.call([cmd] + list(args)) == 0
@@ -15,9 +24,7 @@ def popen_cmd(cmd, *args):
     return subprocess.Popen([cmd] + list(args), stdout=subprocess.PIPE).stdout.read()
 
 
-def edit():
-    return run_cmd(os.environ.get("EDITOR") or "vim", ladder_file)
-
+# Git core
 
 def run_git(git_cmd, *args):
     print " ".join(["git", git_cmd] + list(args))
@@ -29,9 +36,7 @@ def popen_git(git_cmd, *args):
     return popen_cmd("git", git_cmd, *args)
 
 
-def head():
-    return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
-
+# Ladder manipulation
 
 def read_ladder():
     with open(ladder_file, "r") as f:
@@ -58,15 +63,20 @@ def up(branch):
     return shift(branch, -1)
 
 
-def non_empty_lines(s):
-    return filter(None, s.split("\n"))
+def push(branch):
+    ladder = read_ladder()
+    save_ladder([branch] + ladder)
 
 
-def excluding(l, s):
-    return filter(lambda x: x not in s, l)
+# Git/shell commands impl
+
+def edit():
+    return run_cmd(os.environ.get("EDITOR") or "vim", ladder_file)
 
 
-# Trailing -- to prevent git from ever interpreting `branch` as path
+def head():
+    return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
+
 
 def log(branch):
     return non_empty_lines(popen_git("log", "--format=%H", branch, "--"))
@@ -104,11 +114,6 @@ def rebase(branch, base_commit):
     return run_git("rebase", "--interactive", "--onto", down(branch), base_commit, branch)
 
 
-def push(branch):
-    ladder = read_ladder()
-    save_ladder([branch] + ladder)
-
-
 def diff_base(branch):
     return run_git("diff", base(branch), branch, "--")
 
@@ -117,6 +122,8 @@ def prune():
     # TODO: ask to confirm + also mention about `rebase` possibly not working
     return run_git("branch", "-d", *excluding(branches(), read_ladder()))
 
+
+# Main
 
 def main():
     # TODO validate if present
