@@ -208,7 +208,6 @@ def branches():
 
 
 def go(branch):
-    # TODO: don't go to current branch....
     run_git("checkout", "--quiet", branch, "--")
 
 
@@ -221,11 +220,17 @@ def diff_base(branch):
 
 
 def prune():
-    # TODO: ask to confirm + also mention about `rebase` possibly not working
     to_prune = excluding(branches(), all_bs)
     if to_prune:
+        if not opt_force:
+            bs = ", ".join(map(lambda s: "`%s'" % s, to_prune))
+            if raw_input("This will remove the following branches: %s; continue? [y/n] " % bs).lower() not in (
+            'y', 'yes'):
+                return
         opt_delete = "-D" if opt_force else "-d"
         run_git("branch", opt_delete, *to_prune)
+    else:
+        print >> sys.stderr, "No branches to remove"
 
 
 def update():
@@ -237,6 +242,7 @@ def update():
     run_git("push", *opt_push_force)
 
     go(up(h))
+
 
 # Main
 
@@ -261,7 +267,7 @@ try:
         elif opt in ("-h", "--help"):
             usage()
             sys.exit()
-        if opt in ("-o", "--onto"):
+        elif opt in ("-o", "--onto"):
             opt_onto = arg
         elif opt in ("-v", "--verbose"):
             opt_verbose = True
@@ -297,9 +303,9 @@ try:
 
     all_bs = set(sum(trails, []))
 
-    def expect_no_param():
+    def expect_no_param(extra_explanation = ''):
         if len(args) == 2:
-            raise LadderException("No argument expected for `%s'" % cmd)
+            raise LadderException("No argument expected for `%s'%s" % (cmd, extra_explanation))
 
     if cmd == "base":
         print base(param or head())
@@ -313,14 +319,17 @@ try:
     elif cmd == "help":
         usage()
     elif cmd == "go":
+        h = head()
         if param == "down":
-            go(down(head()))
+            dest = down(h)
         elif param == "top":
-            go(top())
+            dest = top()
         elif param == "up":
-            go(up(head()))
+            dest = up(h)
         else:
             raise LadderException("Usage: git ladder go <down|top|up>")
+        if h != dest:
+            go(dest)
     elif cmd == "list":
         expect_no_param()
         print "\n".join(render_ladder())
@@ -334,8 +343,7 @@ try:
         push(b)
         save_ladder()
     elif cmd == "rebase":
-        # TODO: explain --base
-        expect_no_param()
+        expect_no_param(". Use `-b` or `--base` to specify the base commit")
         h = head()
         rebase(h, opt_base or base(h))
     # elif cmd == "slide-out":
@@ -356,7 +364,7 @@ try:
         print up(param or head())
     elif cmd == "update":
         # TODO: explain --base
-        expect_no_param()
+        expect_no_param(". Use `-b` or `--base` to specify the base commit")
         update()
     else:
         usage()
