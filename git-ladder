@@ -13,9 +13,6 @@ class LadderException(Exception):
     def __init__(self, value):
         self.parameter = value
 
-    def __str__(self):
-        return repr(self.parameter)
-
 
 def non_empty_lines(s):
     return filter(None, s.split("\n"))
@@ -92,10 +89,6 @@ def render_ladder():
     return res
 
 
-def flat_ladder():
-    return excluding(render_ladder(), [''])
-
-
 def save_ladder():
     with open(ladder_file, "w") as f:
         f.write("\n".join(render_ladder()))
@@ -150,6 +143,8 @@ def reflog(bs):
 
 
 def base(branch):
+    if branch not in all_bs:
+        raise LadderException("Branch `%s' does not exist in the ladder" % branch)
     log_this_branch = log(branch)
     other_branches = excluding(branches(), [branch])
     reflogs_other_branches = reflog(other_branches)
@@ -158,8 +153,7 @@ def base(branch):
     for h in log_this_branch:
         if h in reflogs_other_branches_no_create:
             return h
-    # TODO: handle that somehow...
-    return "0" * 32
+    raise LadderException("Cannot find base for branch `%s'" % branch)
 
 
 def branches():
@@ -181,7 +175,8 @@ def diff_base(branch):
 
 def prune():
     # TODO: ask to confirm + also mention about `rebase` possibly not working
-    return run_git("branch", "-d", *excluding(branches(), all_bs))
+    to_prune = excluding(branches(), all_bs)
+    return run_git("branch", "-d", *to_prune) if to_prune else 0
 
 
 # Main
@@ -200,7 +195,7 @@ for b, p in prev.items():
     else:
         nexts[p] = [b]
 
-all_bs = flat_ladder()
+all_bs = set(sum(trails, []))
 
 
 def main():
@@ -215,10 +210,12 @@ def main():
         elif cmd == "diff-base":
             diff_base(param or head())
         elif cmd == "down":
-            # TODO: or sth else if param provided
-            print down(head())
+            print down(param or head())
         elif cmd == "edit":
             edit()
+        elif cmd == "help":
+            # TODO!
+            pass
         elif cmd == "go":
             if param == "down":
                 go(down(head()))
@@ -232,15 +229,15 @@ def main():
             # TODO: -f option that would call branch -D
             prune()
         elif cmd == "push":
-            b = sys.argv[2] if len(sys.argv) >= 3 else head()
-            if b in all_bs: raise LadderException("Branch `%s' already exists in the ladder" % b)
+            b = param or head()
+            if b in all_bs:
+                raise LadderException("Branch `%s' already exists in the ladder" % b)
             push(b)
             save_ladder()
         elif cmd == "rebase":
             # TODO: parse -b option (or maybe call it differently, like -a for after?)
             h = head()
-            b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
-            rebase(h, b)
+            rebase(h, param or base(h))
         # elif cmd == "slide-out":
         # TODO: needs some extra checks to implement
         #     # TODO: or sth else if param provided
@@ -252,14 +249,14 @@ def main():
         #     rebase(u, base(u))
         #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
         elif cmd == "up":
-            # TODO: or sth else if param provided
-            print up(head())
+            print up(param or head())
         elif cmd == "update":
             h = head()
             b = sys.argv[2] if len(sys.argv) >= 3 else base(h)
             rebase(h, b) and run_git("push", "--force") and go(up(h))
         else:
-            raise LadderException("Unknown command `%s'" % cmd)
+            # TODO or just call help
+            raise LadderException("Unknown command: `%s'. Use `git ladder help` to list possible commands" % cmd)
     except LadderException, e:
         print >> sys.stderr, e.parameter
 
