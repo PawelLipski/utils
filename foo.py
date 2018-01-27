@@ -58,6 +58,10 @@ def push(b, onto=None):
     else:
         trail_tops.append(b)
     prev[b] = onto
+    if onto in nexts:
+        nexts[onto].append(b)
+    else:
+        nexts[onto] = [b]
 
 
 def up(b):
