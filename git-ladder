@@ -44,6 +44,11 @@ def replace_in_array(arr, orig, dst):
             arr[i] = dst
 
 
+def expect_no_param(extra_explanation = ''):
+    if len(args) == 2:
+        raise LadderException("No argument expected for `%s'%s" % (cmd, extra_explanation))
+
+
 def run_cmd(cmd, *args):
     return subprocess.call([cmd] + list(args))
 
@@ -84,8 +89,63 @@ def expect_in_ladder(b):
 
 
 def read_ladder():
+    global ladder_file, trails, all_bs
+
+    try:
+        root = root_dir()
+    except LadderException:
+        raise LadderException("Not a git repository")
+
+    ladder_file = os.path.join(root, ".git", "ladder")
+    if not os.path.exists(ladder_file):
+        open(ladder_file, 'w').close()
+
     with open(ladder_file, "r") as f:
-        return map(lambda l: l.strip(), f.readlines())
+        ldr = map(lambda l: l.strip(), f.readlines())
+    trails = split_array(ldr, '')
+    all_bs = set(sum(trails, []))
+
+
+def process_ladder():
+    global trail_tops, prev, nexts
+
+    prev = {}
+    for t in trails:
+        pairs = zip(t[:-1], t[1:])
+        for b, p in pairs:
+            if b in prev and prev[b] != p:
+                raise LadderException("Invalid ladder structure: `%s' first placed on the top of `%s' and later on "
+                                      "the top of `%s'. Consider fixing the ladder file manually with "
+                                      "`git ladder edit`" % (b, prev[b], p))
+            prev[b] = p
+
+    nexts = {}
+    for b, p in prev.items():
+        if p in nexts:
+            nexts[p].append(b)
+        else:
+            nexts[p] = [b]
+
+    trail_tops = excluding(all_bs, nexts.keys())
+
+    visited = set()
+    for b in all_bs:
+        if b not in visited:
+            i = b
+            path = [b]
+            while True:
+                p = prev.get(i)
+                if not p: break
+                if p in path:
+                    cycle = path[path.index(p):]
+                    flat_cycle = " -> ".join(map(lambda x: "`%s'" % x, cycle + [p]))
+                    raise LadderException("Invalid ladder structure: found a cycle %s. Consider fixing the ladder "
+                                          "file manually with `git ladder edit`" % flat_cycle)
+                elif p in visited:
+                    break
+                path += [p]
+                visited.add(p)
+                i = p
 
 
 def render_ladder():
@@ -143,6 +203,9 @@ def up(b):
 def push(b):
     global trail_tops
 
+    if b in all_bs:
+        raise LadderException("Branch `%s' already exists in the ladder" % b)
+
     onto = opt_onto
     if onto:
         expect_in_ladder(onto)
@@ -164,6 +227,7 @@ def push(b):
         nexts[onto].append(b)
     else:
         nexts[onto] = [b]
+    save_ladder()
 
 
 # Git/shell commands impl
@@ -233,6 +297,28 @@ def prune():
         print >> sys.stderr, "No branches to remove"
 
 
+def slide_out(b):
+    expect_in_ladder(b)
+    d = prev.get(b)
+    if not d:
+        raise LadderException("No down branch defined for `%s', cannot slide out" % b)
+    u_s = nexts.get(b)
+    if not u_s or len(u_s) == 0:
+        raise LadderException("No up branch defined for `%s', cannot slide out" % b)
+    elif len(u_s) > 1:
+        flat_u_s = ", ".join(map(lambda s: "`%s'" % s, u_s))
+        raise LadderException("Multiple up branches defined for `%s': %s; cannot slide out" % (b, flat_u_s))
+    u = u_s[0]
+    go(u)
+    prev[u] = prev[b]
+    prev[b] = None
+    nexts[d] = nexts[b]
+    nexts[b] = None
+    save_ladder()
+    rebase(u, base(u))
+    print "Note: branch " + b + " not removed. You can now decide to remove it manually."
+
+
 def update():
     h = head()
     b = opt_base or base(h)
@@ -268,6 +354,7 @@ def usage(cmd = None):
     # TODO!
     print >> sys.stderr, "Usage: git ladder <command> [argument]"
 
+
 try:
     opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:v", ['base=', 'force', 'help', 'onto=', 'verbose'])
 
@@ -291,69 +378,13 @@ try:
         else:
             raise LadderException("Unknown option: `%s'" % opt)
 
-    if len(args) == 0:
+    if len(args) not in (1, 2):
         usage()
         sys.exit(2)
-    param = args[1] if len(args) == 2 else None
     cmd = args[0]
+    param = args[1] if len(args) == 2 else None
 
-    try:
-        root = root_dir()
-    except LadderException:
-        raise LadderException("Not a git repository")
-
-    ladder_file = os.path.join(root, ".git", "ladder")
-    if not os.path.exists(ladder_file):
-        open(ladder_file, 'w').close()
-
-    trails = split_array(read_ladder(), '')
-    all_bs = set(sum(trails, []))
-
-
-    def process_ladder():
-        global trail_tops, prev, nexts
-
-        prev = {}
-        for t in trails:
-            pairs = zip(t[:-1], t[1:])
-            for b, p in pairs:
-                if b in prev and prev[b] != p:
-                    raise LadderException("Invalid ladder structure: `%s' first placed on the top of `%s' and later on "
-                                          "the top of `%s'. Consider fixing the ladder file manually with "
-                                          "`git ladder edit`" % (b, prev[b], p))
-                prev[b] = p
-
-        nexts = {}
-        for b, p in prev.items():
-            if p in nexts:
-                nexts[p].append(b)
-            else:
-                nexts[p] = [b]
-
-        trail_tops = excluding(all_bs, nexts.keys())
-
-        visited = set()
-        for b in all_bs:
-            if b not in visited:
-                i = b
-                path = [b]
-                while True:
-                    p = prev.get(i)
-                    if not p: break
-                    if p in path:
-                        cycle = path[path.index(p):]
-                        flat_cycle = " -> ".join(map(lambda x: "`%s'" % x, cycle + [p]))
-                        raise LadderException("Invalid ladder structure: found a cycle %s. Consider fixing the ladder "
-                                              "file manually with `git ladder edit`" % flat_cycle)
-                    elif p in visited:
-                        break
-                    path += [p]
-                    visited.add(p)
-                    i = p
-
-    def expect_no_param(extra_explanation = ''):
-        if len(args) == 2:
-            raise LadderException("No argument expected for `%s'%s" % (cmd, extra_explanation))
+    read_ladder()
 
     if cmd == "base":
         print base(param or head())
@@ -391,39 +422,15 @@ try:
         prune()
     elif cmd in ("p", "push"):
         process_ladder()
-        b = param or head()
-        if b in all_bs:
-            raise LadderException("Branch `%s' already exists in the ladder" % b)
-        push(b)
-        save_ladder()
+        push(param or head())
     elif cmd == "rebase":
         expect_no_param(". Use `-b` or `--base` to specify the base commit")
         process_ladder()
         h = head()
         rebase(h, opt_base or base(h))
     elif cmd == "slide-out":
-        b = param or head()
-        expect_in_ladder(b)
-
         process_ladder()
-        d = prev.get(b)
-        if not d:
-            raise LadderException("No down branch defined for `%s', cannot slide out" % b)
-        u_s = nexts.get(b)
-        if not u_s or len(u_s) == 0:
-            raise LadderException("No up branch defined for `%s', cannot slide out" % b)
-        elif len(u_s) > 1:
-            flat_u_s = ", ".join(map(lambda s: "`%s'" % s, u_s))
-            raise LadderException("Multiple up branches defined for `%s': %s; cannot slide out" % (b, flat_u_s))
-        u = u_s[0]
-        go(u)
-        prev[u] = prev[b]
-        prev[b] = None
-        nexts[d] = nexts[b]
-        nexts[b] = None
-        save_ladder()
-        rebase(u, base(u))
-        print "Note: branch " + b + " not removed. You can now decide to remove it manually."
+        slide_out(param or head())
     elif cmd == "top":
         expect_no_param()
         process_ladder()
