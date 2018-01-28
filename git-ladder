@@ -253,8 +253,8 @@ def usage(cmd = None):
         "diff-base": "",
         "down": "",
         "edit": "",
-        "help": "",
         "go": "",
+        "help": "",
         "list": "",
         "path": "",
         "prune": "",
@@ -362,25 +362,25 @@ try:
     elif cmd == "down":
         process_ladder()
         print down(param or head())
-    elif cmd == "edit":
+    elif cmd in ("e", "edit"):
         expect_no_param()
         edit()
-    elif cmd == "help":
-        usage(param)
-    elif cmd == "go":
+    elif cmd in ("g", "go"):
         process_ladder()
         h = head()
-        if param == "down":
+        if param in ("d", "down"):
             dest = down(h)
-        elif param == "top":
+        elif param in ("t", "top"):
             dest = top()
-        elif param == "up":
+        elif param in ("u", "up"):
             dest = up(h)
         else:
-            raise LadderException("Usage: git ladder go <down|top|up>")
+            raise LadderException("Usage: git ladder go <d[own]|t[op]|u[p]>")
         if h != dest:
             go(dest)
-    elif cmd == "list":
+    elif cmd == "help":
+        usage(param)
+    elif cmd in ("l", "list"):
         expect_no_param()
         process_ladder()
         print "\n".join(render_ladder())
@@ -389,7 +389,7 @@ try:
     elif cmd == "prune":
         expect_no_param()
         prune()
-    elif cmd == "push":
+    elif cmd in ("p", "push"):
         process_ladder()
         b = param or head()
         if b in all_bs:
@@ -437,7 +437,7 @@ try:
         update()
     else:
         usage()
-        raise LadderException("Unknown command: `%s'. Use `git ladder help` to list possible commands" % cmd)
+        raise LadderException("Unknown command: `%s'" % cmd)
 except Exception as e:
     print >> sys.stderr, str(e)
     sys.exit(1)

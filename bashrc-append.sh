@@ -83,6 +83,7 @@ use_java7() {
 
 DEVELOP=develop
 
+alias @='git ladder'
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
