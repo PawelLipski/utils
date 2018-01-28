@@ -256,6 +256,7 @@ def usage(cmd = None):
         "help": "",
         "go": "",
         "list": "",
+        "path": "",
         "prune": "",
         "push": "",
         "rebase": "",
@@ -383,6 +384,8 @@ try:
         expect_no_param()
         process_ladder()
         print "\n".join(render_ladder())
+    elif cmd == "path":
+        print ladder_file
     elif cmd == "prune":
         expect_no_param()
         prune()
