@@ -246,10 +246,26 @@ def update():
 
 # Main
 
-def usage():
+# TODO!!! define help in keys
+def usage(cmd = None):
+    cmd_docs = {
+        "base": "",
+        "diff-base": "",
+        "down": "",
+        "edit": "",
+        "help": "",
+        "go": "",
+        "list": "",
+        "prune": "",
+        "push": "",
+        "rebase": "",
+        "slide-out": "",
+        "top": "",
+        "up": "",
+        "update": ""
+    }
     # TODO!
-    print >> sys.stderr, "Hello!!!!!!!!!!!!!!"
-
+    print >> sys.stderr, "Usage: git ladder <command> [argument]"
 
 try:
     opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:v", ['base=', 'force', 'help', 'onto=', 'verbose'])
@@ -265,7 +281,7 @@ try:
         elif opt in ("-f", "--force"):
             opt_force = True
         elif opt in ("-h", "--help"):
-            usage()
+            usage(args[0] if len(args) >= 1 else None)
             sys.exit()
         elif opt in ("-o", "--onto"):
             opt_onto = arg
@@ -275,7 +291,8 @@ try:
             raise LadderException("Unknown option: `%s'" % opt)
 
     if len(args) == 0:
-        raise LadderException("Usage: git ladder <command> [argument]")
+        usage()
+        sys.exit(2)
     param = args[1] if len(args) == 2 else None
     cmd = args[0]
 
@@ -295,7 +312,6 @@ try:
     def process_ladder():
         global trail_tops, prev, nexts
 
-        trail_tops = map(lambda x: x[0], trails)
         prev = {}
         for t in trails:
             pairs = zip(t[:-1], t[1:])
@@ -312,6 +328,8 @@ try:
                 nexts[p].append(b)
             else:
                 nexts[p] = [b]
+
+        trail_tops = excluding(all_bs, nexts.keys())
 
         visited = set()
         for b in all_bs:
@@ -347,7 +365,7 @@ try:
         expect_no_param()
         edit()
     elif cmd == "help":
-        usage()
+        usage(param)
     elif cmd == "go":
         process_ladder()
         h = head()
@@ -380,17 +398,29 @@ try:
         process_ladder()
         h = head()
         rebase(h, opt_base or base(h))
-    # elif cmd == "slide-out":
-    # TODO: needs some extra checks to implement
-    #     expect_no_param()
-    #     # TODO: or sth else if param provided
-    #     h = head()
-    #     # TODO: handle if multiple superbranches
-    #     u = up(h)
-    #     go(u)
-    #     save_ladder()
-    #     rebase(u, base(u))
-    #     print "Note: branch " + h + " not removed. You can now decide to remove it manually."
+    elif cmd == "slide-out":
+        b = param or head()
+        expect_in_ladder(b)
+
+        process_ladder()
+        d = prev.get(b)
+        if not d:
+            raise LadderException("No down branch defined for `%s', cannot slide out" % b)
+        u_s = nexts.get(b)
+        if not u_s or len(u_s) == 0:
+            raise LadderException("No up branch defined for `%s', cannot slide out" % b)
+        elif len(u_s) > 1:
+            flat_u_s = ", ".join(map(lambda s: "`%s'" % s, u_s))
+            raise LadderException("Multiple up branches defined for `%s': %s; cannot slide out" % (b, flat_u_s))
+        u = u_s[0]
+        go(u)
+        prev[u] = prev[b]
+        prev[b] = None
+        nexts[d] = nexts[b]
+        nexts[b] = None
+        save_ladder()
+        rebase(u, base(u))
+        print "Note: branch " + b + " not removed. You can now decide to remove it manually."
     elif cmd == "top":
         expect_no_param()
         process_ladder()
