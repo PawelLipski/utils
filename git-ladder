@@ -155,7 +155,6 @@ def process_ladder():
 
     for u in trail_roots:
         dfs(u, "")
-    print dfs_res
 
     # TODO: get rid of this stuff!
     visited = set()
@@ -480,14 +479,14 @@ try:
             b_sha = popen_git("rev-parse", "--verify", "--quiet", b)
             # TODO: skip if doesn't exist!
             b_origin_sha = popen_git("rev-parse", "--verify", "--quiet", "origin/" + b)
-            synced_with_origin = "YES" if b_sha == b_origin_sha else "NO "
+            synced_with_origin = "" if b_sha == b_origin_sha else RED + " (unpushed)" + ENDC
             # TODO: better formatting
             current = UNDERLINE + b + ENDC if b == h else b
             if b in prev:
                 status = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
-                print (GREEN if status == 0 else RED) + pfx[:-2] + "| "
-                print pfx[:-2] + "o-" + ENDC,
-            print "%s%s%s  %s" % (BOLD, current, ENDC, synced_with_origin)
+                print pfx[:-2] + "| "
+                sys.stdout.write(pfx[:-2] + (GREEN if status == 0 else RED) + "o-" + ENDC)
+            print "%s%s%s%s" % (BOLD, current, ENDC, synced_with_origin)
     elif cmd == "top":
         expect_no_param()
         process_ladder()
