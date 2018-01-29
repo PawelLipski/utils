@@ -17,6 +17,13 @@ class LadderException(Exception):
         return str(self.parameter)
 
 
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+GREEN = '\033[92m'
+RED = '\033[91m'
+
+
 def non_empty_lines(s):
     return filter(None, s.split("\n"))
 
@@ -113,9 +120,10 @@ def read_ladder():
 
 
 def process_ladder():
-    global trail_tops, prev, nexts
+    global prev, nexts, trail_tops, trail_roots, dfs_res
 
     prev = {}
+    # TODO: get rid of this stuff!
     for t in trails:
         pairs = zip(t[:-1], t[1:])
         for b, p in pairs:
@@ -133,7 +141,21 @@ def process_ladder():
             nexts[p] = [b]
 
     trail_tops = excluding(all_bs, nexts.keys())
+    trail_roots = excluding(all_bs, prev.keys())
+    # TODO: test for many roots!
 
+    dfs_res = []
+
+    def dfs(u, d):
+        dfs_res.append((u, d + 1))
+        for v in nexts.get(u) or []:
+            dfs(v, d + 1)
+
+    for u in trail_roots:
+        dfs(u, 0)
+    print dfs_res
+
+    # TODO: get rid of this stuff!
     visited = set()
     for b in all_bs:
         if b not in visited:
@@ -450,11 +472,11 @@ try:
         process_ladder()
         # TODO extract
         h = head()
-        length = max(len(b) for b in all_bs)
-        for b in all_bs:
+        # TODO ?? length = max(len(b) for b in all_bs)
+        for b, depth in dfs_res:
             if b in prev:
                 status = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
-                synced_with_down = "YES" if status == 0 else "NO "
+                synced_with_down = GREEN + "YES" + ENDC if status == 0 else RED + "NO " + ENDC
             else:
                 synced_with_down = "   "
             # TODO: check errors + config origin!
@@ -464,7 +486,8 @@ try:
             synced_with_origin = "YES" if b_sha == b_origin_sha else "NO "
             # TODO: better formatting
             current = "*" if b == h else " "
-            print ("%" + str(length) + "s %s %s  %s") % (b, current, synced_with_down, synced_with_origin)
+            tabs = "  " * depth
+            print "%s%s%s%s %s %s  %s" % (tabs, BOLD, b, ENDC, current, synced_with_down, synced_with_origin)
     elif cmd == "top":
         expect_no_param()
         process_ladder()
@@ -479,6 +502,6 @@ try:
     else:
         usage()
         raise LadderException("Unknown command: `%s'" % cmd)
-except Exception as e:
+except LadderException as e:
     print >> sys.stderr, str(e)
     sys.exit(1)
