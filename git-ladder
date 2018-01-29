@@ -93,6 +93,13 @@ def popen_git(git_cmd, *args):
     return stdout
 
 
+def get_sha(b):
+    try:
+        return popen_git("rev-parse", "--verify", "--quiet", b)
+    except LadderException:
+        return None
+
+
 # Ladder manipulation
 
 def expect_in_ladder(b):
@@ -149,12 +156,12 @@ def process_ladder():
     def dfs(u, pfx):
         dfs_res.append((u, pfx))
         if nexts.get(u):
-            for v in nexts[u][:-1]:
-                dfs(v, pfx + "| ")
-            dfs(nexts[u][-1], pfx + "  ")
+            for (v, nv) in zip(nexts[u][:-1], nexts[u][1:]):
+                dfs(v, pfx + [nv])
+            dfs(nexts[u][-1], pfx + [None])
 
     for u in trail_roots:
-        dfs(u, "")
+        dfs(u, [])
 
     # TODO: get rid of this stuff!
     visited = set()
@@ -206,6 +213,23 @@ def down(b):
     expect_in_ladder(b)
     pb = prev.get(b)
     return pb if pb else b
+
+
+def next(b):
+    expect_in_ladder(b)
+    idx = map(lambda (x, y): x, dfs_res).index(b) + 1
+    if idx == len(dfs_res):
+        raise LadderException("Branch `%s' has no successor" % b)
+    return dfs_res[idx][0]
+
+
+# TODO rename!
+def prev_(b):
+    expect_in_ladder(b)
+    idx = map(lambda (x, y): x, dfs_res).index(b) - 1
+    if idx == -1:
+        raise LadderException("Branch `%s' has no predecessor" % b)
+    return dfs_res[idx][0]
 
 
 def top():
@@ -355,6 +379,46 @@ def slide_out(b):
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
+def check_needs_sync_with_upstream(b):
+    b_sha = get_sha(b)
+    if not b_sha:
+        raise LadderException("Branch `%s' does not exist" % b)
+    b_origin_sha = get_sha("origin/" + b)
+    if not b_origin_sha:
+        return False
+    return b_sha != b_origin_sha
+
+
+def status():
+    needs_sync_with_down = {}
+    needs_sync_with_upstream = {}
+    for b, pfx in dfs_res:
+        if b in prev:
+            s = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
+            needs_sync_with_down[b] = s != 0
+        needs_sync_with_upstream[b] = check_needs_sync_with_upstream(b)
+
+    h = head()
+    for b, pfx in dfs_res:
+        sys.stdout.write("  ")
+        current = UNDERLINE + b + ENDC if b == h else b
+        if b in prev:
+            for p in pfx[:-1] + [b]:
+                if not p:
+                    sys.stdout.write("  ")
+                else:
+                    sys.stdout.write((RED if needs_sync_with_down[p] else GREEN) + "| " + ENDC)
+            print
+            sys.stdout.write("  ")
+            for p in pfx[:-1]:
+                if not p:
+                    sys.stdout.write("  ")
+                else:
+                    sys.stdout.write((RED if needs_sync_with_down[p] else GREEN) + "| " + ENDC)
+            sys.stdout.write((RED if needs_sync_with_down[b] else GREEN) + "o-" + ENDC)
+        print "%s%s%s%s" % (BOLD, current, ENDC, RED + " (unpushed)" + ENDC if needs_sync_with_upstream[b] else "")
+
+
 def update():
     h = head()
     b = opt_base or base(h)
@@ -377,8 +441,9 @@ def usage(cmd = None):
         "edit": "",
         "go": "",
         "help": "",
-        "list": "",
+        "next": "",
         "path": "",
+        "prev": "",
         "prune": "",
         "push": "",
         "rebase": "",
@@ -438,26 +503,32 @@ try:
         h = head()
         if param in ("d", "down"):
             dest = down(h)
+        elif param in ("n", "next"):
+            dest = next(h)
+        elif param in ("p", "prev"):
+            dest = prev_(h)
         elif param in ("t", "top"):
             dest = top()
         elif param in ("u", "up"):
             dest = up(h)
         else:
-            raise LadderException("Usage: git ladder go <d[own]|t[op]|u[p]>")
+            raise LadderException("Usage: git ladder go <d[own]|n[ext]|p[rev]|t[op]|u[p]>")
         if h != dest:
             go(dest)
     elif cmd == "help":
         usage(param)
-    elif cmd in ("l", "list"):
-        expect_no_param()
+    elif cmd == "next":
         process_ladder()
-        print "\n".join(render_ladder())
+        print next(param or head())
     elif cmd == "path":
         print ladder_file
+    elif cmd == "prev":
+        process_ladder()
+        print prev_(param or head())
     elif cmd == "prune":
         expect_no_param()
         prune()
-    elif cmd in ("p", "push"):
+    elif cmd  == "push":
         process_ladder()
         push(param or head())
     elif cmd == "rebase":
@@ -471,22 +542,7 @@ try:
     elif cmd in ("s", "status"):
         expect_no_param()
         process_ladder()
-        # TODO extract
-        h = head()
-        # TODO ?? length = max(len(b) for b in all_bs)
-        for b, pfx in dfs_res:
-            # TODO: check errors + config origin!
-            b_sha = popen_git("rev-parse", "--verify", "--quiet", b)
-            # TODO: skip if doesn't exist!
-            b_origin_sha = popen_git("rev-parse", "--verify", "--quiet", "origin/" + b)
-            synced_with_origin = "" if b_sha == b_origin_sha else RED + " (unpushed)" + ENDC
-            # TODO: better formatting
-            current = UNDERLINE + b + ENDC if b == h else b
-            if b in prev:
-                status = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
-                print pfx[:-2] + "| "
-                sys.stdout.write(pfx[:-2] + (GREEN if status == 0 else RED) + "o-" + ENDC)
-            print "%s%s%s%s" % (BOLD, current, ENDC, synced_with_origin)
+        status()
     elif cmd == "top":
         expect_no_param()
         process_ladder()
