@@ -146,13 +146,15 @@ def process_ladder():
 
     dfs_res = []
 
-    def dfs(u, d):
-        dfs_res.append((u, d + 1))
-        for v in nexts.get(u) or []:
-            dfs(v, d + 1)
+    def dfs(u, pfx):
+        dfs_res.append((u, pfx))
+        if nexts.get(u):
+            for v in nexts[u][:-1]:
+                dfs(v, pfx + "| ")
+            dfs(nexts[u][-1], pfx + "  ")
 
     for u in trail_roots:
-        dfs(u, 0)
+        dfs(u, "")
     print dfs_res
 
     # TODO: get rid of this stuff!
@@ -473,21 +475,19 @@ try:
         # TODO extract
         h = head()
         # TODO ?? length = max(len(b) for b in all_bs)
-        for b, depth in dfs_res:
-            if b in prev:
-                status = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
-                synced_with_down = GREEN + "YES" + ENDC if status == 0 else RED + "NO " + ENDC
-            else:
-                synced_with_down = "   "
+        for b, pfx in dfs_res:
             # TODO: check errors + config origin!
             b_sha = popen_git("rev-parse", "--verify", "--quiet", b)
             # TODO: skip if doesn't exist!
             b_origin_sha = popen_git("rev-parse", "--verify", "--quiet", "origin/" + b)
             synced_with_origin = "YES" if b_sha == b_origin_sha else "NO "
             # TODO: better formatting
-            current = "*" if b == h else " "
-            tabs = "  " * depth
-            print "%s%s%s%s %s %s  %s" % (tabs, BOLD, b, ENDC, current, synced_with_down, synced_with_origin)
+            current = UNDERLINE + b + ENDC if b == h else b
+            if b in prev:
+                status = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
+                print (GREEN if status == 0 else RED) + pfx[:-2] + "| "
+                print pfx[:-2] + "o-" + ENDC,
+            print "%s%s%s  %s" % (BOLD, current, ENDC, synced_with_origin)
     elif cmd == "top":
         expect_no_param()
         process_ladder()
