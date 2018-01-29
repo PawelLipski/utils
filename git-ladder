@@ -24,6 +24,10 @@ def excluding(l, s):
     return filter(lambda x: x not in s, l)
 
 
+def join_branch_names(bs, sep):
+    return sep.join("`%s'" % x for x in bs)
+
+
 def split_array(arr, sep):
     res = []
     start_new = True
@@ -138,7 +142,7 @@ def process_ladder():
                 if not p: break
                 if p in path:
                     cycle = path[path.index(p):]
-                    flat_cycle = " -> ".join(map(lambda x: "`%s'" % x, cycle + [p]))
+                    flat_cycle = join_branch_names(cycle + [p], " -> ")
                     raise LadderException("Invalid ladder structure: found a cycle %s. Consider fixing the ladder "
                                           "file manually with `git ladder edit`" % flat_cycle)
                 elif p in visited:
@@ -185,8 +189,7 @@ def top():
     elif len(trail_tops) == 1:
         return trail_tops[0]
     else:
-        raise LadderException("Multiple trails, ambiguous trail top: %s" %
-                              " or ".join(map(lambda s: "`%s'" %s, trail_tops)))
+        raise LadderException("Multiple trails, ambiguous trail top: " + join_branch_names(trail_tops, " or "))
 
 
 def up(b):
@@ -197,7 +200,15 @@ def up(b):
     elif len(nb) == 1:
         return nb[0]
     else:
-        raise LadderException("Ambiguous up branch for `%s': %s" % (b, " or ".join(map(lambda s: "`%s'" %s, nb))))
+        bs = "".join("[%i] %s\n" % (idx + 1, br) for br, idx in zip(nb, range(len(nb))))
+        msg = bs + "Specify up-branch or hit <return> to skip: "
+        try:
+            idx = int(raw_input(msg)) - 1
+        except ValueError:
+            sys.exit(1)
+        if idx not in range(len(nb)):
+            raise LadderException("Invalid index: %i" % (idx + 1))
+        return nb[idx]
 
 
 def push(b):
@@ -215,8 +226,8 @@ def push(b):
 
     if not onto:
         if len(trail_tops) > 1:
-            raise LadderException("Multiple trails, ambiguous push destination:"
-                                  "%s" % " or ".join(map(lambda s: "`%s'" % s, trail_tops)))
+            raise LadderException("Multiple trail tops, ambiguous push destination: %s.\nSpecify the push destination "
+                                  "with `--onto'." % join_branch_names(trail_tops, " or "))
         onto = trail_tops[0]
     if onto in trail_tops:
         replace_in_array(trail_tops, onto, b)
@@ -301,13 +312,13 @@ def slide_out(b):
     expect_in_ladder(b)
     d = prev.get(b)
     if not d:
-        raise LadderException("No down branch defined for `%s', cannot slide out" % b)
+        raise LadderException("No down-branch defined for `%s', cannot slide out" % b)
     u_s = nexts.get(b)
     if not u_s or len(u_s) == 0:
-        raise LadderException("No up branch defined for `%s', cannot slide out" % b)
+        raise LadderException("No up-branch defined for `%s', cannot slide out" % b)
     elif len(u_s) > 1:
-        flat_u_s = ", ".join(map(lambda s: "`%s'" % s, u_s))
-        raise LadderException("Multiple up branches defined for `%s': %s; cannot slide out" % (b, flat_u_s))
+        flat_u_s = join_branch_names(u_s, ", ")
+        raise LadderException("Multiple up-branches defined for `%s': %s; cannot slide out" % (b, flat_u_s))
     u = u_s[0]
     go(u)
     prev[u] = prev[b]
@@ -439,7 +450,7 @@ try:
         process_ladder()
         print up(param or head())
     elif cmd == "update":
-        expect_no_param(". Use `-b` or `--base` to specify the base commit")
+        expect_no_param(".\nUse `-b` or `--base` to specify the base commit.")
         process_ladder()
         update()
     else:
