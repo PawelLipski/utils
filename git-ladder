@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from collections import OrderedDict
 import getopt
 import os
 import subprocess
@@ -65,13 +66,14 @@ def popen_cmd(cmd, *args):
 
 # Git core
 
-def run_git(git_cmd, *args):
+def run_git(git_cmd, *args, **kwargs):
     flat_cmd = " ".join(["git", git_cmd] + list(args))
     if opt_verbose:
         print >> sys.stderr, " ".join(["git", git_cmd] + list(args))
     status = run_cmd("git", git_cmd, *args)
-    if status != 0:
+    if not kwargs.get("allow_non_zero") and status != 0:
         raise LadderException("`%s' returned %i" % (flat_cmd, status))
+    return status
 
 
 def popen_git(git_cmd, *args):
@@ -107,7 +109,7 @@ def read_ladder():
     with open(ladder_file, "r") as f:
         ldr = map(lambda l: l.strip(), f.readlines())
     trails = split_array(ldr, '')
-    all_bs = set(sum(trails, []))
+    all_bs = list(OrderedDict.fromkeys((sum(trails, []))))
 
 
 def process_ladder():
@@ -358,6 +360,7 @@ def usage(cmd = None):
         "push": "",
         "rebase": "",
         "slide-out": "",
+        "status": "",
         "top": "",
         "up": "",
         "update": ""
@@ -442,6 +445,26 @@ try:
     elif cmd == "slide-out":
         process_ladder()
         slide_out(param or head())
+    elif cmd in ("s", "status"):
+        expect_no_param()
+        process_ladder()
+        # TODO extract
+        h = head()
+        length = max(len(b) for b in all_bs)
+        for b in all_bs:
+            if b in prev:
+                status = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
+                synced_with_down = "YES" if status == 0 else "NO "
+            else:
+                synced_with_down = "   "
+            # TODO: check errors + config origin!
+            b_sha = popen_git("rev-parse", "--verify", "--quiet", b)
+            # TODO: skip if doesn't exist!
+            b_origin_sha = popen_git("rev-parse", "--verify", "--quiet", "origin/" + b)
+            synced_with_origin = "YES" if b_sha == b_origin_sha else "NO "
+            # TODO: better formatting
+            current = "*" if b == h else " "
+            print ("%" + str(length) + "s %s %s  %s") % (b, current, synced_with_down, synced_with_origin)
     elif cmd == "top":
         expect_no_param()
         process_ladder()
