@@ -383,7 +383,7 @@ def check_needs_sync_with_upstream(b):
     b_sha = get_sha(b)
     if not b_sha:
         raise LadderException("Branch `%s' does not exist" % b)
-    b_origin_sha = get_sha("origin/" + b)
+    b_origin_sha = get_sha((opt_remote or "origin") + "/" + b)
     if not b_origin_sha:
         return False
     return b_sha != b_origin_sha
@@ -458,11 +458,12 @@ def usage(cmd = None):
 
 
 try:
-    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:v", ['base=', 'force', 'help', 'onto=', 'verbose'])
+    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:r:v", ['base=', 'force', 'help', 'onto=', 'remote=', 'verbose'])
 
     opt_base = None
     opt_force = False
     opt_onto = None
+    opt_remote = None
     opt_verbose = False
 
     for opt, arg in opts:
@@ -475,6 +476,8 @@ try:
             sys.exit()
         elif opt in ("-o", "--onto"):
             opt_onto = arg
+        elif opt in ("-r", "--remote"):
+            opt_remote = arg
         elif opt in ("-v", "--verbose"):
             opt_verbose = True
         else:
