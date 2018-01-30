@@ -120,7 +120,7 @@ def read_ladder():
     if not os.path.exists(ladder_file):
         open(ladder_file, 'w').close()
 
-    with open(ladder_file, "r") as f:
+    with open(ladder_file) as f:
         ldr = map(lambda l: l.strip(), f.readlines())
     trails = split_array(ldr, '')
     all_bs = list(OrderedDict.fromkeys((sum(trails, []))))
@@ -532,7 +532,7 @@ try:
     elif cmd == "prune":
         expect_no_param()
         prune()
-    elif cmd  == "push":
+    elif cmd == "push":
         process_ladder()
         push(param or head())
     elif cmd == "rebase":

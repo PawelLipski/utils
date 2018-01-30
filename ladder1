@@ -1,0 +1,12 @@
+develop
+    money-reads-prec
+        pip-471-drop-location-type
+            pip-470-adhoc-change-table
+                feature/pip-467-cancel-withdrawal
+    bugfix/fee-margin-20p
+        cost-gatling-2ary
+    bugfix/pip-483-sdrt-20p
+    diff-errors-script
+
+master
+    pip-466-loan-receipt-trigger-master
