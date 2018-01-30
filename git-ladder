@@ -398,24 +398,27 @@ def status():
             needs_sync_with_down[b] = s != 0
         needs_sync_with_upstream[b] = check_needs_sync_with_upstream(b)
 
+    def print_line_prefix(suffix):
+        for p in pfx[:-1]:
+            if not p:
+                sys.stdout.write("  ")
+            else:
+                sys.stdout.write((RED if needs_sync_with_down[p] else GREEN) + "| " + ENDC)
+        sys.stdout.write((RED if needs_sync_with_down[b] else GREEN) + suffix + ENDC)
+
     h = head()
     for b, pfx in dfs_res:
-        sys.stdout.write("  ")
         current = UNDERLINE + b + ENDC if b == h else b
         if b in prev:
-            for p in pfx[:-1] + [b]:
-                if not p:
-                    sys.stdout.write("  ")
-                else:
-                    sys.stdout.write((RED if needs_sync_with_down[p] else GREEN) + "| " + ENDC)
+            sys.stdout.write("  ")
+            print_line_prefix("| ")
             print
             sys.stdout.write("  ")
-            for p in pfx[:-1]:
-                if not p:
-                    sys.stdout.write("  ")
-                else:
-                    sys.stdout.write((RED if needs_sync_with_down[p] else GREEN) + "| " + ENDC)
-            sys.stdout.write((RED if needs_sync_with_down[b] else GREEN) + "o-" + ENDC)
+            print_line_prefix("o-")
+        else:
+            if b != dfs_res[0][0]:
+                print
+            sys.stdout.write("  ")
         print "%s%s%s%s" % (BOLD, current, ENDC, RED + " (unpushed)" + ENDC if needs_sync_with_upstream[b] else "")
 
 
@@ -426,8 +429,6 @@ def update():
 
     opt_push_force = ["--force"] if opt_force else []
     run_git("push", *opt_push_force)
-
-    go(up(h))
 
 
 # Main
