@@ -127,38 +127,38 @@ def read_ladder():
 
 
 def process_ladder():
-    global prev, nexts, trail_tops, trail_roots, dfs_res
+    global up_branch, down_branches, trail_tops, trail_roots, dfs_res
 
-    prev = {}
+    up_branch = {}
     # TODO: get rid of this stuff!
     for t in trails:
         pairs = zip(t[:-1], t[1:])
         for b, p in pairs:
-            if b in prev and prev[b] != p:
+            if b in up_branch and up_branch[b] != p:
                 raise LadderException("Invalid ladder structure: `%s' first placed on the top of `%s' and later on "
                                       "the top of `%s'. Consider fixing the ladder file manually with "
-                                      "`git ladder edit`" % (b, prev[b], p))
-            prev[b] = p
+                                      "`git ladder edit`" % (b, up_branch[b], p))
+            up_branch[b] = p
 
-    nexts = {}
-    for b, p in prev.items():
-        if p in nexts:
-            nexts[p].append(b)
+    down_branches = {}
+    for b, p in up_branch.items():
+        if p in down_branches:
+            down_branches[p].append(b)
         else:
-            nexts[p] = [b]
+            down_branches[p] = [b]
 
-    trail_tops = excluding(all_bs, nexts.keys())
-    trail_roots = excluding(all_bs, prev.keys())
+    trail_tops = excluding(all_bs, down_branches.keys())
+    trail_roots = excluding(all_bs, up_branch.keys())
     # TODO: test for many roots!
 
     dfs_res = []
 
     def dfs(u, pfx):
         dfs_res.append((u, pfx))
-        if nexts.get(u):
-            for (v, nv) in zip(nexts[u][:-1], nexts[u][1:]):
+        if down_branches.get(u):
+            for (v, nv) in zip(down_branches[u][:-1], down_branches[u][1:]):
                 dfs(v, pfx + [nv])
-            dfs(nexts[u][-1], pfx + [None])
+            dfs(down_branches[u][-1], pfx + [None])
 
     for u in trail_roots:
         dfs(u, [])
@@ -170,7 +170,7 @@ def process_ladder():
             i = b
             path = [b]
             while True:
-                p = prev.get(i)
+                p = up_branch.get(i)
                 if not p: break
                 if p in path:
                     cycle = path[path.index(p):]
@@ -198,7 +198,7 @@ def render_ladder():
             res.append(tt)
             if tt in rendered: break
             rendered.add(tt)
-            p = prev.get(tt)
+            p = up_branch.get(tt)
             if not p: break
             tt = p
     return res
@@ -209,9 +209,9 @@ def save_ladder():
         f.write("\n".join(render_ladder()))
 
 
-def down(b):
+def up(b):
     expect_in_ladder(b)
-    pb = prev.get(b)
+    pb = up_branch.get(b)
     return pb if pb else b
 
 
@@ -224,7 +224,7 @@ def next(b):
 
 
 # TODO rename!
-def prev_(b):
+def prev(b):
     expect_in_ladder(b)
     idx = map(lambda (x, y): x, dfs_res).index(b) - 1
     if idx == -1:
@@ -241,16 +241,16 @@ def top():
         raise LadderException("Multiple trails, ambiguous trail top: " + join_branch_names(trail_tops, " or "))
 
 
-def up(b):
+def down(b):
     expect_in_ladder(b)
-    nb = nexts.get(b)
+    nb = down_branches.get(b)
     if not nb or len(nb) == 0:
         return b
     elif len(nb) == 1:
         return nb[0]
     else:
         bs = "".join("[%i] %s\n" % (idx + 1, br) for br, idx in zip(nb, range(len(nb))))
-        msg = bs + "Specify up-branch or hit <return> to skip: "
+        msg = bs + "Specify down-branch or hit <return> to skip: "
         try:
             idx = int(raw_input(msg)) - 1
         except ValueError:
@@ -282,11 +282,11 @@ def push(b):
         replace_in_array(trail_tops, onto, b)
     else:
         trail_tops.append(b)
-    prev[b] = onto
-    if onto in nexts:
-        nexts[onto].append(b)
+    up_branch[b] = onto
+    if onto in down_branches:
+        down_branches[onto].append(b)
     else:
-        nexts[onto] = [b]
+        down_branches[onto] = [b]
     save_ladder()
 
 
@@ -336,7 +336,7 @@ def go(branch):
 
 
 def rebase(branch, base_commit):
-    run_git("rebase", "--interactive", "--onto", down(branch), base_commit, branch)
+    run_git("rebase", "--interactive", "--onto", up(branch), base_commit, branch)
 
 
 def diff_base(branch):
@@ -359,23 +359,23 @@ def prune():
 
 def slide_out(b):
     expect_in_ladder(b)
-    d = prev.get(b)
-    if not d:
-        raise LadderException("No down-branch defined for `%s', cannot slide out" % b)
-    u_s = nexts.get(b)
-    if not u_s or len(u_s) == 0:
+    u = up_branch.get(b)
+    if not u:
         raise LadderException("No up-branch defined for `%s', cannot slide out" % b)
-    elif len(u_s) > 1:
-        flat_u_s = join_branch_names(u_s, ", ")
-        raise LadderException("Multiple up-branches defined for `%s': %s; cannot slide out" % (b, flat_u_s))
-    u = u_s[0]
-    go(u)
-    prev[u] = prev[b]
-    prev[b] = None
-    nexts[d] = nexts[b]
-    nexts[b] = None
+    dbs = down_branches.get(b)
+    if not dbs or len(dbs) == 0:
+        raise LadderException("No down-branch defined for `%s', cannot slide out" % b)
+    elif len(dbs) > 1:
+        flat_dbs = join_branch_names(dbs, ", ")
+        raise LadderException("Multiple down-branches defined for `%s': %s; cannot slide out" % (b, flat_dbs))
+    d = dbs[0]
+    go(d)
+    up_branch[d] = up_branch[b]
+    up_branch[b] = None
+    down_branches[u] = down_branches[b]
+    down_branches[b] = None
     save_ladder()
-    rebase(u, base(u))
+    rebase(d, base(d))
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
@@ -393,8 +393,8 @@ def status():
     needs_sync_with_down = {}
     needs_sync_with_upstream = {}
     for b, pfx in dfs_res:
-        if b in prev:
-            s = run_git("merge-base", "--is-ancestor", prev[b], b, allow_non_zero=True)
+        if b in up_branch:
+            s = run_git("merge-base", "--is-ancestor", up_branch[b], b, allow_non_zero=True)
             needs_sync_with_down[b] = s != 0
         needs_sync_with_upstream[b] = check_needs_sync_with_upstream(b)
 
@@ -409,7 +409,7 @@ def status():
     h = head()
     for b, pfx in dfs_res:
         current = UNDERLINE + b + ENDC if b == h else b
-        if b in prev:
+        if b in up_branch:
             sys.stdout.write("  ")
             print_line_prefix("| ")
             print
@@ -510,7 +510,7 @@ try:
         elif param in ("n", "next"):
             dest = next(h)
         elif param in ("p", "prev"):
-            dest = prev_(h)
+            dest = prev(h)
         elif param in ("t", "top"):
             dest = top()
         elif param in ("u", "up"):
@@ -528,7 +528,7 @@ try:
         print ladder_file
     elif cmd == "prev":
         process_ladder()
-        print prev_(param or head())
+        print prev(param or head())
     elif cmd == "prune":
         expect_no_param()
         prune()
