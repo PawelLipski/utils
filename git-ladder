@@ -340,7 +340,7 @@ def rebase(branch, base_commit):
 
 
 def diff_base(branch):
-    run_git("diff", base(branch), branch, "--")
+    run_git("diff", base(branch), branch, *((["--stat"] if opt_stat else []) + ["--"]))
 
 
 def prune():
@@ -459,12 +459,13 @@ def usage(cmd = None):
 
 
 try:
-    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:r:v", ['base=', 'force', 'help', 'onto=', 'remote=', 'verbose'])
+    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:r:sv", ['base=', 'force', 'help', 'onto=', 'remote=', 'stat', 'verbose'])
 
     opt_base = None
     opt_force = False
     opt_onto = None
     opt_remote = None
+    opt_stat = False
     opt_verbose = False
 
     for opt, arg in opts:
@@ -479,6 +480,8 @@ try:
             opt_onto = arg
         elif opt in ("-r", "--remote"):
             opt_remote = arg
+        elif opt in ("-s", "--stat"):
+            opt_stat = True
         elif opt in ("-v", "--verbose"):
             opt_verbose = True
         else:
