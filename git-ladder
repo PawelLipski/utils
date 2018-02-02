@@ -497,7 +497,7 @@ try:
 
     if cmd == "base":
         print base(param or head())
-    elif cmd == "diff-base":
+    elif cmd in ("db", "diff-base"):
         diff_base(param or head())
     elif cmd == "down":
         process_ladder()
