@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from collections import OrderedDict
 import getopt
+import itertools
 import os
 import subprocess
 import sys
@@ -103,13 +103,13 @@ def get_sha(b):
 # Ladder manipulation
 
 def expect_in_ladder(b):
-    if b not in all_bs:
+    if b not in all_branches:
         raise LadderException("Branch `%s' does not exist in the ladder. "
                               "Use `git ladder push %s` or `git ladder edit`" % (b, b))
 
 
 def read_ladder():
-    global ladder_file, trails, all_bs
+    global ladder_file, all_branches, down_branches, up_branch, root, dfs_res
 
     try:
         root = root_dir()
@@ -121,35 +121,34 @@ def read_ladder():
         open(ladder_file, 'w').close()
 
     with open(ladder_file) as f:
-        ldr = map(lambda l: l.strip(), f.readlines())
-    trails = split_array(ldr, '')
-    all_bs = list(OrderedDict.fromkeys((sum(trails, []))))
+        ldr = [l.rstrip() for l in f.readlines() if not l.isspace()]
 
-
-def process_ladder():
-    global up_branch, down_branches, trail_tops, trail_roots, dfs_res
-
-    up_branch = {}
-    # TODO: get rid of this stuff!
-    for t in trails:
-        pairs = zip(t[:-1], t[1:])
-        for b, p in pairs:
-            if b in up_branch and up_branch[b] != p:
-                raise LadderException("Invalid ladder structure: `%s' first placed on the top of `%s' and later on "
-                                      "the top of `%s'. Consider fixing the ladder file manually with "
-                                      "`git ladder edit`" % (b, up_branch[b], p))
-            up_branch[b] = p
-
+    all_branches = []
     down_branches = {}
-    for b, p in up_branch.items():
-        if p in down_branches:
-            down_branches[p].append(b)
-        else:
-            down_branches[p] = [b]
+    up_branch = {}
+    indent = None
+    roots = []
+    at_depth = {}
+    
+    # TODO: validation!
+    for l in ldr:
+        pfx = "".join(itertools.takewhile(str.isspace, l))
+        if pfx and not indent:
+            indent = pfx
+        depth = len(pfx) / len(indent) if pfx else 0
 
-    trail_tops = excluding(all_bs, down_branches.keys())
-    trail_roots = excluding(all_bs, up_branch.keys())
-    # TODO: test for many roots!
+        b = l.strip()
+        all_branches += [b]
+        at_depth[depth] = b
+        if depth:
+            p = at_depth[depth - 1]
+            up_branch[b] = p
+            if p in down_branches:
+                down_branches[p] += [b]
+            else:
+                down_branches[p] = [b]
+        else:
+            roots += [b]
 
     dfs_res = []
 
@@ -160,29 +159,11 @@ def process_ladder():
                 dfs(v, pfx + [nv])
             dfs(down_branches[u][-1], pfx + [None])
 
-    for u in trail_roots:
+    for u in roots:
         dfs(u, [])
 
-    # TODO: get rid of this stuff!
-    visited = set()
-    for b in all_bs:
-        if b not in visited:
-            i = b
-            path = [b]
-            while True:
-                p = up_branch.get(i)
-                if not p: break
-                if p in path:
-                    cycle = path[path.index(p):]
-                    flat_cycle = join_branch_names(cycle + [p], " -> ")
-                    raise LadderException("Invalid ladder structure: found a cycle %s. Consider fixing the ladder "
-                                          "file manually with `git ladder edit`" % flat_cycle)
-                elif p in visited:
-                    break
-                path += [p]
-                visited.add(p)
-                i = p
-
+    # TODO: find tops!
+    
 
 def render_ladder():
     rendered = set()
@@ -259,11 +240,11 @@ def down(b):
             raise LadderException("Invalid index: %i" % (idx + 1))
         return nb[idx]
 
-
+# TODO set default! maybe prev branch, not trail top
 def push(b):
     global trail_tops
 
-    if b in all_bs:
+    if b in all_branches:
         raise LadderException("Branch `%s' already exists in the ladder" % b)
 
     onto = opt_onto
@@ -348,7 +329,7 @@ def diff_base(branch):
 
 
 def prune():
-    to_prune = excluding(branches(), all_bs)
+    to_prune = excluding(branches(), all_branches)
     if to_prune:
         if not opt_force:
             bs = ", ".join(map(lambda s: "`%s'" % s, to_prune))
@@ -423,7 +404,7 @@ def status():
             if b != dfs_res[0][0]:
                 print
             sys.stdout.write("  ")
-        print "%s%s%s%s" % (BOLD, current, ENDC, RED + " (unpushed)" + ENDC if needs_sync_with_upstream[b] else "")
+        print "%s%s%s%s" % (BOLD, current, ENDC, RED + " (out of sync with " + (opt_remote or "origin") + ")" + ENDC if needs_sync_with_upstream[b] else "")
 
 
 def update():
@@ -505,13 +486,13 @@ try:
     elif cmd in ("db", "diff-base"):
         diff_base(param or head())
     elif cmd == "down":
-        process_ladder()
+        #process_ladder()
         print down(param or head())
     elif cmd in ("e", "edit"):
         expect_no_param()
         edit()
     elif cmd in ("g", "go"):
-        process_ladder()
+        #process_ladder()
         h = head()
         if param in ("d", "down"):
             dest = down(h)
@@ -530,46 +511,46 @@ try:
     elif cmd == "help":
         usage(param)
     elif cmd == "next":
-        process_ladder()
+        #process_ladder()
         print next(param or head())
     elif cmd == "path":
         print ladder_file
     elif cmd == "prev":
-        process_ladder()
+        #process_ladder()
         print prev(param or head())
     elif cmd == "prune":
         expect_no_param()
         prune()
     elif cmd == "push":
-        process_ladder()
+        #process_ladder()
         push(param or head())
     elif cmd == "rebase":
         expect_no_param(". Use `-b` or `--base` to specify the base commit")
-        process_ladder()
+        #process_ladder()
         h = head()
         rebase(h, opt_base or base(h))
     elif cmd == "slide-out":
-        process_ladder()
+        #process_ladder()
         slide_out(param or head())
     elif cmd == "squash":
         expect_no_param(". Use `-b` or `--base` to specify the base commit")
-        process_ladder()
+        #process_ladder()
         h = head()
         squash(h, opt_base or base(h))
     elif cmd in ("s", "status"):
         expect_no_param()
-        process_ladder()
+        #process_ladder()
         status()
     elif cmd == "top":
         expect_no_param()
-        process_ladder()
+        #process_ladder()
         print top()
     elif cmd == "up":
-        process_ladder()
+        #process_ladder()
         print up(param or head())
     elif cmd == "update":
         expect_no_param(".\nUse `-b` or `--base` to specify the base commit.")
-        process_ladder()
+        #process_ladder()
         update()
     else:
         usage()
