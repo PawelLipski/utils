@@ -207,9 +207,9 @@ alias mntdb='sudo mount -t vmhgfs .host:/Dropbox ~/Dropbox'
 
 alias mv='mv -i'
 
-paste() {
-	cp -ir /tmp/__buffer/* .
-}
+#paste() {
+#	cp -ir /tmp/__buffer/* .
+#}
 
 alias reba='. ~/.bashrc'
 

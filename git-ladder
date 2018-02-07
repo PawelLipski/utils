@@ -339,6 +339,10 @@ def rebase(branch, base_commit):
     run_git("rebase", "--interactive", "--onto", up(branch), base_commit, branch)
 
 
+def squash(branch, base_commit):
+    run_git("rebase", "--interactive", "--onto", base_commit, base_commit, branch)
+
+
 def diff_base(branch):
     run_git("diff", base(branch), branch, *((["--stat"] if opt_stat else []) + ["--"]))
 
@@ -449,6 +453,7 @@ def usage(cmd = None):
         "push": "",
         "rebase": "",
         "slide-out": "",
+        "squash": "",
         "status": "",
         "top": "",
         "up": "",
@@ -546,6 +551,11 @@ try:
     elif cmd == "slide-out":
         process_ladder()
         slide_out(param or head())
+    elif cmd == "squash":
+        expect_no_param(". Use `-b` or `--base` to specify the base commit")
+        process_ladder()
+        h = head()
+        squash(h, opt_base or base(h))
     elif cmd in ("s", "status"):
         expect_no_param()
         process_ladder()
