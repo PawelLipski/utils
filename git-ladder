@@ -109,14 +109,14 @@ def expect_in_ladder(b):
 
 
 def read_ladder():
-    global ladder_file, all_branches, down_branches, up_branch, root, dfs_res
+    global ladder_file, indent, all_branches, down_branches, up_branch, roots
 
     try:
-        root = root_dir()
+        git_root = root_dir()
     except LadderException:
         raise LadderException("Not a git repository")
 
-    ladder_file = os.path.join(root, ".git", "ladder")
+    ladder_file = os.path.join(git_root, ".git", "ladder")
     if not os.path.exists(ladder_file):
         open(ladder_file, 'w').close()
 
@@ -150,39 +150,17 @@ def read_ladder():
         else:
             roots += [b]
 
-    dfs_res = []
-
-    def dfs(u, pfx):
-        dfs_res.append((u, pfx))
-        if down_branches.get(u):
-            for (v, nv) in zip(down_branches[u][:-1], down_branches[u][1:]):
-                dfs(v, pfx + [nv])
-            dfs(down_branches[u][-1], pfx + [None])
-
-    for u in roots:
-        dfs(u, [])
-
     # TODO: find tops!
     
 
 def render_ladder():
-    rendered = set()
-    res = []
-    first = True
-    for tt in trail_tops:
-        if first:
-            first = False
-        else:
-            res.append('')
+    def render_dfs(u, d):
+        print d * indent + u
+        for v in down_branches.get(u) or []:
+            render_dfs(v, d + 1)
 
-        while True:
-            res.append(tt)
-            if tt in rendered: break
-            rendered.add(tt)
-            p = up_branch.get(tt)
-            if not p: break
-            tt = p
-    return res
+    for r in roots:
+        render_dfs(r, 0)
 
 
 def save_ladder():
@@ -196,23 +174,23 @@ def up(b):
     return pb if pb else b
 
 
-def next(b):
+def next_branch(b):
     expect_in_ladder(b)
-    idx = map(lambda (x, y): x, dfs_res).index(b) + 1
-    if idx == len(dfs_res):
+    idx = all_branches.index(b) + 1
+    if idx == len(all_branches):
         raise LadderException("Branch `%s' has no successor" % b)
-    return dfs_res[idx][0]
+    return all_branches[idx]
 
 
-# TODO rename!
-def prev(b):
+def prev_branch(b):
     expect_in_ladder(b)
-    idx = map(lambda (x, y): x, dfs_res).index(b) - 1
+    idx = all_branches.index(b) - 1
     if idx == -1:
         raise LadderException("Branch `%s' has no predecessor" % b)
-    return dfs_res[idx][0]
+    return all_branches[idx]
 
 
+# TODO!
 def top():
     if not trail_tops:
         raise LadderException("Empty ladder. Use `git ladder push [<branch>]` or `git ladder edit`")
@@ -239,6 +217,7 @@ def down(b):
         if idx not in range(len(nb)):
             raise LadderException("Invalid index: %i" % (idx + 1))
         return nb[idx]
+
 
 # TODO set default! maybe prev branch, not trail top
 def push(b):
@@ -375,6 +354,18 @@ def check_needs_sync_with_upstream(b):
 
 
 def status():
+    dfs_res = []
+
+    def dfs(u, pfx):
+        dfs_res.append((u, pfx))
+        if down_branches.get(u):
+            for (v, nv) in zip(down_branches[u][:-1], down_branches[u][1:]):
+                dfs(v, pfx + [nv])
+            dfs(down_branches[u][-1], pfx + [None])
+
+    for u in roots:
+        dfs(u, [])
+
     needs_sync_with_down = {}
     needs_sync_with_upstream = {}
     for b, pfx in dfs_res:
@@ -497,9 +488,9 @@ try:
         if param in ("d", "down"):
             dest = down(h)
         elif param in ("n", "next"):
-            dest = next(h)
+            dest = next_branch(h)
         elif param in ("p", "prev"):
-            dest = prev(h)
+            dest = prev_branch(h)
         elif param in ("t", "top"):
             dest = top()
         elif param in ("u", "up"):
@@ -512,12 +503,12 @@ try:
         usage(param)
     elif cmd == "next":
         #process_ladder()
-        print next(param or head())
+        print next_branch(param or head())
     elif cmd == "path":
         print ladder_file
     elif cmd == "prev":
         #process_ladder()
-        print prev(param or head())
+        print prev_branch(param or head())
     elif cmd == "prune":
         expect_no_param()
         prune()
