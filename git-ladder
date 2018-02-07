@@ -93,13 +93,6 @@ def popen_git(git_cmd, *args):
     return stdout
 
 
-def get_sha(b):
-    try:
-        return popen_git("rev-parse", "--verify", "--quiet", b)
-    except LadderException:
-        return None
-
-
 # Ladder manipulation
 
 def expect_in_ladder(b):
@@ -260,6 +253,21 @@ def root_dir():
     return popen_git("rev-parse", "--show-toplevel").strip()
 
 
+def sha_by_revision(rev):
+    try:
+        return popen_git("rev-parse", "--verify", "--quiet", rev)
+    except LadderException:
+        return None
+
+
+def branch_by_revision(rev):
+    try:
+        return popen_git("rev-parse", "--abbrev-ref", rev).strip()
+    except LadderException:
+        return None
+
+
+# TODO what if not on any branch? capture this case!
 def head():
     return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
 
@@ -344,10 +352,10 @@ def slide_out(b):
 
 
 def check_needs_sync_with_upstream(b):
-    b_sha = get_sha(b)
+    b_sha = sha_by_revision(b)
     if not b_sha:
         raise LadderException("Branch `%s' does not exist" % b)
-    b_origin_sha = get_sha((opt_remote or "origin") + "/" + b)
+    b_origin_sha = sha_by_revision((opt_remote or "origin") + "/" + b)
     if not b_origin_sha:
         return False
     return b_sha != b_origin_sha
