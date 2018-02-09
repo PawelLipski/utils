@@ -61,6 +61,18 @@ def expect_no_param(extra_explanation = ''):
         raise LadderException("No argument expected for `%s'%s" % (cmd, extra_explanation))
 
 
+def pick(choices, name):
+    xs = "".join("[%i] %s\n" % (idx + 1, x) for x, idx in zip(choices, range(len(choices))))
+    msg = xs + "Specify " + name + " or hit <return> to skip: "
+    try:
+        idx = int(raw_input(msg)) - 1
+    except ValueError:
+        sys.exit(1)
+    if idx not in range(len(choices)):
+        raise LadderException("Invalid index: %i" % (idx + 1))
+    return choices[idx]
+
+
 def run_cmd(cmd, *args):
     return subprocess.call([cmd] + list(args))
 
@@ -143,8 +155,6 @@ def read_ladder():
         else:
             roots += [b]
 
-    # TODO: find tops!
-    
 
 def render_ladder():
     def render_dfs(u, d):
@@ -183,14 +193,13 @@ def prev_branch(b):
     return all_branches[idx]
 
 
-# TODO!
-def top():
-    if not trail_tops:
+def root_branch():
+    if not roots:
         raise LadderException("Empty ladder. Use `git ladder push [<branch>]` or `git ladder edit`")
-    elif len(trail_tops) == 1:
-        return trail_tops[0]
+    elif len(roots) == 1:
+        return roots[0]
     else:
-        raise LadderException("Multiple trails, ambiguous trail top: " + join_branch_names(trail_tops, " or "))
+        return pick(roots, "root branch")
 
 
 def down(b):
@@ -201,15 +210,7 @@ def down(b):
     elif len(nb) == 1:
         return nb[0]
     else:
-        bs = "".join("[%i] %s\n" % (idx + 1, br) for br, idx in zip(nb, range(len(nb))))
-        msg = bs + "Specify down-branch or hit <return> to skip: "
-        try:
-            idx = int(raw_input(msg)) - 1
-        except ValueError:
-            sys.exit(1)
-        if idx not in range(len(nb)):
-            raise LadderException("Invalid index: %i" % (idx + 1))
-        return nb[idx]
+        return pick(nb, "down branch")
 
 
 # TODO set default! maybe prev branch, not trail top
@@ -499,21 +500,19 @@ try:
         edit()
     elif cmd in ("g", "go"):
         #process_ladder()
-        h = head()
         if param in ("d", "down"):
-            dest = down(h)
+            dest = down(head())
         elif param in ("n", "next"):
-            dest = next_branch(h)
+            dest = next_branch(head())
         elif param in ("p", "prev"):
-            dest = prev_branch(h)
-        elif param in ("t", "top"):
-            dest = top()
+            dest = prev_branch(head())
+        elif param in ("r", "root"):
+            dest = root_branch()
         elif param in ("u", "up"):
-            dest = up(h)
+            dest = up(head())
         else:
-            raise LadderException("Usage: git ladder go <d[own]|n[ext]|p[rev]|t[op]|u[p]>")
-        if h != dest:
-            go(dest)
+            raise LadderException("Usage: git ladder go <d[own]|n[ext]|p[rev]|r[oot]|u[p]>")
+        go(dest)
     elif cmd == "help":
         usage(param)
     elif cmd == "next":
