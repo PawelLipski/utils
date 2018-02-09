@@ -267,9 +267,12 @@ def branch_by_revision(rev):
         return None
 
 
-# TODO what if not on any branch? capture this case!
+# TODO check all uses, maybe in some places we shouldn't end up with error
 def head():
-    return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
+    try:
+        return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
+    except LadderException:
+        raise LadderException("Not currently on any branch")
 
 
 def log(branch):
@@ -390,7 +393,11 @@ def status():
                 sys.stdout.write((RED if needs_sync_with_down[p] else GREEN) + "| " + ENDC)
         sys.stdout.write((RED if needs_sync_with_down[b] else GREEN) + suffix + ENDC)
 
-    h = head()
+    try:
+        h = head()
+    except LadderException:
+        h = None
+
     for b, pfx in dfs_res:
         current = UNDERLINE + b + ENDC if b == h else b
         if b in up_branch:
