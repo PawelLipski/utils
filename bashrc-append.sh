@@ -170,6 +170,10 @@ function dexdb() {
 	dex $container /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $dbname "$@"
 }
 
+function dexdbrm() {
+	dexdb $1 $2 -c 'drop schema public cascade; create schema public'
+}
+
 function dexdump() {
 	dex $1 /usr/bin/env pg_dump -h localhost -U xxx -W -d $2
 }
