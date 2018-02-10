@@ -153,12 +153,15 @@ def read_ladder():
 
 def render_ladder():
     def render_dfs(u, d):
-        print d * indent + u
+        res = [d * indent + u]
         for v in down_branches.get(u) or []:
-            render_dfs(v, d + 1)
+            res += render_dfs(v, d + 1)
+        return res
 
+    total = []
     for r in roots:
-        render_dfs(r, 0)
+        total += render_dfs(r, 0)
+    return total
 
 
 def save_ladder():
@@ -211,29 +214,27 @@ def down(b):
         return pick(dbs, "down branch")
 
 
-# TODO set default! maybe prev branch, not trail top
 def push(b):
-    global trail_tops
+    global roots
 
+    # TODO check if b exists!
     if b in all_branches:
         raise LadderException("Branch `%s' already exists in the ladder" % b)
 
     onto = opt_onto
     if onto:
         expect_in_ladder(onto)
-    if not trail_tops:
-        trail_tops = [b]
+    if not roots:
+        roots = [b]
         return
 
     if not onto:
-        if len(trail_tops) > 1:
-            raise LadderException("Multiple trail tops, ambiguous push destination: %s.\nSpecify the push destination "
-                                  "with `--onto'." % join_branch_names(trail_tops, " or "))
-        onto = trail_tops[0]
-    if onto in trail_tops:
-        replace_in_array(trail_tops, onto, b)
-    else:
-        trail_tops.append(b)
+        h = head()
+        if b != h:
+            onto = h
+        else:
+            onto = branch_by_revision("@{-1}")
+            # TODO!!!!!!!!!!! what if onto not found?
     up_branch[b] = onto
     if onto in down_branches:
         down_branches[onto].append(b)
@@ -385,6 +386,7 @@ def status():
         needs_sync_with_upstream[b] = check_needs_sync_with_upstream(b)
 
     def print_line_prefix(suffix):
+        sys.stdout.write("  ")
         for p in pfx[:-1]:
             if not p:
                 sys.stdout.write("  ")
@@ -400,10 +402,8 @@ def status():
     for b, pfx in dfs_res:
         current = UNDERLINE + b + ENDC if b == h else b
         if b in up_branch:
-            sys.stdout.write("  ")
             print_line_prefix("| ")
             print
-            sys.stdout.write("  ")
             print_line_prefix("o-")
         else:
             if b != dfs_res[0][0]:
@@ -430,10 +430,10 @@ def usage(c = None):
         "diff-base": "",
         "down": "",
         "edit": "",
+        "file": "",
         "go": "",
         "help": "",
         "next": "",
-        "path": "",
         "prev": "",
         "prune": "",
         "push": "",
@@ -543,6 +543,9 @@ try:
     elif cmd in ("e", "edit"):
         expect_no_param(parse_options(args))
         edit()
+    elif cmd == "file":
+        expect_no_param(parse_options(args))
+        print ladder_file
     elif cmd in ("g", "go"):
         #process_ladder()
         param = check_required_param(parse_options(args))
@@ -572,9 +575,6 @@ try:
         #process_ladder()
         param = check_optional_param(parse_options(args))
         print next_branch(param or head())
-    elif cmd == "path":
-        expect_no_param(parse_options(args))
-        print ladder_file
     elif cmd == "prev":
         #process_ladder()
         param = check_optional_param(parse_options(args))
