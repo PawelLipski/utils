@@ -174,7 +174,10 @@ def save_ladder():
 def up(b):
     expect_in_ladder(b)
     pb = up_branch.get(b)
-    return pb if pb else b
+    if pb:
+        return pb
+    else:
+        raise LadderException("Branch `%s' has no up branch" % b)
 
 
 def next_branch(b):
@@ -204,13 +207,13 @@ def root_branch():
 
 def down(b):
     expect_in_ladder(b)
-    nb = down_branches.get(b)
-    if not nb or len(nb) == 0:
-        return b
-    elif len(nb) == 1:
-        return nb[0]
+    dbs = down_branches.get(b)
+    if not dbs or len(dbs) == 0:
+        raise LadderException("Branch `%s' has no down branch" % b)
+    elif len(dbs) == 1:
+        return dbs[0]
     else:
-        return pick(nb, "down branch")
+        return pick(dbs, "down branch")
 
 
 # TODO set default! maybe prev branch, not trail top
@@ -500,19 +503,25 @@ try:
         edit()
     elif cmd in ("g", "go"):
         #process_ladder()
+        h = None
         if param in ("d", "down"):
-            dest = down(head())
+            h = head()
+            dest = down(h)
         elif param in ("n", "next"):
-            dest = next_branch(head())
+            h = head()
+            dest = next_branch(h)
         elif param in ("p", "prev"):
-            dest = prev_branch(head())
+            h = head()
+            dest = prev_branch(h)
         elif param in ("r", "root"):
             dest = root_branch()
         elif param in ("u", "up"):
-            dest = up(head())
+            h = head()
+            dest = up(h)
         else:
             raise LadderException("Usage: git ladder go <d[own]|n[ext]|p[rev]|r[oot]|u[p]>")
-        go(dest)
+        if dest != h:
+            go(dest)
     elif cmd == "help":
         usage(param)
     elif cmd == "next":
