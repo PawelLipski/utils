@@ -452,7 +452,6 @@ def usage(c=None):
         "up": "Print name of the up branch for a branch (aka parent in the tree)",
         "update": "Rebase the current branch onto its up (parent) branch"
     }
-    example = ""
     long_docs = {
         "base": """
             Usage: git ladder base [<branch>]
@@ -468,7 +467,7 @@ def usage(c=None):
             The latest commit in the history of the branch that appears on adjusted reflog of any other local branch will be selected as the default base commit.
             
             Note: the definition of base commit returns a correct result in most cases, but there are some situations (esp. when some local branches have already been deleted) where base commit might be wrongly determined.
-            Thus, all rebase-involving operations (`slide-out', `squash' and `update') run `git rebase' in interactive mode and allow to specify the base commit explictly by a command-line option.
+            Thus, all rebase-involving operations (`slide-out', `squash' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
         """,
         "diff-base": """
             Usage: git ladder diff-base [-b | --base=<base-commit>] [-s | --stat] [<branch>]
@@ -485,7 +484,7 @@ def usage(c=None):
             Outputs name of the branch (or branches, if many) that are direct children of the given branch (or current branch, if none specified) in the ladder.
         """,
         "edit": """
-            Usage: git ladder edit
+            Usage: git ladder e[dit]
 
             Opens the editor (as defined by the `EDITOR' environment variable, or `vim' if undefined) and lets you edit the ladder definition file manually.
             The ladder file can be always accessed under path returned by `git ladder file' (currently fixed to <repo-root>/.git/ladder).
@@ -496,8 +495,8 @@ def usage(c=None):
             Outputs the path of the ladder definition file (currently fixed to <repo-root>/.git/ladder).
         """,
         "go": """
-            Usage: git ladder go <direction>
-            where <direction> is one of: down, next, prev, root, up
+            Usage: git ladder g[o] <direction>
+            where <direction> is one of: d[own], n[ext], p[rev], r[oot], u[p]
 
             Checks out the branch of the ladder specified by the given direction.
             Roughly equivalent to `git checkout $(git ladder <direction>)'.
@@ -570,7 +569,7 @@ def usage(c=None):
             -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
         """,
         "status": """
-            Usage: git ladder status [-r|--remote=<remote-name>]
+            Usage: git ladder s[tatus] [-r|--remote=<remote-name>]
 
             Outputs a tree-shaped status of the branches in the ladder.
 
@@ -599,6 +598,11 @@ def usage(c=None):
             -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
         """
     }
+    aliases = {
+        "edit": "e",
+        "go": "g",
+        "status": "s"
+    }
     groups = [
         ("General commands", ["help"]),
         ("Edit and display the ladder", ["edit", "file", "push", "status"]),
@@ -613,11 +617,12 @@ def usage(c=None):
         short_usage()
         if c and c not in short_docs:
             print >> sys.stderr, "\nUnknown command: `%s'" % c
-        print >> sys.stderr, "\n" + UNDERLINE + "TL;DR tip" + ENDC + ": get familiar with `edit', `status', `push' and `update' commands.\n"
+        print >> sys.stderr, "\n" + UNDERLINE + "TL;DR tip" + ENDC + ": get familiar with `edit', `status' and `update' commands.\n"
         for hdr, cmds in groups:
             print >> sys.stderr, BOLD + hdr + ENDC + "\n"
             for cm in cmds:
-                print >> sys.stderr, "    %s%-12s%s%s" % (BOLD, cm, ENDC, short_docs[cm])
+                alias = (", " + aliases[cm]) if cm in aliases else ""
+                print >> sys.stderr, "    %s%-14s%s%s" % (BOLD, cm + alias, ENDC, short_docs[cm])
             print >> sys.stderr
 
 
