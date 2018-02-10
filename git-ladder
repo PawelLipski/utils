@@ -104,8 +104,8 @@ def popen_git(git_cmd, *args):
 
 def expect_in_ladder(b):
     if b not in all_branches:
-        raise LadderException("Branch `%s' does not exist in the ladder. "
-                              "Use `git ladder push %s` or `git ladder edit`" % (b, b))
+        raise LadderException("Branch `%s' not found in the ladder. "
+                              "Use `git ladder push %s' or `git ladder edit'" % (b, b))
 
 
 def read_ladder():
@@ -196,7 +196,7 @@ def prev_branch(b):
 
 def root_branch():
     if not roots:
-        raise LadderException("Empty ladder. Use `git ladder push [<branch>]` or `git ladder edit`")
+        raise LadderException("Empty ladder. Use `git ladder push [<branch>]' or `git ladder edit'")
     elif len(roots) == 1:
         return roots[0]
     else:
@@ -217,9 +217,11 @@ def down(b):
 def push(b):
     global roots
 
-    # TODO check if b exists!
     if b in all_branches:
         raise LadderException("Branch `%s' already exists in the ladder" % b)
+
+    if not sha_by_revision(b):
+        raise LadderException("Branch `%s' does not exist" % b)
 
     onto = opt_onto
     if onto:
@@ -233,8 +235,8 @@ def push(b):
         if b != h:
             onto = h
         else:
-            onto = branch_by_revision("@{-1}")
-            # TODO!!!!!!!!!!! what if onto not found?
+            raise LadderException("Specify the branch to push `%s' onto with `--onto'" % b)
+
     up_branch[b] = onto
     if onto in down_branches:
         down_branches[onto].append(b)
@@ -584,11 +586,11 @@ try:
         prune()
     elif cmd == "push":
         #process_ladder()
-        param = check_optional_param(parse_options(args, "o", ["onto"]))
+        param = check_optional_param(parse_options(args, "o:", ["onto="]))
         push(param or head())
     elif cmd == "rebase":
         args1 = parse_options(args, "b:", ["base="])
-        expect_no_param(args1, ". Use `-b` or `--base` to specify the base commit")
+        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
         #process_ladder()
         h = head()
         rebase(h, opt_base or base(h))
@@ -598,7 +600,7 @@ try:
         slide_out(param or head())
     elif cmd == "squash":
         args1 = parse_options(args, "b:", ["base="])
-        expect_no_param(args1, ". Use `-b` or `--base` to specify the base commit")
+        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
         #process_ladder()
         h = head()
         squash(h, opt_base or base(h))
@@ -612,7 +614,7 @@ try:
         print up(param or head())
     elif cmd == "update":
         args1 = parse_options(args, "b:f", ["base=", "force"])
-        expect_no_param(args1, ". Use `-b` or `--base` to specify the base commit")
+        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
         #process_ladder()
         update()
     else:
