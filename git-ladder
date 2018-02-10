@@ -283,6 +283,10 @@ def head():
         raise LadderException("Not currently on any branch")
 
 
+def is_ancestor(earlier, later):
+    return run_git("merge-base", "--is-ancestor", earlier, later, allow_non_zero=True) == 0
+
+
 def log(branch):
     return non_empty_lines(popen_git("log", "--format=%H", branch, "--"))
 
@@ -297,6 +301,9 @@ def base(b):
     expect_in_ladder(b)
     if b not in up_branch:
         raise LadderException("Cannot find base for a root branch `%s'" % b)
+
+    if is_ancestor(up_branch[b], b):
+        return up_branch[b]
 
     log_this_branch = log(b)
     other_branches = excluding(branches(), [b])
@@ -376,7 +383,7 @@ def check_needs_sync_with_remote(b):
 
 
 def commits_between(earlier, later):
-    return filter(None, popen_git("log", "--format=%s", "^" + earlier, later, "--").split("\n"))
+    return non_empty_lines(popen_git("log", "--format=%s", "^" + earlier, later, "--"))
 
 
 def status():
@@ -396,8 +403,7 @@ def status():
     needs_sync_with_remote = {}
     for b, pfx in dfs_res:
         if b in up_branch:
-            s = run_git("merge-base", "--is-ancestor", up_branch[b], b, allow_non_zero=True)
-            needs_sync_with_up_branch[b] = s != 0
+            needs_sync_with_up_branch[b] = not is_ancestor(up_branch[b], b)
         needs_sync_with_remote[b] = check_needs_sync_with_remote(b)
 
     def edge_color(b):
@@ -423,7 +429,7 @@ def status():
             print_line_prefix(b, "| \n")
             if opt_list_commits:
                 start = base(b) if needs_sync_with_up_branch[b] else up_branch[b]
-                for msg in commits_between(start, b):
+                for msg in reversed(commits_between(start, b)):
                     print_line_prefix(b, "| " + GREY + msg + "\n")
             print_line_prefix(b, "o-")
         else:
@@ -462,14 +468,18 @@ def usage(c=None):
             Outputs the base commit for the given branch, or, if none specified, for the current branch.
             This is the commit that will be assumed as the default place where the history of the branch starts in the commands `diff-base', `slide-out', `squash' and most notably `update'.
             In other words, `git ladder' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
+            The branch cannot be a root of the ladder, i.e. its up (parent) branch must be defined.
+
+            In terms of implementation, firstly `git ladder base' checks if the branch commit is a direct descendant of the up branch commit.
+            If so, the up branch is simply assumed to be the base; otherwise, the following heuristics is applied.
             
-            In terms of implementation, history of the given branch `x' is checked against against *adjusted reflogs* of all other local branches in the repository.
+            History of the given branch `x' is checked against against *adjusted reflogs* of all other local branches in the repository.
             By an adjusted reflog of a branch `y', we mean a reflog of branch `y' without any of the below operations:
             - branch creation, with exception of the creation through checkout of a remote branch
             - reset to the branch `x'
-            The latest commit in the history of the branch that appears on adjusted reflog of any other local branch will be selected as the default base commit.
+            The most recent commit in the history of the branch that appears on adjusted reflog of any other local branch will be selected as the default base commit.
             
-            Note: the definition of base commit returns a correct result in most cases, but there are some situations (esp. when some local branches have already been deleted) where base commit might be wrongly determined.
+            Note: the above definition of base commit returns a correct result in most cases, but there are some situations (esp. when some local branches have already been deleted) where base commit might be determined wrongly.
             Thus, all rebase-involving operations (`slide-out', `squash' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
         """,
         "diff-base": """
