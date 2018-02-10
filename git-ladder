@@ -449,6 +449,7 @@ def usage(c=None):
         "down": "Print name(s) of the down branch(es) for a branch (aka its children in the tree)",
         "edit": "Edit the ladder definition file",
         "file": "Print path of the ladder definition file",
+        "format": "Format of the ladder definition file",
         "go": "Checkout the branch relative to the position in ladder, accepts down/next/root/prev/up argument",
         "help": "Print this overview, or print detailed help for a specified command",
         "next": "Print name of the next branch for a branch",
@@ -520,6 +521,19 @@ def usage(c=None):
             Usage: git ladder file
 
             Outputs the path of the ladder definition file (currently fixed to <repo-root>/.git/ladder).
+        """,
+        "format": """
+            The format of the ladder definition file should be as follows:
+            
+            ?????????
+            ?????????
+            ?????????
+            ?????????
+            ?????????
+            ?????????
+            
+            ### Explain what means what!!!!!
+            ####### Tabs or any number of spaces can be used, #### just be consistent across the lines.
         """,
         "go": """
             Usage: git ladder g[o] <direction>
@@ -617,7 +631,7 @@ def usage(c=None):
         "status": "s"
     }
     groups = [
-        ("General commands", ["help"]),
+        ("General topics", ["format", "help"]),
         ("Modify and display the ladder", ["add", "edit", "file", "status"]),
         ("Move across the ladder", ["down", "go", "next", "prev", "root", "up"]),
         ("Determine changes introduced on the branch", ["base", "diff-base"]),
@@ -630,7 +644,7 @@ def usage(c=None):
         short_usage()
         if c and c not in short_docs:
             print >> sys.stderr, "\nUnknown command: `%s'" % c
-        print >> sys.stderr, "\n" + UNDERLINE + "TL;DR tip" + ENDC + ": get familiar with `edit', `status' and `update' commands.\n"
+        print >> sys.stderr, "\n" + UNDERLINE + "TL;DR tip" + ENDC + ": get familiar with the help for `format`, `edit', `status' and `update', in this order.\n"
         for hdr, cmds in groups:
             print >> sys.stderr, BOLD + hdr + ENDC + "\n"
             for cm in cmds:
@@ -749,6 +763,8 @@ try:
     elif cmd == "file":
         expect_no_param(parse_options(args))
         print ladder_file
+    elif cmd == "format":
+        usage("format")
     elif cmd in ("g", "go"):
         param = check_required_param(parse_options(args))
         h = head()
