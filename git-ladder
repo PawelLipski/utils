@@ -264,7 +264,7 @@ def root_dir():
 
 def sha_by_revision(rev):
     try:
-        return popen_git("rev-parse", "--verify", "--quiet", rev)
+        return popen_git("rev-parse", "--verify", "--quiet", rev).rstrip()
     except LadderException:
         return None
 
@@ -299,7 +299,8 @@ def base(b):
     other_branches = excluding(branches(), [b])
     reflogs_other_branches = sum(map(reflog, other_branches), [])
     reflogs_other_branches_no_create = set(h for (h, gs) in reflogs_other_branches if not (
-                gs.startswith("branch: Created") or gs.startswith("branch: Reset to " + b)))
+            (gs.startswith("branch: Created from") and not gs.startswith("branch: Created from refs/remotes/"))
+            or gs.startswith("branch: Reset to " + b)))
     for h in log_this_branch:
         if h in reflogs_other_branches_no_create:
             return h
@@ -396,14 +397,17 @@ def status():
             needs_sync_with_up_branch[b] = s != 0
         needs_sync_with_remote[b] = check_needs_sync_with_remote(b)
 
-    def print_line_prefix(suffix):
+    def edge_color(b):
+        return RED if needs_sync_with_up_branch[b] else GREEN
+
+    def print_line_prefix(b, suffix):
         sys.stdout.write("  ")
         for p in pfx[:-1]:
             if not p:
                 sys.stdout.write("  ")
             else:
-                sys.stdout.write((RED if needs_sync_with_up_branch[p] else GREEN) + "| " + ENDC)
-        sys.stdout.write((RED if needs_sync_with_up_branch[b] else GREEN) + suffix + ENDC)
+                sys.stdout.write(edge_color(p) + "| " + ENDC)
+        sys.stdout.write(edge_color(b) + suffix + ENDC)
 
     try:
         h = head()
@@ -413,12 +417,12 @@ def status():
     for b, pfx in dfs_res:
         current = UNDERLINE + b + ENDC if b == h else b
         if b in up_branch:
-            print_line_prefix("| \n")
+            print_line_prefix(b, "| \n")
             if opt_list_commits:
                 start = base(b) if needs_sync_with_up_branch[b] else up_branch[b]
                 for msg in commits_between(start, b):
-                    print_line_prefix("| " + GREY + msg + "\n")
-            print_line_prefix("o-")
+                    print_line_prefix(b, "| " + GREY + msg + "\n")
+            print_line_prefix(b, "o-")
         else:
             if b != dfs_res[0][0]:
                 print
@@ -457,8 +461,10 @@ def usage(c=None):
             This is the commit that will be assumed as the default place where the history of the branch starts in the commands `diff-base', `slide-out', `squash' and most notably `update'.
             In other words, `git ladder' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
             
-            In terms of implementation, history of the current branch is checked against against *adjusted reflogs* of all other local branches in the repository.
-            By an adjusted reflog of a branch, we mean a reflog of this branch without any branch creation and `reset` operations.
+            In terms of implementation, history of the given branch `x' is checked against against *adjusted reflogs* of all other local branches in the repository.
+            By an adjusted reflog of a branch `y', we mean a reflog of branch `y' without any of the below operations:
+            - branch creation, with exception of the creation through checkout of a remote branch
+            - reset to the branch `x'
             The latest commit in the history of the branch that appears on adjusted reflog of any other local branch will be selected as the default base commit.
             
             Note: the definition of base commit returns a correct result in most cases, but there are some situations (esp. when some local branches have already been deleted) where base commit might be wrongly determined.
