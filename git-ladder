@@ -446,7 +446,6 @@ def usage(cmd = None):
         "slide-out": "",
         "squash": "",
         "status": "",
-        "top": "",
         "up": "",
         "update": ""
     }
@@ -480,8 +479,6 @@ try:
             opt_stat = True
         elif opt in ("-v", "--verbose"):
             opt_verbose = True
-        else:
-            raise LadderException("Unknown option: `%s'" % opt)
 
     if len(args) not in (1, 2):
         usage()
@@ -555,10 +552,6 @@ try:
         expect_no_param()
         #process_ladder()
         status()
-    elif cmd == "top":
-        expect_no_param()
-        #process_ladder()
-        print top()
     elif cmd == "up":
         #process_ladder()
         print up(param or head())
@@ -572,3 +565,7 @@ try:
 except LadderException as e:
     print >> sys.stderr, str(e)
     sys.exit(1)
+except getopt.GetoptError as e:
+    usage()
+    print >> sys.stderr, str(e)
+    sys.exit(2)
