@@ -237,10 +237,7 @@ def push(b):
         return
 
     if not onto:
-        try:
-            h = head()
-        except LadderException:
-            h = None
+        h = head()
         if b != h:
             onto = h
         else:
@@ -331,11 +328,10 @@ def diff_base(branch):
 def prune():
     to_prune = excluding(branches(), all_branches)
     if to_prune:
-        if not opt_force:
-            bs = ", ".join(map(lambda s: "`%s'" % s, to_prune))
-            msg = "This will remove the following branches: %s; continue? [y/n] " % bs
-            if raw_input(msg).lower() not in ('y', 'yes'):
-                return
+        bs = ", ".join(map(lambda s: "`%s'" % s, to_prune))
+        msg = "This will remove the following branches: %s; continue? [y/n] " % bs
+        if raw_input(msg).lower() not in ('y', 'yes'):
+            return
         opt_delete = "-D" if opt_force else "-d"
         run_git("branch", opt_delete, *to_prune)
     else:
@@ -425,94 +421,167 @@ def status():
 
 def usage(c=None):
     short_docs = {
-        "base": "Print SHA of the base commit of the current branch",
-        "diff-base": "Diff current working tree against the base commit of the current branch",
-        "down": "Print name(s) of the down branch(es) for the current branch (aka children in the tree)",
+        "base": "Print SHA of the base commit of a branch",
+        "diff-base": "Diff current working tree against the base commit of a branch",
+        "down": "Print name(s) of the down branch(es) for a branch (aka its children in the tree)",
         "edit": "Edit the ladder definition file",
         "file": "Print path of the ladder definition file",
         "go": "Checkout the branch relative to the position in ladder, accepts down/next/root/prev/up argument",
         "help": "Print this overview, or print detailed help for a specified command",
-        "next": "Print name of the next branch for the current branch",
-        "prev": "Print name of the previous branch for the current branch",
+        "next": "Print name of the next branch for a branch",
+        "prev": "Print name of the previous branch for a branch",
         "prune": "Remove all local branches that are not in the ladder",
         "push": "Add a branch into the ladder on the top of the current or other specified branch",
-        "root": "Print name of the root branch of the tree where the current branch is located",
-        "slide-out": "Slide the branch out from the ladder and rebase its down branch",
-        "squash": "Rebase the current branch on the top of its base commit",
+        "root": "Print name of the root branch of the tree where a branch is located",
+        "slide-out": "Slide the current branch out from the ladder and rebase its down (child) branch onto its up (parent) branch",
+        "squash": "Rebase the current branch onto its base commit",
         "status": "Print tree-shaped status of branches in the ladder, including info on their sync with up branch and remote",
-        "up": "Print name of the up branch for the current branch (aka parent in the tree)",
-        "update": "Rebase the current branch on the top of its up branch"
+        "up": "Print name of the up branch for a branch (aka parent in the tree)",
+        "update": "Rebase the current branch onto its up (parent) branch"
     }
     example = ""
     long_docs = {
         "base": """
             Usage: git ladder base [<branch>]
 
-            Prints the
+            Outputs the base commit for the given branch, or, if none specified, for the current branch.
+            This is the commit that will be assumed as the default place where the history of the branch starts in the commands `diff-base', `slide-out', `squash' and most notably `update'.
+            In other words, `git ladder' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
+            
+            In terms of implementation, history of the current branch is checked against against *adjusted reflogs* of all other local branches in the repository.
+            By an adjusted reflog of a branch, we mean a reflog of this branch without any branch creation and `reset` operations.
+            The latest commit in the history of the branch that appears on adjusted reflog of any other local branch will be selected as the default base commit.
+            
+            Note: the definition of base commit returns a correct result in most cases, but there are some situations (esp. when some local branches have already been deleted) where base commit might be wrongly determined.
+            Thus, all rebase-involving operations (`slide-out', `squash' and `update') run `git rebase' in interactive mode and allow to specify the base commit explictly by a command-line option.
         """,
         "diff-base": """
             Usage: git ladder diff-base [-b | --base=<base-commit>] [-s | --stat] [<branch>]
 
+            Runs `git diff' of the the current working directory against the base commit of the given branch or, if none specified, of the current branch.
+            See `git ladder help base' for more details on meaning of the `base commit'.
+
+            Options:
+            -s, --stat    Makes diff-base pass `--stat' option to `git diff', so that only summary (diffstat) will be output.
         """,
         "down":  """
             Usage: git ladder down [<branch>]
 
+            Outputs name of the branch (or branches, if many) that are direct children of the given branch (or current branch, if none specified) in the ladder.
         """,
         "edit": """
             Usage: git ladder edit
 
+            Opens the editor (as defined by the `EDITOR' environment variable, or `vim' if undefined) and lets you edit the ladder definition file manually.
+            The ladder file can be always accessed under path returned by `git ladder file' (currently fixed to <repo-root>/.git/ladder).
         """,
         "file": """
             Usage: git ladder file
 
+            Outputs the path of the ladder definition file (currently fixed to <repo-root>/.git/ladder).
         """,
         "go": """
             Usage: git ladder go <direction>
             where <direction> is one of: down, next, prev, root, up
 
+            Checks out the branch of the ladder specified by the given direction.
+            Roughly equivalent to `git checkout $(git ladder <direction>)'.
         """,
         "help": """
             Usage: git ladder help [<command>]
+
+            Prints a summary of this tool, or a detailed info on a command if defined.
         """,
         "next": """
             Usage: git ladder next [<branch>]
 
+            Outputs name of the branch that directly follows the given branch (or current branch, if none specified) in the ladder file.
         """,
         "prev": """
             Usage: git ladder prev [<branch>]
 
+            Outputs name of the branch that directly precedes the given branch (or current branch, if none specified) in the ladder file.
         """,
         "prune": """
             Usage: git ladder prune [-f|--force]
 
+            Lists the local git branches that don't exist in the ladder, and removes all of them by `git branch -d' if confirmed by the user.
+
+            Note: this should be used with care since removing local branches can sometimes make it impossible for git ladder to properly compute base commits.
+            See `git ladder help base' for more details.
+
+            Options:
+            -f, --force    Passes `-D' instead of `-d' to `git branch'; this will delete branches even if they are not merged yet.
         """,
         "push": """
             Usage: git ladder push [-o|--onto=<target-branch>] [<branch>]
 
+            Adds the given branch (or the current branch, if none specified) to the ladder.
+            If the ladder is empty, the branch will be added as the first root of the tree.
+            Otherwise, the branch will be added on the top of the current branch.
+            If the current branch is the same as the branch to be added (esp. in the case when the new branch to add has not been specified at all),
+            the target parent branch must be explicitly specified with `--onto' option.
+
+            Note: the same effect can be always achieved by manually editing the ladder file.
+
+            Options:
+            -o, --onto=<target-branch>    Specifies the target parent branch to add the new branch onto.
         """,
         "root": """
             Usage: git ladder root [<branch>]
 
+            Outputs name of the branch that is the root of the tree where the given branch (or current branch, if none specified) is located in the ladder.
+            Depending on your case, this will typically be something like `develop' or `master', since all branches are usually meant to be ultimately merged to one of those.
         """,
         "slide-out": """
             Usage: git ladder slide-out [-d|--down-base=<down-base-commit>] [<branch>]
 
+            Removes the current branch from the ladder and rebases the down (child) branch of the current branch on the top of the up (parent) branch of the current branch.
+
+            Note: slide-out will return an error if the current branch has no down branches, more than one down branch, or is a root (has no up branch).
+            In other words, slide-out works only when the branch has exactly one up branch and exactly one down branch.
+
+            -d, --down-base=<down-base-commit>    Specifies the alternative base commit after which the rebased part of history of the down branch should start.
+                                                  See also doc for `--base' option for `git ladder help squash' and `git ladder help update'.
         """,
         "squash": """
             Usage: git ladder squash [-b|--base=<base-commit>]
 
+            Interactively rebase the current branch on the top of its base commit.
+            This is useful e.g. for squashing the commits on the current branch to make history more condensed before push to the remote.
+            The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
+
+            Options:
+            -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
         """,
         "status": """
             Usage: git ladder status [-r|--remote=<remote-name>]
 
+            Outputs a tree-shaped status of the branches in the ladder.
+
+            Apart from simply ASCII-formatting the tree defined in the ladder definition file, this also:
+            * prints `(out of sync with <remote>)' message for each branch that differs from its remote counterpart (in the `origin' remote by default),
+            * colors the edges between up (parent) and down (child) branches depending on whether down branch commit is a direct descendant of the up branch commit:
+              - green edge means that the down branch commit is direct descendant of the up branch commit (basically, the down branch is in sync with its up branch),
+              - red edge means the opposite (so the down branch is out of sync).
+
+            Options:
+            -r, --remote=<remote-name>    Specifies the alternative name of the remote (if different from the default `origin').
         """,
         "up": """
             Usage: git ladder up [<branch>]
 
+            Outputs name of the branch that is the direct parent of the given branch (or current branch, if none specified) in the ladder.
         """,
         "update": """
             Usage: git ladder update [-b|--base=<base-commit>]
 
+            Interactively rebase the current branch on the top of its up (parent) branch in the ladder.
+            This is useful e.g. for syncing the current branch with changes introduced by an upstream branch like `develop', or changes commited on the parent branches.
+            The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
+
+            Options:
+            -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
         """
     }
     groups = [
@@ -524,11 +593,7 @@ def usage(c=None):
         ("Tidy up git branches", ["prune"])
     ]
     if c and c in short_docs:
-        # TODO cmd docs!
-        s = short_docs[c]
-        l = long_docs[c]
-        print >> sys.stderr, "\n%sgit ladder %s%s - %s\n%s" % \
-                             (BOLD, c, ENDC, s[:1].lower() + s[1:] if s else '', textwrap.dedent(l))
+        print >> sys.stderr, textwrap.dedent(long_docs[c])
     else:
         short_usage()
         if c and c not in short_docs:
@@ -634,7 +699,7 @@ try:
         param = check_optional_param(parse_options(args))
         print base(param or head())
     elif cmd in ("db", "diff-base"):
-        param = check_optional_param(parse_options(args, "b:s", ["base=", "stat"]))
+        param = check_optional_param(parse_options(args, "s", ["stat"]))
         diff_base(param or head())
     elif cmd == "down":
         param = check_optional_param(parse_options(args))
