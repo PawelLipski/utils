@@ -5,6 +5,7 @@ import itertools
 import os
 import subprocess
 import sys
+import textwrap
 
 
 # Core utils
@@ -122,7 +123,7 @@ def read_ladder():
     at_depth = {}
     last_depth = -1
     hint = "Edit the ladder file manually with `git ladder edit'"
-    
+
     for idx, l in enumerate(ldr):
         pfx = "".join(itertools.takewhile(str.isspace, l))
         if pfx and not indent:
@@ -170,13 +171,17 @@ def save_ladder():
         f.write("\n".join(render_ladder()))
 
 
-def up(b):
+def down(b, pick_mode=True):
     expect_in_ladder(b)
-    pb = up_branch.get(b)
-    if pb:
-        return pb
+    dbs = down_branches.get(b)
+    if not dbs or len(dbs) == 0:
+        raise LadderException("Branch `%s' has no down branch" % b)
+    elif len(dbs) == 1:
+        return dbs[0]
+    elif pick_mode:
+        return pick(dbs, "down branch")
     else:
-        raise LadderException("Branch `%s' has no up branch" % b)
+        return "\n".join(dbs)
 
 
 def next_branch(b):
@@ -195,28 +200,24 @@ def prev_branch(b):
     return all_branches[idx]
 
 
-def root_branch(pick_mode=True):
-    if not roots:
-        raise LadderException("Empty ladder. Use `git ladder push [<branch>]' or `git ladder edit'")
-    elif len(roots) == 1:
-        return roots[0]
-    elif pick_mode:
-        return pick(roots, "root branch")
-    else:
-        return "\n".join(roots)
-
-
-def down(b, pick_mode=True):
+def root_branch(b):
     expect_in_ladder(b)
-    dbs = down_branches.get(b)
-    if not dbs or len(dbs) == 0:
-        raise LadderException("Branch `%s' has no down branch" % b)
-    elif len(dbs) == 1:
-        return dbs[0]
-    elif pick_mode:
-        return pick(dbs, "down branch")
+    u = up_branch.get(b)
+    if not u:
+        raise LadderException("Branch `%s' is already a root" % b)
+    while u:
+        b = u
+        u = up_branch.get(b)
+    return b
+
+
+def up(b):
+    expect_in_ladder(b)
+    pb = up_branch.get(b)
+    if pb:
+        return pb
     else:
-        return "\n".join(dbs)
+        raise LadderException("Branch `%s' has no up branch" % b)
 
 
 def push(b):
@@ -324,7 +325,7 @@ def squash(branch, base_commit):
 
 
 def diff_base(branch):
-    run_git("diff", base(branch), branch, *((["--stat"] if opt_stat else []) + ["--"]))
+    run_git("diff", *((["--stat"] if opt_stat else []) + [base(branch), "--"]))
 
 
 def prune():
@@ -359,7 +360,7 @@ def slide_out(b):
     down_branches[u] = down_branches[b]
     down_branches[b] = None
     save_ladder()
-    update(d, opt_base or base(d))
+    update(d, opt_down_base or base(d))
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
@@ -423,34 +424,121 @@ def status():
 # Main
 
 def usage(c=None):
-    # TODO!!! define help in keys
-    cmd_docs = {
-        "base": "",
-        "diff-base": "",
-        "down": "",
-        "edit": "",
-        "file": "",
-        "go": "",
-        "help": "",
-        "next": "",
-        "prev": "",
-        "prune": "",
-        "push": "",
-        "root": "",
-        "slide-out": "",
-        "squash": "",
-        "status": "",
-        "up": "",
-        "update": ""
+    short_docs = {
+        "base": "Print SHA of the base commit of the current branch",
+        "diff-base": "Diff current working tree against the base commit of the current branch",
+        "down": "Print name(s) of the down branch(es) for the current branch (aka children in the tree)",
+        "edit": "Edit the ladder definition file",
+        "file": "Print path of the ladder definition file",
+        "go": "Checkout the branch relative to the position in ladder, accepts down/next/root/prev/up argument",
+        "help": "Print this overview, or print detailed help for a specified command",
+        "next": "Print name of the next branch for the current branch",
+        "prev": "Print name of the previous branch for the current branch",
+        "prune": "Remove all local branches that are not in the ladder",
+        "push": "Add a branch into the ladder on the top of the current or other specified branch",
+        "root": "Print name of the root branch of the tree where the current branch is located",
+        "slide-out": "Slide the branch out from the ladder and rebase its down branch",
+        "squash": "Rebase the current branch on the top of its base commit",
+        "status": "Print tree-shaped status of branches in the ladder, including info on their sync with up branch and remote",
+        "up": "Print name of the up branch for the current branch (aka parent in the tree)",
+        "update": "Rebase the current branch on the top of its up branch"
     }
-    short_usage()
-    if c and c in cmd_docs:
-        print "\ncmd docs for `%s': " % c, cmd_docs[c]
+    example = ""
+    long_docs = {
+        "base": """
+            Usage: git ladder base [<branch>]
+
+            Prints the
+        """,
+        "diff-base": """
+            Usage: git ladder diff-base [-b | --base=<base-commit>] [-s | --stat] [<branch>]
+
+        """,
+        "down":  """
+            Usage: git ladder down [<branch>]
+
+        """,
+        "edit": """
+            Usage: git ladder edit
+
+        """,
+        "file": """
+            Usage: git ladder file
+
+        """,
+        "go": """
+            Usage: git ladder go <direction>
+            where <direction> is one of: down, next, prev, root, up
+
+        """,
+        "help": """
+            Usage: git ladder help [<command>]
+        """,
+        "next": """
+            Usage: git ladder next [<branch>]
+
+        """,
+        "prev": """
+            Usage: git ladder prev [<branch>]
+
+        """,
+        "prune": """
+            Usage: git ladder prune [-f|--force]
+
+        """,
+        "push": """
+            Usage: git ladder push [-o|--onto=<target-branch>] [<branch>]
+
+        """,
+        "root": """
+            Usage: git ladder root [<branch>]
+
+        """,
+        "slide-out": """
+            Usage: git ladder slide-out [-d|--down-base=<down-base-commit>] [<branch>]
+
+        """,
+        "squash": """
+            Usage: git ladder squash [-b|--base=<base-commit>]
+
+        """,
+        "status": """
+            Usage: git ladder status [-r|--remote=<remote-name>]
+
+        """,
+        "up": """
+            Usage: git ladder up [<branch>]
+
+        """,
+        "update": """
+            Usage: git ladder update [-b|--base=<base-commit>]
+
+        """
+    }
+    groups = [
+        ("General commands", ["help"]),
+        ("Edit and display the ladder", ["edit", "file", "push", "status"]),
+        ("Move across the ladder", ["down", "go", "next", "prev", "root", "up"]),
+        ("Determine changes introduced on the branch", ["base", "diff-base"]),
+        ("Update history in accordance with the ladder", ["slide-out", "squash", "update"]),
+        ("Tidy up git branches", ["prune"])
+    ]
+    if c and c in short_docs:
+        # TODO cmd docs!
+        s = short_docs[c]
+        l = long_docs[c]
+        print >> sys.stderr, "\n%sgit ladder %s%s - %s\n%s" % \
+                             (BOLD, c, ENDC, s[:1].lower() + s[1:] if s else '', textwrap.dedent(l))
     else:
-        if c and c not in cmd_docs:
-            print >> sys.stderr, "Unknown command: `%s'" % c
-        for cm, doc in sorted(cmd_docs.items()):
-            print cm, doc
+        short_usage()
+        if c and c not in short_docs:
+            print >> sys.stderr, "\nUnknown command: `%s'" % c
+        print >> sys.stderr, "\n" + UNDERLINE + "TL;DR tip" + ENDC + ": get familiar with `edit', `status', `push' and `update' commands.\n"
+        for hdr, cmds in groups:
+            print >> sys.stderr, BOLD + hdr + ENDC + "\n"
+            for cm in cmds:
+                print >> sys.stderr, "    %s%-12s%s%s" % (BOLD, cm, ENDC, short_docs[cm])
+            print >> sys.stderr
 
 
 def short_usage():
@@ -458,7 +546,7 @@ def short_usage():
 
 
 def parse_options(in_args, short_opts="", long_opts=[], gnu = True):
-    global cmd, opt_base, opt_force, opt_onto, opt_remote, opt_stat, opt_verbose
+    global cmd, opt_base, opt_down_base, opt_force, opt_onto, opt_remote, opt_stat, opt_verbose
 
     fun = getopt.gnu_getopt if gnu else getopt.getopt
     opts, rest = fun(in_args, short_opts + "hv", long_opts + ['help', 'verbose'])
@@ -466,6 +554,8 @@ def parse_options(in_args, short_opts="", long_opts=[], gnu = True):
     for opt, arg in opts:
         if opt in ("-b", "--base"):
             opt_base = arg
+        elif opt in ("-d", "--down-base"):
+            opt_down_base = arg
         elif opt in ("-f", "--force"):
             opt_force = True
         elif opt in ("-h", "--help"):
@@ -479,7 +569,6 @@ def parse_options(in_args, short_opts="", long_opts=[], gnu = True):
             opt_stat = True
         elif opt in ("-v", "--verbose"):
             opt_verbose = True
-
     return rest
 
 
@@ -515,6 +604,7 @@ def check_required_param(in_args):
 try:
     cmd = None
     opt_base = None
+    opt_down_base = None
     opt_force = False
     opt_onto = None
     opt_remote = None
@@ -557,20 +647,16 @@ try:
         print ladder_file
     elif cmd in ("g", "go"):
         param = check_required_param(parse_options(args))
-        h = None
+        h = head()
         if param in ("d", "down"):
-            h = head()
             dest = down(h)
         elif param in ("n", "next"):
-            h = head()
             dest = next_branch(h)
         elif param in ("p", "prev"):
-            h = head()
             dest = prev_branch(h)
         elif param in ("r", "root"):
-            dest = root_branch()
+            dest = root_branch(h)
         elif param in ("u", "up"):
-            h = head()
             dest = up(h)
         else:
             raise LadderException("Usage: git ladder go <d[own]|n[ext]|p[rev]|r[oot]|u[p]>")
@@ -592,10 +678,10 @@ try:
         param = check_optional_param(parse_options(args, "o:", ["onto="]))
         push(param or head())
     elif cmd == "root":
-        expect_no_param(args)
-        print root_branch(pick_mode=False)
+        param = check_optional_param(parse_options(args))
+        print root_branch(param or head())
     elif cmd == "slide-out":
-        param = check_optional_param(parse_options(args, "b:", ["base="]))
+        param = check_optional_param(parse_options(args, "d:", ["down-base="]))
         slide_out(param or head())
     elif cmd == "squash":
         args1 = parse_options(args, "b:", ["base="])
