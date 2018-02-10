@@ -295,6 +295,9 @@ def reflog(b):
 
 def base(b):
     expect_in_ladder(b)
+    if b not in up_branch:
+        raise LadderException("Cannot find base for a root branch `%s'" % b)
+
     log_this_branch = log(b)
     other_branches = excluding(branches(), [b])
     reflogs_other_branches = sum(map(reflog, other_branches), [])
