@@ -107,7 +107,7 @@ def popen_git(git_cmd, *args):
 def expect_in_ladder(b):
     if b not in all_branches:
         raise LadderException("Branch `%s' not found in the ladder. "
-                              "Use `git ladder push %s' or `git ladder edit'" % (b, b))
+                              "Use `git ladder add %s' or `git ladder edit'" % (b, b))
 
 
 def read_ladder():
@@ -221,7 +221,7 @@ def up(b):
         raise LadderException("Branch `%s' has no up branch" % b)
 
 
-def push(b):
+def add(b):
     global roots
 
     if b in all_branches:
@@ -242,7 +242,7 @@ def push(b):
         if b != h:
             onto = h
         else:
-            raise LadderException("Specify the branch to push `%s' onto with `--onto'" % b)
+            raise LadderException("Specify the branch to add `%s' onto with `--onto'" % b)
 
     up_branch[b] = onto
     if onto in down_branches:
@@ -443,6 +443,7 @@ def status():
 
 def usage(c=None):
     short_docs = {
+        "add": "Add a branch into the ladder on the top of the current or other specified branch",
         "base": "Print SHA of the base commit of a branch",
         "diff-base": "Diff current working tree against the base commit of a branch",
         "down": "Print name(s) of the down branch(es) for a branch (aka its children in the tree)",
@@ -453,7 +454,6 @@ def usage(c=None):
         "next": "Print name of the next branch for a branch",
         "prev": "Print name of the previous branch for a branch",
         "prune": "Remove all local branches that are not in the ladder",
-        "push": "Add a branch into the ladder on the top of the current or other specified branch",
         "root": "Print name of the root branch of the tree where a branch is located",
         "slide-out": "Slide the current branch out from the ladder and rebase its down (child) branch onto its up (parent) branch",
         "squash": "Rebase the current branch onto its base commit",
@@ -462,6 +462,20 @@ def usage(c=None):
         "update": "Rebase the current branch onto its up (parent) branch"
     }
     long_docs = {
+        "add": """
+            Usage: git ladder add [-o|--onto=<target-branch>] [<branch>]
+
+            Adds the given branch (or the current branch, if none specified) to the ladder.
+            If the ladder is empty, the branch will be added as the first root of the tree.
+            Otherwise, the branch will be added on the top of the current branch.
+            If the current branch is the same as the branch to be added (esp. in the case when the new branch to add has not been specified at all),
+            the target parent branch must be explicitly specified with `--onto' option.
+
+            Note: the same effect can be always achieved by manually editing the ladder file.
+
+            Options:
+            -o, --onto=<target-branch>    Specifies the target parent branch to add the new branch onto.
+        """,
         "base": """
             Usage: git ladder base [<branch>]
 
@@ -540,20 +554,6 @@ def usage(c=None):
             Options:
             -f, --force    Passes `-D' instead of `-d' to `git branch'; this will delete branches even if they are not merged yet.
         """,
-        "push": """
-            Usage: git ladder push [-o|--onto=<target-branch>] [<branch>]
-
-            Adds the given branch (or the current branch, if none specified) to the ladder.
-            If the ladder is empty, the branch will be added as the first root of the tree.
-            Otherwise, the branch will be added on the top of the current branch.
-            If the current branch is the same as the branch to be added (esp. in the case when the new branch to add has not been specified at all),
-            the target parent branch must be explicitly specified with `--onto' option.
-
-            Note: the same effect can be always achieved by manually editing the ladder file.
-
-            Options:
-            -o, --onto=<target-branch>    Specifies the target parent branch to add the new branch onto.
-        """,
         "root": """
             Usage: git ladder root [<branch>]
 
@@ -618,7 +618,7 @@ def usage(c=None):
     }
     groups = [
         ("General commands", ["help"]),
-        ("Edit and display the ladder", ["edit", "file", "push", "status"]),
+        ("Modify and display the ladder", ["add", "edit", "file", "status"]),
         ("Move across the ladder", ["down", "go", "next", "prev", "root", "up"]),
         ("Determine changes introduced on the branch", ["base", "diff-base"]),
         ("Update history in accordance with the ladder", ["slide-out", "squash", "update"]),
@@ -731,7 +731,10 @@ try:
     if cmd not in ("e", "edit", "file", "help"):
         read_ladder()
 
-    if cmd == "base":
+    if cmd == "add":
+        param = check_optional_param(parse_options(args, "o:", ["onto="]))
+        add(param or head())
+    elif cmd == "base":
         param = check_optional_param(parse_options(args))
         print base(param or head())
     elif cmd in ("db", "diff-base"):
@@ -775,9 +778,6 @@ try:
     elif cmd == "prune":
         expect_no_param(parse_options(args, "f", ["force"]))
         prune()
-    elif cmd == "push":
-        param = check_optional_param(parse_options(args, "o:", ["onto="]))
-        push(param or head())
     elif cmd == "root":
         param = check_optional_param(parse_options(args))
         print root_branch(param or head())
