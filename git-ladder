@@ -111,15 +111,6 @@ def expect_in_ladder(b):
 def read_ladder():
     global ladder_file, indent, all_branches, down_branches, up_branch, roots
 
-    try:
-        git_root = root_dir()
-    except LadderException:
-        raise LadderException("Not a git repository")
-
-    ladder_file = os.path.join(git_root, ".git", "ladder")
-    if not os.path.exists(ladder_file):
-        open(ladder_file, 'w').close()
-
     with open(ladder_file) as f:
         ldr = [l.rstrip() for l in f.readlines() if not l.isspace()]
 
@@ -129,16 +120,26 @@ def read_ladder():
     indent = None
     roots = []
     at_depth = {}
+    last_depth = -1
+    hint = "Edit the ladder file manually with `git ladder edit'"
     
-    # TODO: validation!
-    for l in ldr:
+    for idx, l in enumerate(ldr):
         pfx = "".join(itertools.takewhile(str.isspace, l))
         if pfx and not indent:
             indent = pfx
-        depth = len(pfx) / len(indent) if pfx else 0
 
         b = l.strip()
+        if b in all_branches:
+            raise LadderException("%s, line %i: branch `%s' re-appears in the ladder. %s" %
+                                  (ladder_file, idx + 1, b, hint))
         all_branches += [b]
+
+        depth = len(pfx) / len(indent) if pfx else 0
+        if depth > last_depth + 1:
+            raise LadderException("%s, line %i: too much indent for the branch `%s'. %s" %
+                                  (ladder_file, idx + 1, b, hint))
+        last_depth = depth
+
         at_depth[depth] = b
         if depth:
             p = at_depth[depth - 1]
@@ -276,7 +277,6 @@ def branch_by_revision(rev):
         return None
 
 
-# TODO check all uses, maybe in some places we shouldn't end up with error
 def head():
     try:
         return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
@@ -315,7 +315,7 @@ def go(branch):
     run_git("checkout", "--quiet", branch, "--")
 
 
-def rebase(branch, base_commit):
+def update(branch, base_commit):
     run_git("rebase", "--interactive", "--onto", up(branch), base_commit, branch)
 
 
@@ -359,7 +359,7 @@ def slide_out(b):
     down_branches[u] = down_branches[b]
     down_branches[b] = None
     save_ladder()
-    rebase(d, opt_base or base(d))
+    update(d, opt_base or base(d))
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
@@ -411,8 +411,7 @@ def status():
     for b, pfx in dfs_res:
         current = UNDERLINE + b + ENDC if b == h else b
         if b in up_branch:
-            print_line_prefix("| ")
-            print
+            print_line_prefix("| \n")
             print_line_prefix("o-")
         else:
             if b != dfs_res[0][0]:
@@ -421,19 +420,10 @@ def status():
         print "%s%s%s%s" % (BOLD, current, ENDC, RED + " (out of sync with " + (opt_remote or "origin") + ")" + ENDC if needs_sync_with_upstream[b] else "")
 
 
-def update():
-    h = head()
-    b = opt_base or base(h)
-    rebase(h, b)
-
-    opt_push_force = ["--force"] if opt_force else []
-    run_git("push", *opt_push_force)
-
-
 # Main
 
-# TODO!!! define help in keys
-def usage(c = None):
+def usage(c=None):
+    # TODO!!! define help in keys
     cmd_docs = {
         "base": "",
         "diff-base": "",
@@ -446,7 +436,6 @@ def usage(c = None):
         "prev": "",
         "prune": "",
         "push": "",
-        "rebase": "",
         "root": "",
         "slide-out": "",
         "squash": "",
@@ -455,16 +444,17 @@ def usage(c = None):
         "update": ""
     }
     short_usage()
-    if c:
-        # TODO: what if undefined?
-        print "cmd docs for `%s': " % c, cmd_docs[c]
+    if c and c in cmd_docs:
+        print "\ncmd docs for `%s': " % c, cmd_docs[c]
     else:
+        if c and c not in cmd_docs:
+            print >> sys.stderr, "Unknown command: `%s'" % c
         for cm, doc in sorted(cmd_docs.items()):
             print cm, doc
 
 
 def short_usage():
-    print >> sys.stderr, "Usage: git ladder <command> [argument]"
+    print >> sys.stderr, "Usage: git ladder [--help] [--verbose] <command> [command-specific options] [command-specific argument]"
 
 
 def parse_options(in_args, short_opts="", long_opts=[], gnu = True):
@@ -538,7 +528,17 @@ try:
     cmd = all_args[0]
     args = all_args[1:]
 
-    read_ladder()
+    try:
+        git_root = root_dir()
+    except LadderException:
+        raise LadderException("Not a git repository")
+
+    ladder_file = os.path.join(git_root, ".git", "ladder")
+    if not os.path.exists(ladder_file):
+        open(ladder_file, 'w').close()
+
+    if cmd not in ("e", "edit", "file", "help"):
+        read_ladder()
 
     if cmd == "base":
         param = check_optional_param(parse_options(args))
@@ -547,7 +547,6 @@ try:
         param = check_optional_param(parse_options(args, "b:s", ["base=", "stat"]))
         diff_base(param or head())
     elif cmd == "down":
-        #process_ladder()
         param = check_optional_param(parse_options(args))
         print down(param or head(), pick_mode=False)
     elif cmd in ("e", "edit"):
@@ -557,7 +556,6 @@ try:
         expect_no_param(parse_options(args))
         print ladder_file
     elif cmd in ("g", "go"):
-        #process_ladder()
         param = check_required_param(parse_options(args))
         h = None
         if param in ("d", "down"):
@@ -582,56 +580,42 @@ try:
         param = check_optional_param(parse_options(args))
         usage(param)
     elif cmd == "next":
-        #process_ladder()
         param = check_optional_param(parse_options(args))
         print next_branch(param or head())
     elif cmd == "prev":
-        #process_ladder()
         param = check_optional_param(parse_options(args))
         print prev_branch(param or head())
     elif cmd == "prune":
         expect_no_param(parse_options(args, "f", ["force"]))
         prune()
     elif cmd == "push":
-        #process_ladder()
         param = check_optional_param(parse_options(args, "o:", ["onto="]))
         push(param or head())
-    elif cmd == "rebase":
-        args1 = parse_options(args, "b:", ["base="])
-        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
-        #process_ladder()
-        h = head()
-        rebase(h, opt_base or base(h))
     elif cmd == "root":
-        # process_ladder()
         expect_no_param(args)
         print root_branch(pick_mode=False)
     elif cmd == "slide-out":
-        #process_ladder()
         param = check_optional_param(parse_options(args, "b:", ["base="]))
         slide_out(param or head())
     elif cmd == "squash":
         args1 = parse_options(args, "b:", ["base="])
         expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
-        #process_ladder()
         h = head()
         squash(h, opt_base or base(h))
     elif cmd in ("s", "status"):
         expect_no_param(parse_options(args, "r:", ["remote="]))
-        #process_ladder()
         status()
     elif cmd == "up":
-        #process_ladder()
         param = check_optional_param(parse_options(args))
         print up(param or head())
     elif cmd == "update":
-        args1 = parse_options(args, "b:f", ["base=", "force"])
+        args1 = parse_options(args, "b:", ["base="])
         expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
-        #process_ladder()
-        update()
+        h = head()
+        update(h, opt_base or base(h))
     else:
         short_usage()
-        raise LadderException("Unknown command: `%s'" % cmd)
+        raise LadderException("\nUnknown command: `%s'. Use `git ladder help' to list possible commands" % cmd)
 
 except LadderException as e:
     print >> sys.stderr, str(e)
