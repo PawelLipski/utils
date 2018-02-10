@@ -22,6 +22,7 @@ ENDC = '\033[0m'
 BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 GREEN = '\033[92m'
+GREY = '\033[37m'
 RED = '\033[91m'
 
 
@@ -292,17 +293,17 @@ def reflog(b):
     return [entry.split("|") for entry in non_empty_lines(popen_git("reflog", "--format=%H|%gs", b, "--"))]
 
 
-def base(branch):
-    expect_in_ladder(branch)
-    log_this_branch = log(branch)
-    other_branches = excluding(branches(), [branch])
+def base(b):
+    expect_in_ladder(b)
+    log_this_branch = log(b)
+    other_branches = excluding(branches(), [b])
     reflogs_other_branches = sum(map(reflog, other_branches), [])
     reflogs_other_branches_no_create = set(h for (h, gs) in reflogs_other_branches if not (
-                gs.startswith("branch: Created") or gs.startswith("branch: Reset to " + branch)))
+                gs.startswith("branch: Created") or gs.startswith("branch: Reset to " + b)))
     for h in log_this_branch:
         if h in reflogs_other_branches_no_create:
             return h
-    raise LadderException("Cannot find base for branch `%s'" % branch)
+    raise LadderException("Cannot find base for branch `%s'" % b)
 
 
 def branches():
@@ -360,7 +361,7 @@ def slide_out(b):
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
-def check_needs_sync_with_upstream(b):
+def check_needs_sync_with_remote(b):
     b_sha = sha_by_revision(b)
     if not b_sha:
         raise LadderException("Branch `%s' does not exist" % b)
@@ -368,6 +369,10 @@ def check_needs_sync_with_upstream(b):
     if not b_origin_sha:
         return False
     return b_sha != b_origin_sha
+
+
+def commits_between(earlier, later):
+    return filter(None, popen_git("log", "--format=%s", "^" + earlier, later, "--").split("\n"))
 
 
 def status():
@@ -383,13 +388,13 @@ def status():
     for u in roots:
         dfs(u, [])
 
-    needs_sync_with_down = {}
-    needs_sync_with_upstream = {}
+    needs_sync_with_up_branch = {}
+    needs_sync_with_remote = {}
     for b, pfx in dfs_res:
         if b in up_branch:
             s = run_git("merge-base", "--is-ancestor", up_branch[b], b, allow_non_zero=True)
-            needs_sync_with_down[b] = s != 0
-        needs_sync_with_upstream[b] = check_needs_sync_with_upstream(b)
+            needs_sync_with_up_branch[b] = s != 0
+        needs_sync_with_remote[b] = check_needs_sync_with_remote(b)
 
     def print_line_prefix(suffix):
         sys.stdout.write("  ")
@@ -397,8 +402,8 @@ def status():
             if not p:
                 sys.stdout.write("  ")
             else:
-                sys.stdout.write((RED if needs_sync_with_down[p] else GREEN) + "| " + ENDC)
-        sys.stdout.write((RED if needs_sync_with_down[b] else GREEN) + suffix + ENDC)
+                sys.stdout.write((RED if needs_sync_with_up_branch[p] else GREEN) + "| " + ENDC)
+        sys.stdout.write((RED if needs_sync_with_up_branch[b] else GREEN) + suffix + ENDC)
 
     try:
         h = head()
@@ -409,12 +414,16 @@ def status():
         current = UNDERLINE + b + ENDC if b == h else b
         if b in up_branch:
             print_line_prefix("| \n")
+            if opt_list_commits:
+                start = base(b) if needs_sync_with_up_branch[b] else up_branch[b]
+                for msg in commits_between(start, b):
+                    print_line_prefix("| " + GREY + msg + "\n")
             print_line_prefix("o-")
         else:
             if b != dfs_res[0][0]:
                 print
             sys.stdout.write("  ")
-        print "%s%s%s%s" % (BOLD, current, ENDC, RED + " (out of sync with " + (opt_remote or "origin") + ")" + ENDC if needs_sync_with_upstream[b] else "")
+        print "%s%s%s%s" % (BOLD, current, ENDC, RED + " (out of sync with " + (opt_remote or "origin") + ")" + ENDC if needs_sync_with_remote[b] else "")
 
 
 # Main
@@ -610,8 +619,8 @@ def short_usage():
     print >> sys.stderr, "Usage: git ladder [--help] [--verbose] <command> [command-specific options] [command-specific argument]"
 
 
-def parse_options(in_args, short_opts="", long_opts=[], gnu = True):
-    global cmd, opt_base, opt_down_base, opt_force, opt_onto, opt_remote, opt_stat, opt_verbose
+def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
+    global cmd, opt_base, opt_down_base, opt_force, opt_list_commits, opt_onto, opt_remote, opt_stat, opt_verbose
 
     fun = getopt.gnu_getopt if gnu else getopt.getopt
     opts, rest = fun(in_args, short_opts + "hv", long_opts + ['help', 'verbose'])
@@ -626,6 +635,8 @@ def parse_options(in_args, short_opts="", long_opts=[], gnu = True):
         elif opt in ("-h", "--help"):
             usage(cmd)
             sys.exit()
+        elif opt in ("-l", "--list-commits"):
+            opt_list_commits = True
         elif opt in ("-o", "--onto"):
             opt_onto = arg
         elif opt in ("-r", "--remote"):
@@ -671,6 +682,7 @@ try:
     opt_base = None
     opt_down_base = None
     opt_force = False
+    opt_list_commits = False
     opt_onto = None
     opt_remote = None
     opt_stat = False
@@ -754,7 +766,7 @@ try:
         h = head()
         squash(h, opt_base or base(h))
     elif cmd in ("s", "status"):
-        expect_no_param(parse_options(args, "r:", ["remote="]))
+        expect_no_param(parse_options(args, "lr:", ["list-commits", "remote="]))
         status()
     elif cmd == "up":
         param = check_optional_param(parse_options(args))
