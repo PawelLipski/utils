@@ -194,24 +194,28 @@ def prev_branch(b):
     return all_branches[idx]
 
 
-def root_branch():
+def root_branch(pick_mode=True):
     if not roots:
         raise LadderException("Empty ladder. Use `git ladder push [<branch>]' or `git ladder edit'")
     elif len(roots) == 1:
         return roots[0]
-    else:
+    elif pick_mode:
         return pick(roots, "root branch")
+    else:
+        return "\n".join(roots)
 
 
-def down(b):
+def down(b, pick_mode=True):
     expect_in_ladder(b)
     dbs = down_branches.get(b)
     if not dbs or len(dbs) == 0:
         raise LadderException("Branch `%s' has no down branch" % b)
     elif len(dbs) == 1:
         return dbs[0]
-    else:
+    elif pick_mode:
         return pick(dbs, "down branch")
+    else:
+        return "\n".join(dbs)
 
 
 def push(b):
@@ -231,7 +235,10 @@ def push(b):
         return
 
     if not onto:
-        h = head()
+        try:
+            h = head()
+        except LadderException:
+            h = None
         if b != h:
             onto = h
         else:
@@ -440,6 +447,7 @@ def usage(c = None):
         "prune": "",
         "push": "",
         "rebase": "",
+        "root": "",
         "slide-out": "",
         "squash": "",
         "status": "",
@@ -541,7 +549,7 @@ try:
     elif cmd == "down":
         #process_ladder()
         param = check_optional_param(parse_options(args))
-        print down(param or head())
+        print down(param or head(), pick_mode=False)
     elif cmd in ("e", "edit"):
         expect_no_param(parse_options(args))
         edit()
@@ -594,6 +602,10 @@ try:
         #process_ladder()
         h = head()
         rebase(h, opt_base or base(h))
+    elif cmd == "root":
+        # process_ladder()
+        expect_no_param(args)
+        print root_branch(pick_mode=False)
     elif cmd == "slide-out":
         #process_ladder()
         param = check_optional_param(parse_options(args, "b:", ["base="]))
