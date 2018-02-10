@@ -56,11 +56,6 @@ def replace_in_array(arr, orig, dst):
             arr[i] = dst
 
 
-def expect_no_param(extra_explanation = ''):
-    if len(args) == 2:
-        raise LadderException("No argument expected for `%s'%s" % (cmd, extra_explanation))
-
-
 def pick(choices, name):
     xs = "".join("[%i] %s\n" % (idx + 1, x) for x, idx in zip(choices, range(len(choices))))
     msg = xs + "Specify " + name + " or hit <return> to skip: "
@@ -354,7 +349,7 @@ def slide_out(b):
     down_branches[u] = down_branches[b]
     down_branches[b] = None
     save_ladder()
-    rebase(d, base(d))
+    rebase(d, opt_base or base(d))
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
@@ -429,7 +424,7 @@ def update():
 # Main
 
 # TODO!!! define help in keys
-def usage(cmd = None):
+def usage(c = None):
     cmd_docs = {
         "base": "",
         "diff-base": "",
@@ -449,19 +444,24 @@ def usage(cmd = None):
         "up": "",
         "update": ""
     }
-    # TODO!
+    short_usage()
+    if c:
+        # TODO: what if undefined?
+        print "cmd docs for `%s': " % c, cmd_docs[c]
+    else:
+        for cm, doc in sorted(cmd_docs.items()):
+            print cm, doc
+
+
+def short_usage():
     print >> sys.stderr, "Usage: git ladder <command> [argument]"
 
 
-try:
-    opts, args = getopt.gnu_getopt(sys.argv[1:], "b:fho:r:sv", ['base=', 'force', 'help', 'onto=', 'remote=', 'stat', 'verbose'])
+def parse_options(in_args, short_opts="", long_opts=[], gnu = True):
+    global cmd, opt_base, opt_force, opt_onto, opt_remote, opt_stat, opt_verbose
 
-    opt_base = None
-    opt_force = False
-    opt_onto = None
-    opt_remote = None
-    opt_stat = False
-    opt_verbose = False
+    fun = getopt.gnu_getopt if gnu else getopt.getopt
+    opts, rest = fun(in_args, short_opts + "hv", long_opts + ['help', 'verbose'])
 
     for opt, arg in opts:
         if opt in ("-b", "--base"):
@@ -469,7 +469,7 @@ try:
         elif opt in ("-f", "--force"):
             opt_force = True
         elif opt in ("-h", "--help"):
-            usage(args[0] if len(args) >= 1 else None)
+            usage(cmd)
             sys.exit()
         elif opt in ("-o", "--onto"):
             opt_onto = arg
@@ -480,26 +480,72 @@ try:
         elif opt in ("-v", "--verbose"):
             opt_verbose = True
 
-    if len(args) not in (1, 2):
+    return rest
+
+
+def expect_no_param(in_args, extra_explanation = ''):
+    if len(in_args) == 2:
+        raise LadderException("No argument expected for `%s'%s" % (cmd, extra_explanation))
+
+
+def check_optional_param(in_args):
+    if not in_args:
+        return None
+    elif len(in_args) > 1:
+        raise LadderException("`%s' accepts at most one argument" % cmd)
+    elif not in_args[0]:
+        raise LadderException("Argument to `%s' cannot be empty" % cmd)
+    elif in_args[0][0] == "-":
+        raise LadderException("option `%s' not recognized" % in_args[0])
+    else:
+        return in_args[0]
+
+
+def check_required_param(in_args):
+    if not in_args or len(in_args) > 1:
+        raise LadderException("`%s' requires exactly one argument" % cmd)
+    elif not in_args[0]:
+        raise LadderException("Argument to `%s' cannot be empty" % cmd)
+    elif in_args[0][0] == "-":
+        raise LadderException("option `%s' not recognized" % in_args[0])
+    else:
+        return in_args[0]
+
+
+try:
+    cmd = None
+    opt_base = None
+    opt_force = False
+    opt_onto = None
+    opt_remote = None
+    opt_stat = False
+    opt_verbose = False
+
+    all_args = parse_options(sys.argv[1:], gnu=False)
+    if not all_args:
         usage()
         sys.exit(2)
-    cmd = args[0]
-    param = args[1] if len(args) == 2 else None
+    cmd = all_args[0]
+    args = all_args[1:]
 
     read_ladder()
 
     if cmd == "base":
+        param = check_optional_param(parse_options(args))
         print base(param or head())
     elif cmd in ("db", "diff-base"):
+        param = check_optional_param(parse_options(args, "b:s", ["base=", "stat"]))
         diff_base(param or head())
     elif cmd == "down":
         #process_ladder()
+        param = check_optional_param(parse_options(args))
         print down(param or head())
     elif cmd in ("e", "edit"):
-        expect_no_param()
+        expect_no_param(parse_options(args))
         edit()
     elif cmd in ("g", "go"):
         #process_ladder()
+        param = check_required_param(parse_options(args))
         h = None
         if param in ("d", "down"):
             h = head()
@@ -520,52 +566,63 @@ try:
         if dest != h:
             go(dest)
     elif cmd == "help":
+        param = check_optional_param(parse_options(args))
         usage(param)
     elif cmd == "next":
         #process_ladder()
+        param = check_optional_param(parse_options(args))
         print next_branch(param or head())
     elif cmd == "path":
+        expect_no_param(parse_options(args))
         print ladder_file
     elif cmd == "prev":
         #process_ladder()
+        param = check_optional_param(parse_options(args))
         print prev_branch(param or head())
     elif cmd == "prune":
-        expect_no_param()
+        expect_no_param(parse_options(args, "f", ["force"]))
         prune()
     elif cmd == "push":
         #process_ladder()
+        param = check_optional_param(parse_options(args, "o", ["onto"]))
         push(param or head())
     elif cmd == "rebase":
-        expect_no_param(". Use `-b` or `--base` to specify the base commit")
+        args1 = parse_options(args, "b:", ["base="])
+        expect_no_param(args1, ". Use `-b` or `--base` to specify the base commit")
         #process_ladder()
         h = head()
         rebase(h, opt_base or base(h))
     elif cmd == "slide-out":
         #process_ladder()
+        param = check_optional_param(parse_options(args, "b:", ["base="]))
         slide_out(param or head())
     elif cmd == "squash":
-        expect_no_param(". Use `-b` or `--base` to specify the base commit")
+        args1 = parse_options(args, "b:", ["base="])
+        expect_no_param(args1, ". Use `-b` or `--base` to specify the base commit")
         #process_ladder()
         h = head()
         squash(h, opt_base or base(h))
     elif cmd in ("s", "status"):
-        expect_no_param()
+        expect_no_param(parse_options(args, "r:", ["remote="]))
         #process_ladder()
         status()
     elif cmd == "up":
         #process_ladder()
+        param = check_optional_param(parse_options(args))
         print up(param or head())
     elif cmd == "update":
-        expect_no_param(".\nUse `-b` or `--base` to specify the base commit.")
+        args1 = parse_options(args, "b:f", ["base=", "force"])
+        expect_no_param(args1, ". Use `-b` or `--base` to specify the base commit")
         #process_ladder()
         update()
     else:
-        usage()
+        short_usage()
         raise LadderException("Unknown command: `%s'" % cmd)
+
 except LadderException as e:
     print >> sys.stderr, str(e)
     sys.exit(1)
 except getopt.GetoptError as e:
-    usage()
+    short_usage()
     print >> sys.stderr, str(e)
     sys.exit(2)
