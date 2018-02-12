@@ -302,9 +302,6 @@ def base(b):
     if b not in up_branch:
         raise LadderException("Cannot find base for a root branch `%s'" % b)
 
-    if is_ancestor(up_branch[b], b):
-        return up_branch[b]
-
     log_this_branch = log(b)
     other_branches = excluding(branches(), [b])
     reflogs_other_branches = sum(map(reflog, other_branches), [])
@@ -428,8 +425,8 @@ def status():
         if b in up_branch:
             print_line_prefix(b, "| \n")
             if opt_list_commits:
-                start = base(b) if needs_sync_with_up_branch[b] else up_branch[b]
-                for msg in reversed(commits_between(start, b)):
+                #start = base(b) if needs_sync_with_up_branch[b] else up_branch[b]
+                for msg in reversed(commits_between(base(b), b)):
                     print_line_prefix(b, "| " + GREY + msg + "\n")
             print_line_prefix(b, "o-")
         else:
