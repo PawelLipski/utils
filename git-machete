@@ -522,15 +522,28 @@ def usage(c=None):
         "format": """
             The format of the definition file should be as follows:
             
-            ?????????
-            ?????????
-            ?????????
-            ?????????
-            ?????????
-            ?????????
             
+            develop
+                bugfix/money-reads-prec
+                    refactor/drop-location-type
+                        refactor/change-table
+                            feature/cancel-order
+                bugfix/reserve-margin-not-allowed
+                    gatling/load-sim
+                diff-errors-script
+            master
+                hotfix/receipt-trigger
+
+
+            In the above example `develop' and `master' are roots of the branch tree.
+            ###################
+            ###################
+            ###################
+            ###################
+            ###################
+            ###################
             ### Explain what means what!!!!!
-            ####### Tabs or any number of spaces can be used, #### just be consistent across the lines.
+            To indent lines, tabs or any number of spaces can be used, just be consistent across different lines.
         """,
         "go": """
             Usage: git machete g[o] <direction>
