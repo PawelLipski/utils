@@ -331,7 +331,7 @@ def update(branch, base_commit):
     run_git("rebase", "--interactive", "--onto", up(branch), base_commit, branch)
 
 
-def squash(branch, base_commit):
+def reapply(branch, base_commit):
     run_git("rebase", "--interactive", "--onto", base_commit, base_commit, branch)
 
 
@@ -459,9 +459,9 @@ def usage(c=None):
         "next": "Print name of the next branch for a branch",
         "prev": "Print name of the previous branch for a branch",
         "prune": "Remove all local branches that are not in the ladder",
+        "reapply": "Rebase the current branch onto its base commit",
         "root": "Print name of the root branch of the tree where a branch is located",
         "slide-out": "Slide the current branch out from the ladder and rebase its down (child) branch onto its up (parent) branch",
-        "squash": "Rebase the current branch onto its base commit",
         "status": "Print tree-shaped status of branches in the ladder, including info on their sync with up branch and remote",
         "up": "Print name of the up branch for a branch (aka parent in the tree)",
         "update": "Rebase the current branch onto its up (parent) branch"
@@ -485,7 +485,7 @@ def usage(c=None):
             Usage: git ladder base [<branch>]
 
             Outputs the base commit for the given branch, or, if none specified, for the current branch.
-            This is the commit that will be assumed as the default place where the history of the branch starts in the commands `diff-base', `slide-out', `squash' and most notably `update'.
+            This is the commit that will be assumed as the default place where the history of the branch starts in the commands `diff-base', `reapply', `slide-out', and most notably `update'.
             In other words, `git ladder' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
             The branch cannot be a root of the ladder, i.e. its up (parent) branch must be defined.
 
@@ -499,7 +499,7 @@ def usage(c=None):
             The most recent commit in the history of the branch that appears on adjusted reflog of any other local branch will be selected as the default base commit.
             
             Note: the above definition of base commit returns a correct result in most cases, but there are some situations (esp. when some local branches have already been deleted) where base commit might be determined wrongly.
-            Thus, all rebase-involving operations (`slide-out', `squash' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
+            Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
         """,
         "diff-base": """
             Usage: git ladder diff-base [-b | --base=<base-commit>] [-s | --stat] [<branch>]
@@ -572,6 +572,16 @@ def usage(c=None):
             Options:
             -f, --force    Passes `-D' instead of `-d' to `git branch'; this will delete branches even if they are not merged yet.
         """,
+        "reapply": """
+            Usage: git ladder reapply [-b|--base=<base-commit>]
+
+            Interactively rebase the current branch on the top of its base commit.
+            This is useful e.g. for squashing the commits on the current branch to make history more condensed before push to the remote.
+            The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
+
+            Options:
+            -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
+        """,
         "root": """
             Usage: git ladder root [<branch>]
 
@@ -587,17 +597,7 @@ def usage(c=None):
             In other words, slide-out works only when the branch has exactly one up branch and exactly one down branch.
 
             -d, --down-base=<down-base-commit>    Specifies the alternative base commit after which the rebased part of history of the down branch should start.
-                                                  See also doc for `--base' option for `git ladder help squash' and `git ladder help update'.
-        """,
-        "squash": """
-            Usage: git ladder squash [-b|--base=<base-commit>]
-
-            Interactively rebase the current branch on the top of its base commit.
-            This is useful e.g. for squashing the commits on the current branch to make history more condensed before push to the remote.
-            The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
-
-            Options:
-            -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
+                                                  See also doc for `--base' option for `git ladder help reapply' and `git ladder help update'.
         """,
         "status": """
             Usage: git ladder s[tatus] [-r|--remote=<remote-name>]
@@ -639,7 +639,7 @@ def usage(c=None):
         ("Modify and display the ladder", ["add", "edit", "file", "status"]),
         ("Move across the ladder", ["down", "go", "next", "prev", "root", "up"]),
         ("Determine changes introduced on the branch", ["base", "diff-base"]),
-        ("Update history in accordance with the ladder", ["slide-out", "squash", "update"]),
+        ("Update history in accordance with the ladder", ["reapply", "slide-out", "update"]),
         ("Tidy up git branches", ["prune"])
     ]
     if c and c in short_docs:
@@ -648,7 +648,9 @@ def usage(c=None):
         short_usage()
         if c and c not in short_docs:
             print >> sys.stderr, "\nUnknown command: `%s'" % c
-        print >> sys.stderr, "\n" + UNDERLINE + "TL;DR tip" + ENDC + ": get familiar with the help for `format`, `edit', `status' and `update', in this order.\n"
+        print >> sys.stderr, "\n%sTL;DR tip%s: get familiar with the help for %sformat%s, %sedit%s, %sstatus%s and %supdate%s, in this order.\n" % (
+            UNDERLINE, ENDC, BOLD, ENDC, BOLD, ENDC, BOLD, ENDC, BOLD, ENDC
+        )
         for hdr, cmds in groups:
             print >> sys.stderr, BOLD + hdr + ENDC + "\n"
             for cm in cmds:
@@ -798,17 +800,17 @@ try:
     elif cmd == "prune":
         expect_no_param(parse_options(args, "f", ["force"]))
         prune()
+    elif cmd == "reapply":
+        args1 = parse_options(args, "b:", ["base="])
+        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
+        h = head()
+        reapply(h, opt_base or base(h))
     elif cmd == "root":
         param = check_optional_param(parse_options(args))
         print root_branch(param or head())
     elif cmd == "slide-out":
         param = check_optional_param(parse_options(args, "d:", ["down-base="]))
         slide_out(param or head())
-    elif cmd == "squash":
-        args1 = parse_options(args, "b:", ["base="])
-        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
-        h = head()
-        squash(h, opt_base or base(h))
     elif cmd in ("s", "status"):
         expect_no_param(parse_options(args, "lr:", ["list-commits", "remote="]))
         status()
