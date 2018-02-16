@@ -242,7 +242,7 @@ def add(b):
         if b != h:
             onto = h
         else:
-            raise LadderException("Specify the branch to add `%s' onto with `--onto'" % b)
+            raise LadderException("Specify the desired up (parent) branch for `%s' with `--onto'" % b)
 
     up_branch[b] = onto
     if onto in down_branches:
@@ -291,10 +291,15 @@ def log(branch):
     return non_empty_lines(popen_git("log", "--format=%H", branch, "--"))
 
 
+reflogs_cached = {}
+
+
 def reflog(b):
     # %H - full hash
     # %gs - reflog subject
-    return [entry.split("|") for entry in non_empty_lines(popen_git("reflog", "--format=%H|%gs", b, "--"))]
+    if b not in reflogs_cached:
+        reflogs_cached[b] = [entry.split("|") for entry in non_empty_lines(popen_git("reflog", "--format=%H|%gs", b, "--"))]
+    return reflogs_cached[b]
 
 
 def base(b):
@@ -398,9 +403,12 @@ def status():
 
     needs_sync_with_up_branch = {}
     needs_sync_with_remote = {}
+    commits_cached = {}
     for b, pfx in dfs_res:
         if b in up_branch:
             needs_sync_with_up_branch[b] = not is_ancestor(up_branch[b], b)
+            if opt_list_commits:
+                commits_cached[b] = reversed(commits_between(base(b), b))
         needs_sync_with_remote[b] = check_needs_sync_with_remote(b)
 
     def edge_color(b):
@@ -425,8 +433,7 @@ def status():
         if b in up_branch:
             print_line_prefix(b, "| \n")
             if opt_list_commits:
-                #start = base(b) if needs_sync_with_up_branch[b] else up_branch[b]
-                for msg in reversed(commits_between(base(b), b)):
+                for msg in commits_cached[b]:
                     print_line_prefix(b, "| " + GREY + msg + "\n")
             print_line_prefix(b, "o-")
         else:

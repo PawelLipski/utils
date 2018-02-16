@@ -122,6 +122,7 @@ alias gre='git reset'
 alias grv='git remote -v'
 alias gs='git status'
 alias gsh='git show'
+alias gshx='git show --stat'
 
 gar() {
 	name=${1-$(basename `pwd`)}
