@@ -10,7 +10,7 @@ import textwrap
 
 # Core utils
 
-class LadderException(Exception):
+class MacheteException(Exception):
     def __init__(self, value):
         self.parameter = value
 
@@ -66,7 +66,7 @@ def pick(choices, name):
     except ValueError:
         sys.exit(1)
     if idx not in range(len(choices)):
-        raise LadderException("Invalid index: %i" % (idx + 1))
+        raise MacheteException("Invalid index: %i" % (idx + 1))
     return choices[idx]
 
 
@@ -88,7 +88,7 @@ def run_git(git_cmd, *args, **kwargs):
         print >> sys.stderr, " ".join(["git", git_cmd] + list(args))
     status = run_cmd("git", git_cmd, *args)
     if not kwargs.get("allow_non_zero") and status != 0:
-        raise LadderException("`%s' returned %i" % (flat_cmd, status))
+        raise MacheteException("`%s' returned %i" % (flat_cmd, status))
     return status
 
 
@@ -98,22 +98,22 @@ def popen_git(git_cmd, *args):
         print >> sys.stderr, flat_cmd
     status, stdout = popen_cmd("git", git_cmd, *args)
     if status != 0:
-        raise LadderException("`%s' returned %i" % (flat_cmd, status))
+        raise MacheteException("`%s' returned %i" % (flat_cmd, status))
     return stdout
 
 
-# Ladder manipulation
+# Manipulation with definition file/tree of branches
 
-def expect_in_ladder(b):
+def expect_in_branch_tree(b):
     if b not in all_branches:
-        raise LadderException("Branch `%s' not found in the ladder. "
-                              "Use `git ladder add %s' or `git ladder edit'" % (b, b))
+        raise MacheteException("Branch `%s' not found in the tree. "
+                              "Use `git machete add %s' or `git machete edit'" % (b, b))
 
 
-def read_ladder():
-    global ladder_file, indent, all_branches, down_branches, up_branch, roots
+def read_definition_file():
+    global definition_file, indent, all_branches, down_branches, up_branch, roots
 
-    with open(ladder_file) as f:
+    with open(definition_file) as f:
         ldr = [l.rstrip() for l in f.readlines() if not l.isspace()]
 
     all_branches = []
@@ -123,7 +123,7 @@ def read_ladder():
     roots = []
     at_depth = {}
     last_depth = -1
-    hint = "Edit the ladder file manually with `git ladder edit'"
+    hint = "Edit the definition file manually with `git machete edit'"
 
     for idx, l in enumerate(ldr):
         pfx = "".join(itertools.takewhile(str.isspace, l))
@@ -132,14 +132,14 @@ def read_ladder():
 
         b = l.strip()
         if b in all_branches:
-            raise LadderException("%s, line %i: branch `%s' re-appears in the ladder. %s" %
-                                  (ladder_file, idx + 1, b, hint))
+            raise MacheteException("%s, line %i: branch `%s' re-appears in the tree. %s" %
+                                   (definition_file, idx + 1, b, hint))
         all_branches += [b]
 
         depth = len(pfx) / len(indent) if pfx else 0
         if depth > last_depth + 1:
-            raise LadderException("%s, line %i: too much indent for the branch `%s'. %s" %
-                                  (ladder_file, idx + 1, b, hint))
+            raise MacheteException("%s, line %i: too much indent for the branch `%s'. %s" %
+                                   (definition_file, idx + 1, b, hint))
         last_depth = depth
 
         at_depth[depth] = b
@@ -154,7 +154,7 @@ def read_ladder():
             roots += [b]
 
 
-def render_ladder():
+def render_definition_file():
     def render_dfs(u, d):
         res = [d * indent + u]
         for v in down_branches.get(u) or []:
@@ -167,16 +167,16 @@ def render_ladder():
     return total
 
 
-def save_ladder():
-    with open(ladder_file, "w") as f:
-        f.write("\n".join(render_ladder()))
+def save_definition_file():
+    with open(definition_file, "w") as f:
+        f.write("\n".join(render_definition_file()))
 
 
 def down(b, pick_mode=True):
-    expect_in_ladder(b)
+    expect_in_branch_tree(b)
     dbs = down_branches.get(b)
     if not dbs or len(dbs) == 0:
-        raise LadderException("Branch `%s' has no down branch" % b)
+        raise MacheteException("Branch `%s' has no down branch" % b)
     elif len(dbs) == 1:
         return dbs[0]
     elif pick_mode:
@@ -186,26 +186,26 @@ def down(b, pick_mode=True):
 
 
 def next_branch(b):
-    expect_in_ladder(b)
+    expect_in_branch_tree(b)
     idx = all_branches.index(b) + 1
     if idx == len(all_branches):
-        raise LadderException("Branch `%s' has no successor" % b)
+        raise MacheteException("Branch `%s' has no successor" % b)
     return all_branches[idx]
 
 
 def prev_branch(b):
-    expect_in_ladder(b)
+    expect_in_branch_tree(b)
     idx = all_branches.index(b) - 1
     if idx == -1:
-        raise LadderException("Branch `%s' has no predecessor" % b)
+        raise MacheteException("Branch `%s' has no predecessor" % b)
     return all_branches[idx]
 
 
 def root_branch(b):
-    expect_in_ladder(b)
+    expect_in_branch_tree(b)
     u = up_branch.get(b)
     if not u:
-        raise LadderException("Branch `%s' is already a root" % b)
+        raise MacheteException("Branch `%s' is already a root" % b)
     while u:
         b = u
         u = up_branch.get(b)
@@ -213,26 +213,26 @@ def root_branch(b):
 
 
 def up(b):
-    expect_in_ladder(b)
+    expect_in_branch_tree(b)
     pb = up_branch.get(b)
     if pb:
         return pb
     else:
-        raise LadderException("Branch `%s' has no up branch" % b)
+        raise MacheteException("Branch `%s' has no up branch" % b)
 
 
 def add(b):
     global roots
 
     if b in all_branches:
-        raise LadderException("Branch `%s' already exists in the ladder" % b)
+        raise MacheteException("Branch `%s' already exists in the tree" % b)
 
     if not sha_by_revision(b):
-        raise LadderException("Branch `%s' does not exist" % b)
+        raise MacheteException("Branch `%s' does not exist" % b)
 
     onto = opt_onto
     if onto:
-        expect_in_ladder(onto)
+        expect_in_branch_tree(onto)
     if not roots:
         roots = [b]
         return
@@ -242,20 +242,20 @@ def add(b):
         if b != h:
             onto = h
         else:
-            raise LadderException("Specify the desired up (parent) branch for `%s' with `--onto'" % b)
+            raise MacheteException("Specify the desired up (parent) branch for `%s' with `--onto'" % b)
 
     up_branch[b] = onto
     if onto in down_branches:
         down_branches[onto].append(b)
     else:
         down_branches[onto] = [b]
-    save_ladder()
+    save_definition_file()
 
 
 # Git/shell commands impl
 
 def edit():
-    return run_cmd(os.environ.get("EDITOR") or "vim", ladder_file)
+    return run_cmd(os.environ.get("EDITOR") or "vim", definition_file)
 
 
 def root_dir():
@@ -265,22 +265,22 @@ def root_dir():
 def sha_by_revision(rev):
     try:
         return popen_git("rev-parse", "--verify", "--quiet", rev).rstrip()
-    except LadderException:
+    except MacheteException:
         return None
 
 
 def branch_by_revision(rev):
     try:
         return popen_git("rev-parse", "--abbrev-ref", rev).strip()
-    except LadderException:
+    except MacheteException:
         return None
 
 
 def head():
     try:
         return popen_git("symbolic-ref", "--short", "--quiet", "HEAD").strip()
-    except LadderException:
-        raise LadderException("Not currently on any branch")
+    except MacheteException:
+        raise MacheteException("Not currently on any branch")
 
 
 def is_ancestor(earlier, later):
@@ -303,9 +303,9 @@ def reflog(b):
 
 
 def base(b):
-    expect_in_ladder(b)
+    expect_in_branch_tree(b)
     if b not in up_branch:
-        raise LadderException("Cannot find base for a root branch `%s'" % b)
+        raise MacheteException("Cannot find base for a root branch `%s'" % b)
 
     log_this_branch = log(b)
     other_branches = excluding(branches(), [b])
@@ -316,7 +316,7 @@ def base(b):
     for h in log_this_branch:
         if h in reflogs_other_branches_no_create:
             return h
-    raise LadderException("Cannot find base for branch `%s'" % b)
+    raise MacheteException("Cannot find base for branch `%s'" % b)
 
 
 def branches():
@@ -353,23 +353,23 @@ def prune():
 
 
 def slide_out(b):
-    expect_in_ladder(b)
+    expect_in_branch_tree(b)
     u = up_branch.get(b)
     if not u:
-        raise LadderException("No up-branch defined for `%s', cannot slide out" % b)
+        raise MacheteException("No up-branch defined for `%s', cannot slide out" % b)
     dbs = down_branches.get(b)
     if not dbs or len(dbs) == 0:
-        raise LadderException("No down-branch defined for `%s', cannot slide out" % b)
+        raise MacheteException("No down-branch defined for `%s', cannot slide out" % b)
     elif len(dbs) > 1:
         flat_dbs = join_branch_names(dbs, ", ")
-        raise LadderException("Multiple down-branches defined for `%s': %s; cannot slide out" % (b, flat_dbs))
+        raise MacheteException("Multiple down-branches defined for `%s': %s; cannot slide out" % (b, flat_dbs))
     d = dbs[0]
     go(d)
     up_branch[d] = up_branch[b]
     up_branch[b] = None
     down_branches[u] = down_branches[b]
     down_branches[b] = None
-    save_ladder()
+    save_definition_file()
     update(d, opt_down_base or base(d))
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
@@ -377,7 +377,7 @@ def slide_out(b):
 def check_needs_sync_with_remote(b):
     b_sha = sha_by_revision(b)
     if not b_sha:
-        raise LadderException("Branch `%s' does not exist" % b)
+        raise MacheteException("Branch `%s' does not exist" % b)
     b_origin_sha = sha_by_revision((opt_remote or "origin") + "/" + b)
     if not b_origin_sha:
         return False
@@ -425,7 +425,7 @@ def status():
 
     try:
         h = head()
-    except LadderException:
+    except MacheteException:
         h = None
 
     for b, pfx in dfs_res:
@@ -447,80 +447,80 @@ def status():
 
 def usage(c=None):
     short_docs = {
-        "add": "Add a branch into the ladder on the top of the current or other specified branch",
+        "add": "Add a branch on the top of the current or other specified branch",
         "base": "Print SHA of the base commit of a branch",
         "diff-base": "Diff current working tree against the base commit of a branch",
         "down": "Print name(s) of the down branch(es) for a branch (aka its children in the tree)",
-        "edit": "Edit the ladder definition file",
-        "file": "Print path of the ladder definition file",
-        "format": "Format of the ladder definition file",
-        "go": "Checkout the branch relative to the position in ladder, accepts down/next/root/prev/up argument",
+        "edit": "Edit the definition file",
+        "file": "Print path of the definition file",
+        "format": "Format of the definition file",
+        "go": "Check out the branch relative to the position of the current branch, accepts down/next/root/prev/up argument",
         "help": "Print this overview, or print detailed help for a specified command",
         "next": "Print name of the next branch for a branch",
         "prev": "Print name of the previous branch for a branch",
-        "prune": "Remove all local branches that are not in the ladder",
+        "prune": "Remove all local branches that are not in the definition file",
         "reapply": "Rebase the current branch onto its base commit",
         "root": "Print name of the root branch of the tree where a branch is located",
-        "slide-out": "Slide the current branch out from the ladder and rebase its down (child) branch onto its up (parent) branch",
-        "status": "Print tree-shaped status of branches in the ladder, including info on their sync with up branch and remote",
+        "slide-out": "Slide the current branch out and rebase its down (child) branch onto its up (parent) branch",
+        "status": "Print tree-shaped status of branches listed in the definition file, including info on their sync with up branch and remote",
         "up": "Print name of the up branch for a branch (aka parent in the tree)",
         "update": "Rebase the current branch onto its up (parent) branch"
     }
     long_docs = {
         "add": """
-            Usage: git ladder add [-o|--onto=<target-branch>] [<branch>]
+            Usage: git machete add [-o|--onto=<target-branch>] [<branch>]
 
-            Adds the given branch (or the current branch, if none specified) to the ladder.
-            If the ladder is empty, the branch will be added as the first root of the tree.
+            Adds the given branch (or the current branch, if none specified) to the definition file.
+            If the definition file is empty, the branch will be added as the first root of the tree.
             Otherwise, the branch will be added on the top of the current branch.
             If the current branch is the same as the branch to be added (esp. in the case when the new branch to add has not been specified at all),
             the target parent branch must be explicitly specified with `--onto' option.
 
-            Note: the same effect can be always achieved by manually editing the ladder file.
+            Note: the same effect can be always achieved by manually editing the definition file.
 
             Options:
             -o, --onto=<target-branch>    Specifies the target parent branch to add the new branch onto.
         """,
         "base": """
-            Usage: git ladder base [<branch>]
+            Usage: git machete base [<branch>]
 
             Outputs the base commit for the given branch, or, if none specified, for the current branch.
-            The given branch cannot be a root of the ladder, i.e. its up (parent) branch must be defined.
+            The given branch cannot be a root, i.e. its up (parent) branch must be defined.
             
             The returned base commit will be assumed as the default place where the history of the branch starts in the commands `diff-base', `reapply', `slide-out', and most notably `update'.
-            In other words, `git ladder' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
+            In other words, `git machete' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
             
-            Note: to determine this place in history, `git ladder' uses a heuristics based on reflogs of local branches.
+            Note: to determine this place in history, `git machete' uses a heuristics based on reflogs of local branches.
             This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where base commit might not be determined correctly.
             Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
         """,
         "diff-base": """
-            Usage: git ladder diff-base [-b | --base=<base-commit>] [-s | --stat] [<branch>]
+            Usage: git machete diff-base [-b | --base=<base-commit>] [-s | --stat] [<branch>]
 
             Runs `git diff' of the the current working directory against the base commit of the given branch or, if none specified, of the current branch.
-            See `git ladder help base' for more details on meaning of the `base commit'.
+            See `git machete help base' for more details on meaning of the `base commit'.
 
             Options:
             -s, --stat    Makes diff-base pass `--stat' option to `git diff', so that only summary (diffstat) will be output.
         """,
         "down":  """
-            Usage: git ladder down [<branch>]
+            Usage: git machete down [<branch>]
 
-            Outputs name of the branch (or branches, if many) that are direct children of the given branch (or current branch, if none specified) in the ladder.
+            Outputs name of the branch (or branches, if many) that are direct children of the given branch (or current branch, if none specified).
         """,
         "edit": """
-            Usage: git ladder e[dit]
+            Usage: git machete e[dit]
 
-            Opens the editor (as defined by the `EDITOR' environment variable, or `vim' if undefined) and lets you edit the ladder definition file manually.
-            The ladder file can be always accessed under path returned by `git ladder file' (currently fixed to <repo-root>/.git/ladder).
+            Opens the editor (as defined by the `EDITOR' environment variable, or `vim' if undefined) and lets you edit the definition file manually.
+            The definition file can be always accessed under path returned by `git machete file' (currently fixed to <repo-root>/.git/machete).
         """,
         "file": """
-            Usage: git ladder file
+            Usage: git machete file
 
-            Outputs the path of the ladder definition file (currently fixed to <repo-root>/.git/ladder).
+            Outputs the path of the machete definition file (currently fixed to <repo-root>/.git/machete).
         """,
         "format": """
-            The format of the ladder definition file should be as follows:
+            The format of the definition file should be as follows:
             
             ?????????
             ?????????
@@ -533,40 +533,40 @@ def usage(c=None):
             ####### Tabs or any number of spaces can be used, #### just be consistent across the lines.
         """,
         "go": """
-            Usage: git ladder g[o] <direction>
+            Usage: git machete g[o] <direction>
             where <direction> is one of: d[own], n[ext], p[rev], r[oot], u[p]
 
-            Checks out the branch of the ladder specified by the given direction.
-            Roughly equivalent to `git checkout $(git ladder <direction>)'.
+            Checks out the branch specified by the given direction relative to the currently checked out branch.
+            Roughly equivalent to `git checkout $(git machete <direction>)'.
         """,
         "help": """
-            Usage: git ladder help [<command>]
+            Usage: git machete help [<command>]
 
             Prints a summary of this tool, or a detailed info on a command if defined.
         """,
         "next": """
-            Usage: git ladder next [<branch>]
+            Usage: git machete next [<branch>]
 
-            Outputs name of the branch that directly follows the given branch (or current branch, if none specified) in the ladder file.
+            Outputs name of the branch that directly follows the given branch (or current branch, if none specified) in the definition file.
         """,
         "prev": """
-            Usage: git ladder prev [<branch>]
+            Usage: git machete prev [<branch>]
 
-            Outputs name of the branch that directly precedes the given branch (or current branch, if none specified) in the ladder file.
+            Outputs name of the branch that directly precedes the given branch (or current branch, if none specified) in the definition file.
         """,
         "prune": """
-            Usage: git ladder prune [-f|--force]
+            Usage: git machete prune [-f|--force]
 
-            Lists the local git branches that don't exist in the ladder, and removes all of them by `git branch -d' if confirmed by the user.
+            Lists the local git branches that don't exist in the definition file, and removes all of them by `git branch -d' if confirmed by the user.
 
-            Note: this should be used with care since removing local branches can sometimes make it impossible for git ladder to properly compute base commits.
-            See `git ladder help base' for more details.
+            Note: this should be used with care since removing local branches can sometimes make it impossible for `git machete' to properly compute base commits.
+            See `git machete help base' for more details.
 
             Options:
             -f, --force    Passes `-D' instead of `-d' to `git branch'; this will delete branches even if they are not merged yet.
         """,
         "reapply": """
-            Usage: git ladder reapply [-b|--base=<base-commit>]
+            Usage: git machete reapply [-b|--base=<base-commit>]
 
             Interactively rebase the current branch on the top of its base commit.
             This is useful e.g. for squashing the commits on the current branch to make history more condensed before push to the remote.
@@ -576,46 +576,47 @@ def usage(c=None):
             -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
         """,
         "root": """
-            Usage: git ladder root [<branch>]
+            Usage: git machete root [<branch>]
 
-            Outputs name of the branch that is the root of the tree where the given branch (or current branch, if none specified) is located in the ladder.
+            Outputs name of the branch that is the root of the tree where the given branch (or current branch, if none specified) is located.
             Depending on your case, this will typically be something like `develop' or `master', since all branches are usually meant to be ultimately merged to one of those.
         """,
         "slide-out": """
-            Usage: git ladder slide-out [-d|--down-base=<down-base-commit>] [<branch>]
+            Usage: git machete slide-out [-d|--down-base=<down-base-commit>] [<branch>]
 
-            Removes the current branch from the ladder and rebases the down (child) branch of the current branch on the top of the up (parent) branch of the current branch.
+            Removes the current branch from the machete and rebases the down (child) branch of the current branch on the top of the up (parent) branch of the current branch.
 
             Note: slide-out will return an error if the current branch has no down branches, more than one down branch, or is a root (has no up branch).
             In other words, slide-out works only when the branch has exactly one up branch and exactly one down branch.
 
             -d, --down-base=<down-base-commit>    Specifies the alternative base commit after which the rebased part of history of the down branch should start.
-                                                  See also doc for `--base' option for `git ladder help reapply' and `git ladder help update'.
+                                                  See also doc for `--base' option for `git machete help reapply' and `git machete help update'.
         """,
         "status": """
-            Usage: git ladder s[tatus] [-l|--list-commits] [-r|--remote=<remote-name>]
+            Usage: git machete s[tatus] [-l|--list-commits] [-r|--remote=<remote-name>]
 
-            Outputs a tree-shaped status of the branches in the ladder.
+            Outputs a tree-shaped status of the branches listed in the definition file.
 
-            Apart from simply ASCII-formatting the tree defined in the ladder definition file, this also:
-            * prints `(out of sync with <remote>)' message for each branch that differs from its remote counterpart (in the `origin' remote by default),
+            Apart from simply ASCII-formatting the definition file, this also:
+            * prints `(out of sync with <remote>)' message for each branch that differs from its remote counterpart (in the `origin' remote by default);
             * colors the edges between up (parent) and down (child) branches depending on whether down branch commit is a direct descendant of the up branch commit:
               - green edge means that the down branch commit is direct descendant of the up branch commit (basically, the down branch is in sync with its up branch),
-              - red edge means the opposite (so the down branch is out of sync).
+              - red edge means the opposite (so the down branch is out of sync);
+            * optionally list commits introduced on each branch if `--list-commits' is supplied.
 
             Options:
             -l, --list-commits            Additionally lists the messages of commits introduced on each branch.
             -r, --remote=<remote-name>    Specifies the alternative name of the remote (`origin' by default).
         """,
         "up": """
-            Usage: git ladder up [<branch>]
+            Usage: git machete up [<branch>]
 
-            Outputs name of the branch that is the direct parent of the given branch (or current branch, if none specified) in the ladder.
+            Outputs name of the branch that is the direct parent of the given branch (or current branch, if none specified).
         """,
         "update": """
-            Usage: git ladder update [-b|--base=<base-commit>]
+            Usage: git machete update [-b|--base=<base-commit>]
 
-            Interactively rebase the current branch on the top of its up (parent) branch in the ladder.
+            Interactively rebase the current branch on the top of its up (parent) branch.
             This is useful e.g. for syncing the current branch with changes introduced by an upstream branch like `develop', or changes commited on the parent branches.
             The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
 
@@ -630,10 +631,10 @@ def usage(c=None):
     }
     groups = [
         ("General topics", ["format", "help"]),
-        ("Modify and display the ladder", ["add", "edit", "file", "status"]),
-        ("Move across the ladder", ["down", "go", "next", "prev", "root", "up"]),
+        ("Modify and display the definition file", ["add", "edit", "file", "status"]),
+        ("Move across the tree of branches", ["down", "go", "next", "prev", "root", "up"]),
         ("Determine changes introduced on the branch", ["base", "diff-base"]),
-        ("Update history in accordance with the ladder", ["reapply", "slide-out", "update"]),
+        ("Update history in accordance with the tree of branches", ["reapply", "slide-out", "update"]),
         ("Tidy up git branches", ["prune"])
     ]
     if c and c in short_docs:
@@ -654,7 +655,7 @@ def usage(c=None):
 
 
 def short_usage():
-    print >> sys.stderr, "Usage: git ladder [--help] [--verbose] <command> [command-specific options] [command-specific argument]"
+    print >> sys.stderr, "Usage: git machete [--help] [--verbose] <command> [command-specific options] [command-specific argument]"
 
 
 def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
@@ -688,29 +689,29 @@ def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
 
 def expect_no_param(in_args, extra_explanation = ''):
     if len(in_args) == 2:
-        raise LadderException("No argument expected for `%s'%s" % (cmd, extra_explanation))
+        raise MacheteException("No argument expected for `%s'%s" % (cmd, extra_explanation))
 
 
 def check_optional_param(in_args):
     if not in_args:
         return None
     elif len(in_args) > 1:
-        raise LadderException("`%s' accepts at most one argument" % cmd)
+        raise MacheteException("`%s' accepts at most one argument" % cmd)
     elif not in_args[0]:
-        raise LadderException("Argument to `%s' cannot be empty" % cmd)
+        raise MacheteException("Argument to `%s' cannot be empty" % cmd)
     elif in_args[0][0] == "-":
-        raise LadderException("option `%s' not recognized" % in_args[0])
+        raise MacheteException("option `%s' not recognized" % in_args[0])
     else:
         return in_args[0]
 
 
 def check_required_param(in_args):
     if not in_args or len(in_args) > 1:
-        raise LadderException("`%s' requires exactly one argument" % cmd)
+        raise MacheteException("`%s' requires exactly one argument" % cmd)
     elif not in_args[0]:
-        raise LadderException("Argument to `%s' cannot be empty" % cmd)
+        raise MacheteException("Argument to `%s' cannot be empty" % cmd)
     elif in_args[0][0] == "-":
-        raise LadderException("option `%s' not recognized" % in_args[0])
+        raise MacheteException("option `%s' not recognized" % in_args[0])
     else:
         return in_args[0]
 
@@ -735,15 +736,15 @@ try:
 
     try:
         git_root = root_dir()
-    except LadderException:
-        raise LadderException("Not a git repository")
+    except MacheteException:
+        raise MacheteException("Not a git repository")
 
-    ladder_file = os.path.join(git_root, ".git", "ladder")
-    if not os.path.exists(ladder_file):
-        open(ladder_file, 'w').close()
+    definition_file = os.path.join(git_root, ".git", "machete")
+    if not os.path.exists(definition_file):
+        open(definition_file, 'w').close()
 
     if cmd not in ("e", "edit", "file", "help"):
-        read_ladder()
+        read_definition_file()
 
     if cmd == "add":
         param = check_optional_param(parse_options(args, "o:", ["onto="]))
@@ -762,7 +763,7 @@ try:
         edit()
     elif cmd == "file":
         expect_no_param(parse_options(args))
-        print ladder_file
+        print definition_file
     elif cmd == "format":
         usage("format")
     elif cmd in ("g", "go"):
@@ -779,7 +780,7 @@ try:
         elif param in ("u", "up"):
             dest = up(h)
         else:
-            raise LadderException("Usage: git ladder go <d[own]|n[ext]|p[rev]|r[oot]|u[p]>")
+            raise MacheteException("Usage: git machete go <d[own]|n[ext]|p[rev]|r[oot]|u[p]>")
         if dest != h:
             go(dest)
     elif cmd == "help":
@@ -818,9 +819,9 @@ try:
         update(h, opt_base or base(h))
     else:
         short_usage()
-        raise LadderException("\nUnknown command: `%s'. Use `git ladder help' to list possible commands" % cmd)
+        raise MacheteException("\nUnknown command: `%s'. Use `git machete help' to list possible commands" % cmd)
 
-except LadderException as e:
+except MacheteException as e:
     print >> sys.stderr, str(e)
     sys.exit(1)
 except getopt.GetoptError as e:
