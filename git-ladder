@@ -485,20 +485,13 @@ def usage(c=None):
             Usage: git ladder base [<branch>]
 
             Outputs the base commit for the given branch, or, if none specified, for the current branch.
-            This is the commit that will be assumed as the default place where the history of the branch starts in the commands `diff-base', `reapply', `slide-out', and most notably `update'.
+            The given branch cannot be a root of the ladder, i.e. its up (parent) branch must be defined.
+            
+            The returned base commit will be assumed as the default place where the history of the branch starts in the commands `diff-base', `reapply', `slide-out', and most notably `update'.
             In other words, `git ladder' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
-            The branch cannot be a root of the ladder, i.e. its up (parent) branch must be defined.
-
-            In terms of implementation, firstly `git ladder base' checks if the branch commit is a direct descendant of the up branch commit.
-            If so, the up branch is simply assumed to be the base; otherwise, the following heuristics is applied.
             
-            History of the given branch `x' is checked against against *adjusted reflogs* of all other local branches in the repository.
-            By an adjusted reflog of a branch `y', we mean a reflog of branch `y' without any of the below operations:
-            - branch creation, with exception of the creation through checkout of a remote branch
-            - reset to the branch `x'
-            The most recent commit in the history of the branch that appears on adjusted reflog of any other local branch will be selected as the default base commit.
-            
-            Note: the above definition of base commit returns a correct result in most cases, but there are some situations (esp. when some local branches have already been deleted) where base commit might be determined wrongly.
+            Note: to determine this place in history, `git ladder' uses a heuristics based on reflogs of local branches.
+            This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where base commit might not be determined correctly.
             Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
         """,
         "diff-base": """
@@ -600,7 +593,7 @@ def usage(c=None):
                                                   See also doc for `--base' option for `git ladder help reapply' and `git ladder help update'.
         """,
         "status": """
-            Usage: git ladder s[tatus] [-r|--remote=<remote-name>]
+            Usage: git ladder s[tatus] [-l|--list-commits] [-r|--remote=<remote-name>]
 
             Outputs a tree-shaped status of the branches in the ladder.
 
@@ -611,7 +604,8 @@ def usage(c=None):
               - red edge means the opposite (so the down branch is out of sync).
 
             Options:
-            -r, --remote=<remote-name>    Specifies the alternative name of the remote (if different from the default `origin').
+            -l, --list-commits            Additionally lists the messages of commits introduced on each branch.
+            -r, --remote=<remote-name>    Specifies the alternative name of the remote (`origin' by default).
         """,
         "up": """
             Usage: git ladder up [<branch>]
