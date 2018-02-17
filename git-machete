@@ -527,18 +527,16 @@ def usage(c=None):
         "format": """
             The format of the definition file should be as follows:
 
-
             develop
-                bugfix/money-reads-prec
-                    refactor/drop-location-type
-                        refactor/change-table
-                            feature/cancel-order
-                bugfix/reserve-margin-not-allowed
-                    gatling/load-sim
-                diff-errors-script
+                adjust-reads-prec
+                    block-cancel-order
+                        change-table
+                            drop-location-type
+                edit-margin-not-allowed
+                    full-load-gatling
+                grep-errors-script
             master
                 hotfix/receipt-trigger
-
 
             In the above example `develop' and `master' are roots of the branch tree.
             ###################
