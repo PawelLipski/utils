@@ -172,7 +172,7 @@ def save_definition_file():
         f.write("\n".join(render_definition_file()))
 
 
-def down(b, pick_mode=True):
+def down(b, pick_mode):
     expect_in_branch_tree(b)
     dbs = down_branches.get(b)
     if not dbs or len(dbs) == 0:
@@ -783,7 +783,7 @@ try:
         param = check_required_param(parse_options(args))
         h = head()
         if param in ("d", "down"):
-            dest = down(h)
+            dest = down(h, pick_mode=True)
         elif param in ("n", "next"):
             dest = next_branch(h)
         elif param in ("p", "prev"):
