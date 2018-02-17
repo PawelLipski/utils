@@ -336,7 +336,7 @@ def reapply(branch, fork_commit):
 
 
 def diff(branch):
-    run_git("diff", *((["--stat"] if opt_stat else []) + [fork_point(branch), "--"]))
+    run_git("diff", *((["--stat"] if opt_stat else []) + [fork_point(branch), branch, "--"]))
 
 
 def prune():
@@ -481,23 +481,10 @@ def usage(c=None):
             Options:
             -o, --onto=<target-branch>    Specifies the target parent branch to add the new branch onto.
         """,
-        "fork-point": """
-            Usage: git machete fork-point [<branch>]
-
-            Outputs SHA of the fork point commit for the given branch, or, if none specified, for the current branch.
-            The given branch cannot be a root, i.e. its upstream (parent) branch must be defined.
-
-            The returned fork point will be assumed as the default place where the history of the branch starts in the commands `diff', `reapply', `slide-out', and most notably `update'.
-            In other words, `git machete' treats the fork point as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
-
-            Note: to determine this place in history, `git machete' uses a heuristics based on reflogs of local branches.
-            This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where the fork point might not be determined correctly.
-            Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the fork point explictly by a command-line option.
-        """,
         "diff": """
             Usage: git machete diff [-s | --stat] [<branch>]
 
-            Runs `git diff' of the the current working directory against the fork point commit of the given branch or, if none specified, of the current branch.
+            Runs `git diff' of the given branch tip against its fork point or, if none specified, of the tip of the current branch against its fork point.
             See `git machete help fork-point' for more details on meaning of the "fork point".
 
             Options:
@@ -518,6 +505,24 @@ def usage(c=None):
             Usage: git machete file
 
             Outputs the path of the machete definition file (currently fixed to <repo-root>/.git/machete).
+        """,
+        "fork-point": """
+            Usage: git machete fork-point [<branch>]
+
+            Outputs SHA of the fork point commit for the given branch (the commit at which the history of the branch actually diverges from history of any other branch).
+            If no branch is specified, the currently checked out branch is assumed.
+            The given branch cannot be a root, i.e. its upstream (parent) branch must be defined.
+
+            The returned fork point will be assumed as the default place where the history of the branch starts in the commands `diff', `reapply', `slide-out', and most notably `update'.
+            In other words, `git machete' treats the fork point as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
+
+            Note: to determine this place in history, `git machete' uses a heuristics based on reflogs of local branches.
+            This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where the fork point might not be determined correctly.
+            Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the fork point explictly by a command-line option.
+
+            Also, `git machete fork-point` is different (and more powerful) than `git merge-base --fork-point`, since the latter takes into account only the reflog of the one provided upstream branch,
+            while the former scans reflogs of all local branches.
+            This makes machete's `fork-point` work correctly even when the tree definition has been modified and one or more of the branches changed their corresponding upstream branch.
         """,
         "format": """
             The format of the definition file should be as follows:
