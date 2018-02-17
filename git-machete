@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import getopt
 import itertools
@@ -420,7 +421,7 @@ def status():
             if not p:
                 sys.stdout.write("  ")
             else:
-                sys.stdout.write(edge_color(p) + "| " + ENDC)
+                sys.stdout.write(edge_color(p) + "│ " + ENDC)
         sys.stdout.write(edge_color(b) + suffix + ENDC)
 
     try:
@@ -431,11 +432,11 @@ def status():
     for b, pfx in dfs_res:
         current = UNDERLINE + b + ENDC if b == h else b
         if b in up_branch:
-            print_line_prefix(b, "| \n")
+            print_line_prefix(b, "│ \n")
             if opt_list_commits:
                 for msg in commits_cached[b]:
-                    print_line_prefix(b, "| " + GREY + msg + "\n")
-            print_line_prefix(b, "o-")
+                    print_line_prefix(b, "│ " + GREY + msg + "\n")
+            print_line_prefix(b, "└─")
         else:
             if b != dfs_res[0][0]:
                 print
@@ -520,9 +521,9 @@ def usage(c=None):
             This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where the fork point might not be determined correctly.
             Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the fork point explictly by a command-line option.
 
-            Also, `git machete fork-point` is different (and more powerful) than `git merge-base --fork-point`, since the latter takes into account only the reflog of the one provided upstream branch,
+            Also, `git machete fork-point' is different (and more powerful) than `git merge-base --fork-point', since the latter takes into account only the reflog of the one provided upstream branch,
             while the former scans reflogs of all local branches.
-            This makes machete's `fork-point` work correctly even when the tree definition has been modified and one or more of the branches changed their corresponding upstream branch.
+            This makes machete's `fork-point' work correctly even when the tree definition has been modified and one or more of the branches changed their corresponding upstream branch.
         """,
         "format": """
             The format of the definition file should be as follows:
@@ -539,14 +540,11 @@ def usage(c=None):
                 hotfix/receipt-trigger
 
             In the above example `develop' and `master' are roots of the branch tree.
-            ###################
-            ###################
-            ###################
-            ###################
-            ###################
-            ###################
-            ### Explain what means what!!!!!
-            To indent lines, tabs or any number of spaces can be used, just be consistent across different lines.
+            Branches `adjust-reads-prec', `edit-margin-not-allowed' and `grep-errors-script' are direct downstream branches for `develop'.
+            `block-cancel-order' is a downstream branch of `adjust-reads-prec', `change-table' is a downstream branch of `block-cancel-order' and so on.
+
+            Tabs or any number of spaces can be used as indentation.
+            It's only important to be consistent wrt. the sequence of characters used for indentation between all lines.
         """,
         "go": """
             Usage: git machete g[o] <direction>

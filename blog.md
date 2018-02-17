@@ -12,10 +12,20 @@ Let's imagine ???
 
 ??? install `git-machete` with #####.
 Now let's run `git machete edit` or simply open the `.git/machete` file with your favorite editor.
-A file like that:
 
+A file like that:
+??? a tree-like structure with `develop`/`master` being the roots ???
 ```
-TODO maybe sample from help simply? More differentiated branch names!
+develop
+    adjust-reads-prec
+        block-cancel-order
+            change-table
+                drop-location-type
+    edit-margin-not-allowed
+        full-load-gatling
+    grep-errors-script
+master
+    hotfix/receipt-trigger
 ```
 
 Now we've given defined the structure how our branches should relate to each other.
@@ -43,9 +53,28 @@ Also, there is this (out of sync with origin) ??? message
 
 Running `git machete status --list-commits` (or `git machete s -l` for short) also prints the commits introduced on each branch:
 
-!!! add pic
+We see that, for example, the branch ??? is out of sync with its upstream branch, ???.
+Let's check out `???` and put it back in sync with `???`.
+!!! add pic (maybe some other formatting? how to include colored text - TODO ask ppl!)
+
+This ran an interactive rebase ??? automagically providing the correct parameters. !! resolve possible conflicts etc.
 
 !!! say sth about fork point!! `the commit at which the history of the branch actually diverges from the history of any other branch`
+
+The way fork point is determined ensures that ??? correctly even after structure of the ladder is modified, e.g. upstream branch is swapped with its downstream.
+For possible ???, see the appendix (link TODO) at the end of this blog post.
+
+Now let's see the status:
+
+TODO pic
+
+We can check it explicitly that ??? on the top of ???.
+
+After push ??? but with `--force` ???, the status ???
+
+Let's now check out downstream with a handy shortcut `git machete go down` and rebase the downstream branch `???` on the already rebased `???`:
+
+TODO pic, also include git push -f
 
 
 # A few other useful hacks... `diff`, `go`, `add`, `reapply`, `slide-out`
@@ -58,9 +87,23 @@ To see the changes introduced since the fork point of the current branch, run `g
 `git machete go root` goes all the way upstream to the root of the tree (where a `develop` or `master` branch is usually located).
 `git machete go prev` and `git machete go next` switch to the previous or next branch in the order of definition (or simply just previous/next line in the ladder definition file).
 
-`git machete add --onto [<target-upstream>] [<branch>]` ????
+`git machete add --onto [<target-upstream>] [<branch>]` pushes the branch ???
+Let's now add a newly created branch `ignore-whitespace` onto the existing branch `change-table` and see the status:
 
-`slide-out` subcommand comes somewhat trick
+TODO shell + status now!
+
+The same effect can as well be achieved by editing the definition file `.git/machete` manually e.g. with `git machete edit`.
+
+
+`reapply` is similar to `update`, but instead of rebasing the commits onto upstream branch, it instead rebases onto fork point.
+This means that nothing changes in relation to the upstream branch - if the branches weren't in sync before, they still won't be.
+
+
+`slide-out` subcommand comes somewhat tricky.
+Let's assume the `edit-margin-not-allowed` was already merged to develop.
+What we most likely want to do now is to remove `edit-margin-not-allowed` from the tree ,
+
+
 All commands supported by `git machete` can be found under `git machete help`.
 Run `git machete help <command>` for a more specific doc for the given command.
 
