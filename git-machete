@@ -132,7 +132,7 @@ def read_definition_file():
 
         b = l.strip()
         if b in all_branches:
-            raise MacheteException("%s, line %i: branch `%s' re-appears in the tree. %s" %
+            raise MacheteException("%s, line %i: branch `%s' re-appears in the tree definition. %s" %
                                    (definition_file, idx + 1, b, hint))
         all_branches += [b]
 
@@ -302,10 +302,10 @@ def reflog(b):
     return reflogs_cached[b]
 
 
-def base(b):
+def fork_point(b):
     expect_in_branch_tree(b)
     if b not in up_branch:
-        raise MacheteException("Cannot find base for a root branch `%s'" % b)
+        raise MacheteException("Cannot find fork point for a root branch `%s'. Upstream branch must be defined." % b)
 
     log_this_branch = log(b)
     other_branches = excluding(branches(), [b])
@@ -316,7 +316,7 @@ def base(b):
     for h in log_this_branch:
         if h in reflogs_other_branches_no_create:
             return h
-    raise MacheteException("Cannot find base for branch `%s'" % b)
+    raise MacheteException("Cannot find fork point for branch `%s'" % b)
 
 
 def branches():
@@ -327,16 +327,16 @@ def go(branch):
     run_git("checkout", "--quiet", branch, "--")
 
 
-def update(branch, base_commit):
-    run_git("rebase", "--interactive", "--onto", up(branch), base_commit, branch)
+def update(branch, fork_commit):
+    run_git("rebase", "--interactive", "--onto", up(branch), fork_commit, branch)
 
 
-def reapply(branch, base_commit):
-    run_git("rebase", "--interactive", "--onto", base_commit, base_commit, branch)
+def reapply(branch, fork_commit):
+    run_git("rebase", "--interactive", "--onto", fork_commit, fork_commit, branch)
 
 
-def diff_base(branch):
-    run_git("diff", *((["--stat"] if opt_stat else []) + [base(branch), "--"]))
+def diff(branch):
+    run_git("diff", *((["--stat"] if opt_stat else []) + [fork_point(branch), "--"]))
 
 
 def prune():
@@ -370,7 +370,7 @@ def slide_out(b):
     down_branches[u] = down_branches[b]
     down_branches[b] = None
     save_definition_file()
-    update(d, opt_down_base or base(d))
+    update(d, opt_down_fork_point or fork_point(d))
     print "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
@@ -408,7 +408,7 @@ def status():
         if b in up_branch:
             needs_sync_with_up_branch[b] = not is_ancestor(up_branch[b], b)
             if opt_list_commits:
-                commits_cached[b] = reversed(commits_between(base(b), b))
+                commits_cached[b] = reversed(commits_between(fork_point(b), b))
         needs_sync_with_remote[b] = check_needs_sync_with_remote(b)
 
     def edge_color(b):
@@ -448,18 +448,18 @@ def status():
 def usage(c=None):
     short_docs = {
         "add": "Add a branch on the top of the current or other specified branch",
-        "base": "Print SHA of the base commit of a branch",
-        "diff-base": "Diff current working tree against the base commit of a branch",
+        "diff": "Diff current working tree against the computed fork point of a branch",
         "down": "Print name(s) of the downstream branch(es) for a branch (aka its children in the tree)",
         "edit": "Edit the definition file",
         "file": "Print path of the definition file",
+        "fork-point": "Print SHA of the computed fork point commit of a branch",
         "format": "Format of the definition file",
         "go": "Check out the branch relative to the position of the current branch, accepts down/next/root/prev/up argument",
         "help": "Print this overview, or print detailed help for a specified command",
         "next": "Print name of the next branch for a branch",
         "prev": "Print name of the previous branch for a branch",
         "prune": "Remove all local branches that are not in the definition file",
-        "reapply": "Rebase the current branch onto its base commit",
+        "reapply": "Rebase the current branch onto its computed fork point",
         "root": "Print name of the root branch of the tree where a branch is located",
         "slide-out": "Slide the current branch out and rebase its downstream (child) branch onto its upstream (parent) branch",
         "status": "Print tree-shaped status of branches listed in the definition file, including info on their sync with upstream branch and remote",
@@ -481,27 +481,27 @@ def usage(c=None):
             Options:
             -o, --onto=<target-branch>    Specifies the target parent branch to add the new branch onto.
         """,
-        "base": """
-            Usage: git machete base [<branch>]
+        "fork-point": """
+            Usage: git machete fork-point [<branch>]
 
-            Outputs the base commit for the given branch, or, if none specified, for the current branch.
+            Outputs SHA of the fork point commit for the given branch, or, if none specified, for the current branch.
             The given branch cannot be a root, i.e. its upstream (parent) branch must be defined.
 
-            The returned base commit will be assumed as the default place where the history of the branch starts in the commands `diff-base', `reapply', `slide-out', and most notably `update'.
-            In other words, `git machete' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
+            The returned fork point will be assumed as the default place where the history of the branch starts in the commands `diff', `reapply', `slide-out', and most notably `update'.
+            In other words, `git machete' treats the fork point as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
 
             Note: to determine this place in history, `git machete' uses a heuristics based on reflogs of local branches.
-            This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where base commit might not be determined correctly.
-            Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
+            This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where the fork point might not be determined correctly.
+            Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the fork point explictly by a command-line option.
         """,
-        "diff-base": """
-            Usage: git machete diff-base [-b | --base=<base-commit>] [-s | --stat] [<branch>]
+        "diff": """
+            Usage: git machete diff [-s | --stat] [<branch>]
 
-            Runs `git diff' of the the current working directory against the base commit of the given branch or, if none specified, of the current branch.
-            See `git machete help base' for more details on meaning of the `base commit'.
+            Runs `git diff' of the the current working directory against the fork point commit of the given branch or, if none specified, of the current branch.
+            See `git machete help fork-point' for more details on meaning of the "fork point".
 
             Options:
-            -s, --stat    Makes diff-base pass `--stat' option to `git diff', so that only summary (diffstat) will be output.
+            -s, --stat    Makes `git machete diff' pass `--stat' option to `git diff', so that only summary (diffstat) will be output.
         """,
         "down":  """
             Usage: git machete down [<branch>]
@@ -572,21 +572,22 @@ def usage(c=None):
 
             Lists the local git branches that don't exist in the definition file, and removes all of them by `git branch -d' if confirmed by the user.
 
-            Note: this should be used with care since removing local branches can sometimes make it impossible for `git machete' to properly compute base commits.
-            See `git machete help base' for more details.
+            Note: this should be used with care since removing local branches can sometimes make it impossible for `git machete' to properly compute fork points.
+            See `git machete help fork-point' for more details.
 
             Options:
             -f, --force    Passes `-D' instead of `-d' to `git branch'; this will delete branches even if they are not merged yet.
         """,
         "reapply": """
-            Usage: git machete reapply [-b|--base=<base-commit>]
+            Usage: git machete reapply [-p|--fork-point=<fork-point-commit>]
 
-            Interactively rebase the current branch on the top of its base commit.
+            Interactively rebase the current branch on the top of its computed fork point.
             This is useful e.g. for squashing the commits on the current branch to make history more condensed before push to the remote.
-            The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
+            The chunk of the history to be rebased starts at the automatically computed fork point of the current branch by default, but can also be set explicitly by `--fork-point'.
+            See `git machete help fork-point' for more details on meaning of the "fork point".
 
             Options:
-            -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
+            -p, --fork-point=<fork-point-commit>    Specifies the alternative fork point commit after which the rebased part of history is meant to start.
         """,
         "root": """
             Usage: git machete root [<branch>]
@@ -595,15 +596,15 @@ def usage(c=None):
             Depending on your case, this will typically be something like `develop' or `master', since all branches are usually meant to be ultimately merged to one of those.
         """,
         "slide-out": """
-            Usage: git machete slide-out [-d|--down-base=<down-base-commit>] [<branch>]
+            Usage: git machete slide-out [-d|--down-fork-point=<down-fork-point-commit>] [<branch>]
 
             Removes the current branch from the machete and rebases the downstream (child) branch of the current branch on the top of the upstream (parent) branch of the current branch.
 
             Note: slide-out will return an error if the current branch has no downstream branches, has more than one downstream branch, or is a root (has no upstream branch).
             In other words, slide-out works only when the branch has exactly one upstream branch and exactly one downstream branch.
 
-            -d, --down-base=<down-base-commit>    Specifies the alternative base commit after which the rebased part of history of the downstream branch should start.
-                                                  See also doc for `--base' option for `git machete help reapply' and `git machete help update'.
+            -d, --down-fork-point=<down-fork-point-commit>    Specifies the alternative fork-point commit after which the rebased part of history of the downstream branch should start.
+                                                              See also doc for `--fork-point' option for `git machete help reapply' and `git machete help update'.
         """,
         "status": """
             Usage: git machete s[tatus] [-l|--list-commits] [-r|--remote=<remote-name>]
@@ -627,17 +628,19 @@ def usage(c=None):
             Outputs name of the branch that is the direct parent of the given branch (or current branch, if none specified).
         """,
         "update": """
-            Usage: git machete update [-b|--base=<base-commit>]
+            Usage: git machete update [-p|--fork-point=<fork-point-commit>]
 
             Interactively rebase the current branch on the top of its upstream (parent) branch.
             This is useful e.g. for syncing the current branch with changes introduced by an upstream branch like `develop', or changes commited on the parent branches.
-            The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
+            The chunk of the history to be rebased starts at the automatically computed fork point of the current branch by default, but can also be set explicitly by `--fork-point'.
+            See `git machete help fork-point' for more details on meaning of the "fork point".
 
             Options:
-            -b, --base=<base-commit>    Specifies the alternative base commit after which the rebased part of history should start.
+            -p, --fork-point=<fork-point-commit>    Specifies the alternative fork point commit after which the rebased part of history is meant to start.
         """
     }
     aliases = {
+        "diff": "d",
         "edit": "e",
         "go": "g",
         "status": "s"
@@ -646,7 +649,7 @@ def usage(c=None):
         ("General topics", ["format", "help"]),
         ("Modify and display the definition file", ["add", "edit", "file", "status"]),
         ("Move across the tree of branches", ["down", "go", "next", "prev", "root", "up"]),
-        ("Determine changes introduced on the branch", ["base", "diff-base"]),
+        ("Determine changes specific to the given branch", ["diff", "fork-point"]),
         ("Update history in accordance with the tree of branches", ["reapply", "slide-out", "update"]),
         ("Tidy up git branches", ["prune"])
     ]
@@ -672,16 +675,14 @@ def short_usage():
 
 
 def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
-    global cmd, opt_base, opt_down_base, opt_force, opt_list_commits, opt_onto, opt_remote, opt_stat, opt_verbose
+    global cmd, opt_down_fork_point, opt_force, opt_fork_point, opt_list_commits, opt_onto, opt_remote, opt_stat, opt_verbose
 
     fun = getopt.gnu_getopt if gnu else getopt.getopt
     opts, rest = fun(in_args, short_opts + "hv", long_opts + ['help', 'verbose'])
 
     for opt, arg in opts:
-        if opt in ("-b", "--base"):
-            opt_base = arg
-        elif opt in ("-d", "--down-base"):
-            opt_down_base = arg
+        if opt in ("-d", "--down-fork-point"):
+            opt_down_fork_point = arg
         elif opt in ("-f", "--force"):
             opt_force = True
         elif opt in ("-h", "--help"):
@@ -691,6 +692,8 @@ def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
             opt_list_commits = True
         elif opt in ("-o", "--onto"):
             opt_onto = arg
+        elif opt in ("-p", "--fork-point"):
+            opt_fork_point = arg
         elif opt in ("-r", "--remote"):
             opt_remote = arg
         elif opt in ("-s", "--stat"):
@@ -731,9 +734,9 @@ def check_required_param(in_args):
 
 try:
     cmd = None
-    opt_base = None
-    opt_down_base = None
+    opt_down_fork_point = None
     opt_force = False
+    opt_fork_point = None
     opt_list_commits = False
     opt_onto = None
     opt_remote = None
@@ -762,12 +765,9 @@ try:
     if cmd == "add":
         param = check_optional_param(parse_options(args, "o:", ["onto="]))
         add(param or head())
-    elif cmd == "base":
-        param = check_optional_param(parse_options(args))
-        print base(param or head())
-    elif cmd in ("db", "diff-base"):
+    elif cmd in ("d", "diff"):
         param = check_optional_param(parse_options(args, "s", ["stat"]))
-        diff_base(param or head())
+        diff(param or head())
     elif cmd == "down":
         param = check_optional_param(parse_options(args))
         print down(param or head(), pick_mode=False)
@@ -777,6 +777,9 @@ try:
     elif cmd == "file":
         expect_no_param(parse_options(args))
         print definition_file
+    elif cmd == "fork-point":
+        param = check_optional_param(parse_options(args))
+        print fork_point(param or head())
     elif cmd == "format":
         usage("format")
     elif cmd in ("g", "go"):
@@ -809,15 +812,15 @@ try:
         expect_no_param(parse_options(args, "f", ["force"]))
         prune()
     elif cmd == "reapply":
-        args1 = parse_options(args, "b:", ["base="])
-        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
+        args1 = parse_options(args, "p:", ["fork-point="])
+        expect_no_param(args1, ". Use `-p' or `--fork-point' to specify the fork point commit")
         h = head()
-        reapply(h, opt_base or base(h))
+        reapply(h, opt_fork_point or fork_point(h))
     elif cmd == "root":
         param = check_optional_param(parse_options(args))
         print root_branch(param or head())
     elif cmd == "slide-out":
-        param = check_optional_param(parse_options(args, "d:", ["down-base="]))
+        param = check_optional_param(parse_options(args, "d:", ["down-fork-point="]))
         slide_out(param or head())
     elif cmd in ("s", "status"):
         expect_no_param(parse_options(args, "lr:", ["list-commits", "remote="]))
@@ -826,10 +829,10 @@ try:
         param = check_optional_param(parse_options(args))
         print up(param or head())
     elif cmd == "update":
-        args1 = parse_options(args, "b:", ["base="])
-        expect_no_param(args1, ". Use `-b' or `--base' to specify the base commit")
+        args1 = parse_options(args, "p:", ["fork-point="])
+        expect_no_param(args1, ". Use `-p' or `--fork-point' to specify the fork point commit")
         h = head()
-        update(h, opt_base or base(h))
+        update(h, opt_fork_point or fork_point(h))
     else:
         short_usage()
         raise MacheteException("\nUnknown command: `%s'. Use `git machete help' to list possible commands" % cmd)
