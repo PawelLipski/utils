@@ -6,9 +6,9 @@ TL;DR: `git machete` helps you see what branch is out of sync with its parent (u
 
 # The problem
 
-Let's imag
+Let's imagine ???
 
-# Defining a structure for the branches
+# Defining a structure for the branches (`edit` command)
 
 ??? install `git-machete` with #####.
 Now let's run `git machete edit` or simply open the `.git/machete` file with your favorite editor.
@@ -27,18 +27,46 @@ so ???, ??? and ??? now need to be synced with `develop` (possibly we have to so
 Also, our PR for ??? received a couple of comments which we then fixed on a separate commit... thus throwing ??? out of sync with its parent branch ???
 And... that's exactly a _jungle_ like that where `git machete` comes to rescue.
 
-# What's macheting really about... `status` and `update` subcommands
 
-!!! say sth about fork point!
+# What's macheting really about... `status` and `update` subcommands
+TODO maybe `go` also here
+
+
+Let's now run `git machete status` and see the result:
+
+!!! add the picture
+
+Now we see the branch tree with coloring of edges.
+Red edge means ???
+Green edge means ???
+Also, there is this (out of sync with origin) ??? message
+
+Running `git machete status --list-commits` (or `git machete s -l` for short) also prints the commits introduced on each branch:
+
+!!! add pic
+
+!!! say sth about fork point!! `the commit at which the history of the branch actually diverges from the history of any other branch`
+
 
 # A few other useful hacks... `diff`, `go`, `add`, `reapply`, `slide-out`
 
-To see the changes introduced since the fork point of the current branch, 
 
+To see the changes introduced since the fork point of the current branch, run `git machete diff`.
+
+`git machete go` helps quickly navigate between branches in the tree.
+`git machete go up` and `git machete go down` check out the upstream branch or downstream branch of the current branch (if defined).
+`git machete go root` goes all the way upstream to the root of the tree (where a `develop` or `master` branch is usually located).
+`git machete go prev` and `git machete go next` switch to the previous or next branch in the order of definition (or simply just previous/next line in the ladder definition file).
+
+`git machete add --onto [<target-upstream>] [<branch>]` ????
+
+`slide-out` subcommand comes somewhat trick
 All commands supported by `git machete` can be found under `git machete help`.
 Run `git machete help <command>` for a more specific doc for the given command.
 
+
 # Appendix: fork point - not so easy business...
+
 
 The fork point commit (the commit at which the history of the branch actually diverges from the history of any other branch) is determined with a heuristics that uses `git reflog`.
 It's generally not trivial to find a correct fork point in every case, so a heurestics is applied that compares the *commit-wise* history (aka `git log`) of the given branch
@@ -50,7 +78,7 @@ This definition, though working correctly in most real-life cases, might sometim
 In particular, if certain local branches were already deleted, the determined fork point may be _too early_ in the history than expected.
 ??? sentence order?
 Also, it's always possible to check the fork point for a given branch included in the definition file with `git machete fork-point [<branch>]`,
-or to simply list commits considered by `git machete` to be specific for the each branch with `git machete status --list-commits` (`git machete s -l` for short).
+or to simply list commits considered by `git machete` to be specific for the each branch with `git machete status --list-commits`.
 Anyway, the potentially effects of ??? are mitigated:
 * The three commands that run `git rebase` under the hood (`reapply`, `slide-out`, `update`) always pass the `--interactive` flag.
   This enables the user to review the list of commits that are going to be rebased before actual rebase is executed.

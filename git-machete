@@ -371,7 +371,7 @@ def slide_out(b):
     down_branches[b] = None
     save_definition_file()
     update(d, opt_down_fork_point or fork_point(d))
-    print "Note: branch " + b + " not removed. You can now decide to remove it manually."
+    print >> sys.stderr, "Note: branch " + b + " not removed. You can now decide to remove it manually."
 
 
 def check_needs_sync_with_remote(b):
@@ -468,7 +468,7 @@ def usage(c=None):
     }
     long_docs = {
         "add": """
-            Usage: git machete add [-o|--onto=<target-branch>] [<branch>]
+            Usage: git machete add [-o|--onto=<target-upstream-branch>] [<branch>]
 
             Adds the given branch (or the current branch, if none specified) to the definition file.
             If the definition file is empty, the branch will be added as the first root of the tree.
@@ -479,10 +479,10 @@ def usage(c=None):
             Note: the same effect can be always achieved by manually editing the definition file.
 
             Options:
-            -o, --onto=<target-branch>    Specifies the target parent branch to add the new branch onto.
+            -o, --onto=<target-upstream-branch>    Specifies the target parent branch to add the new branch onto.
         """,
         "diff": """
-            Usage: git machete diff [-s | --stat] [<branch>]
+            Usage: git machete d[iff] [-s|--stat] [<branch>]
 
             Runs `git diff' of the given branch tip against its fork point or, if none specified, of the tip of the current branch against its fork point.
             See `git machete help fork-point' for more details on meaning of the "fork point".
@@ -652,8 +652,8 @@ def usage(c=None):
     }
     groups = [
         ("General topics", ["format", "help"]),
-        ("Modify and display the definition file", ["add", "edit", "file", "status"]),
-        ("Move across the tree of branches", ["down", "go", "next", "prev", "root", "up"]),
+        ("Modify and display the tree of branches", ["add", "edit", "file", "status"]),
+        ("Navigate between the branches", ["down", "go", "next", "prev", "root", "up"]),
         ("Determine changes specific to the given branch", ["diff", "fork-point"]),
         ("Update history in accordance with the tree of branches", ["reapply", "slide-out", "update"]),
         ("Tidy up git branches", ["prune"])
@@ -664,15 +664,20 @@ def usage(c=None):
         short_usage()
         if c and c not in short_docs:
             print >> sys.stderr, "\nUnknown command: `%s'" % c
-        print >> sys.stderr, "\n%sTL;DR tip%s: get familiar with the help for %sformat%s, %sedit%s, %sstatus%s and %supdate%s, in this order.\n" % (
+        print >> sys.stderr, "\n%sTL;DR tip%s\n\n    Get familiar with the help for %sformat%s, %sedit%s, %sstatus%s and %supdate%s, in this order.\n" % (
             UNDERLINE, ENDC, BOLD, ENDC, BOLD, ENDC, BOLD, ENDC, BOLD, ENDC
         )
         for hdr, cmds in groups:
-            print >> sys.stderr, BOLD + hdr + ENDC + "\n"
+            print >> sys.stderr, UNDERLINE + hdr + ENDC + "\n"
             for cm in cmds:
                 alias = (", " + aliases[cm]) if cm in aliases else ""
                 print >> sys.stderr, "    %s%-14s%s%s" % (BOLD, cm + alias, ENDC, short_docs[cm])
             print >> sys.stderr
+        print >> sys.stderr, textwrap.dedent("""
+            %sGeneral options%s\n
+                -h, --help       Prints help and exits.
+                -v, --verbose    Logs the executed git commands.
+        """[1:] % (UNDERLINE, ENDC))
 
 
 def short_usage():
