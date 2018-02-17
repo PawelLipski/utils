@@ -50,3 +50,7 @@ Anyway, the potentially effects of ??? are mitigated:
   This enables the user to review the list of commits that are getting rebased before actual rebase is executed.
 * It's also possible to specify the `git rebase`'s <from> the mentioned three commands
 
+More git-savvy use may argue that it should simply enough to use `--fork-point` option of `git rebase`... but reality tends to be harder.
+`git merge-base --fork-point` (and thus `git rebase` with the said option) only takes reflog of one upstream branch into account.
+This would work fine as long as nobody changes the structure of the tree in the definition file (i.e. doesn't move downstream branch from one upstream branch to another).
+Unfortunately, such modifications happen pretty often in real-life development... and thus a custom implementation of fork point has been necessary.

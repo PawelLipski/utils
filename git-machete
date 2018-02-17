@@ -176,11 +176,11 @@ def down(b, pick_mode):
     expect_in_branch_tree(b)
     dbs = down_branches.get(b)
     if not dbs or len(dbs) == 0:
-        raise MacheteException("Branch `%s' has no down branch" % b)
+        raise MacheteException("Branch `%s' has no downstream branch" % b)
     elif len(dbs) == 1:
         return dbs[0]
     elif pick_mode:
-        return pick(dbs, "down branch")
+        return pick(dbs, "downstream branch")
     else:
         return "\n".join(dbs)
 
@@ -218,7 +218,7 @@ def up(b):
     if pb:
         return pb
     else:
-        raise MacheteException("Branch `%s' has no up branch" % b)
+        raise MacheteException("Branch `%s' has no upstream branch" % b)
 
 
 def add(b):
@@ -242,7 +242,7 @@ def add(b):
         if b != h:
             onto = h
         else:
-            raise MacheteException("Specify the desired up (parent) branch for `%s' with `--onto'" % b)
+            raise MacheteException("Specify the desired upstream (parent) branch for `%s' with `--onto'" % b)
 
     up_branch[b] = onto
     if onto in down_branches:
@@ -356,13 +356,13 @@ def slide_out(b):
     expect_in_branch_tree(b)
     u = up_branch.get(b)
     if not u:
-        raise MacheteException("No up-branch defined for `%s', cannot slide out" % b)
+        raise MacheteException("No upstream branch defined for `%s', cannot slide out" % b)
     dbs = down_branches.get(b)
     if not dbs or len(dbs) == 0:
-        raise MacheteException("No down-branch defined for `%s', cannot slide out" % b)
+        raise MacheteException("No downstream branch defined for `%s', cannot slide out" % b)
     elif len(dbs) > 1:
         flat_dbs = join_branch_names(dbs, ", ")
-        raise MacheteException("Multiple down-branches defined for `%s': %s; cannot slide out" % (b, flat_dbs))
+        raise MacheteException("Multiple downstream branches defined for `%s': %s; cannot slide out" % (b, flat_dbs))
     d = dbs[0]
     go(d)
     up_branch[d] = up_branch[b]
@@ -450,7 +450,7 @@ def usage(c=None):
         "add": "Add a branch on the top of the current or other specified branch",
         "base": "Print SHA of the base commit of a branch",
         "diff-base": "Diff current working tree against the base commit of a branch",
-        "down": "Print name(s) of the down branch(es) for a branch (aka its children in the tree)",
+        "down": "Print name(s) of the downstream branch(es) for a branch (aka its children in the tree)",
         "edit": "Edit the definition file",
         "file": "Print path of the definition file",
         "format": "Format of the definition file",
@@ -461,10 +461,10 @@ def usage(c=None):
         "prune": "Remove all local branches that are not in the definition file",
         "reapply": "Rebase the current branch onto its base commit",
         "root": "Print name of the root branch of the tree where a branch is located",
-        "slide-out": "Slide the current branch out and rebase its down (child) branch onto its up (parent) branch",
-        "status": "Print tree-shaped status of branches listed in the definition file, including info on their sync with up branch and remote",
-        "up": "Print name of the up branch for a branch (aka parent in the tree)",
-        "update": "Rebase the current branch onto its up (parent) branch"
+        "slide-out": "Slide the current branch out and rebase its downstream (child) branch onto its upstream (parent) branch",
+        "status": "Print tree-shaped status of branches listed in the definition file, including info on their sync with upstream branch and remote",
+        "up": "Print name of the upstream branch for a branch (aka parent in the tree)",
+        "update": "Rebase the current branch onto its upstream (parent) branch"
     }
     long_docs = {
         "add": """
@@ -485,11 +485,11 @@ def usage(c=None):
             Usage: git machete base [<branch>]
 
             Outputs the base commit for the given branch, or, if none specified, for the current branch.
-            The given branch cannot be a root, i.e. its up (parent) branch must be defined.
-            
+            The given branch cannot be a root, i.e. its upstream (parent) branch must be defined.
+
             The returned base commit will be assumed as the default place where the history of the branch starts in the commands `diff-base', `reapply', `slide-out', and most notably `update'.
             In other words, `git machete' treats the base commit as the most recent commit in the log of the given branch that has NOT been introduced on that very branch, but on some other (usually earlier) branch.
-            
+
             Note: to determine this place in history, `git machete' uses a heuristics based on reflogs of local branches.
             This yields a correct result in typical cases, but there are some situations (esp. when some local branches have been deleted) where base commit might not be determined correctly.
             Thus, all rebase-involving operations (`reapply', `slide-out' and `update') run `git rebase' in the interactive mode and allow to specify the base commit explictly by a command-line option.
@@ -521,8 +521,8 @@ def usage(c=None):
         """,
         "format": """
             The format of the definition file should be as follows:
-            
-            
+
+
             develop
                 bugfix/money-reads-prec
                     refactor/drop-location-type
@@ -597,12 +597,12 @@ def usage(c=None):
         "slide-out": """
             Usage: git machete slide-out [-d|--down-base=<down-base-commit>] [<branch>]
 
-            Removes the current branch from the machete and rebases the down (child) branch of the current branch on the top of the up (parent) branch of the current branch.
+            Removes the current branch from the machete and rebases the downstream (child) branch of the current branch on the top of the upstream (parent) branch of the current branch.
 
-            Note: slide-out will return an error if the current branch has no down branches, more than one down branch, or is a root (has no up branch).
-            In other words, slide-out works only when the branch has exactly one up branch and exactly one down branch.
+            Note: slide-out will return an error if the current branch has no downstream branches, has more than one downstream branch, or is a root (has no upstream branch).
+            In other words, slide-out works only when the branch has exactly one upstream branch and exactly one downstream branch.
 
-            -d, --down-base=<down-base-commit>    Specifies the alternative base commit after which the rebased part of history of the down branch should start.
+            -d, --down-base=<down-base-commit>    Specifies the alternative base commit after which the rebased part of history of the downstream branch should start.
                                                   See also doc for `--base' option for `git machete help reapply' and `git machete help update'.
         """,
         "status": """
@@ -612,9 +612,9 @@ def usage(c=None):
 
             Apart from simply ASCII-formatting the definition file, this also:
             * prints `(out of sync with <remote>)' message for each branch that differs from its remote counterpart (in the `origin' remote by default);
-            * colors the edges between up (parent) and down (child) branches depending on whether down branch commit is a direct descendant of the up branch commit:
-              - green edge means that the down branch commit is direct descendant of the up branch commit (basically, the down branch is in sync with its up branch),
-              - red edge means the opposite (so the down branch is out of sync);
+            * colors the edges between upstream (parent) and downstream (children) branches depending on whether downstream branch commit is a direct descendant of the upstream branch commit:
+              - green edge means that the downstream branch commit is direct descendant of the upstream branch commit (basically, the downstream branch is in sync with its upstream branch),
+              - red edge means the opposite (so the downstream branch is out of sync);
             * optionally list commits introduced on each branch if `--list-commits' is supplied.
 
             Options:
@@ -629,7 +629,7 @@ def usage(c=None):
         "update": """
             Usage: git machete update [-b|--base=<base-commit>]
 
-            Interactively rebase the current branch on the top of its up (parent) branch.
+            Interactively rebase the current branch on the top of its upstream (parent) branch.
             This is useful e.g. for syncing the current branch with changes introduced by an upstream branch like `develop', or changes commited on the parent branches.
             The chunk of the history to be rebased starts at the base commit of the current branch by default, but can also be set explicitly by `--base'.
 
