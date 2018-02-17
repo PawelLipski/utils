@@ -2,15 +2,31 @@ Title: Make your way through git jungle with `git-machete`!
 
 <and some jungle-related picture>
 
-TL;DR: `git machete` helps you see what branch is out of sync with its parent (upstream) branch and automatically rebase, especially when some topic branches are stacked atop other ones.
+TL;DR: `git machete` helps you see what topic branches are out of sync with their parent (upstream) branches and automatically rebase, especially when some of them are stacked atop other ones.
+
 
 # The problem
 
-Let's imagine ???
+
+Let's imagine ??? !!!!!!!!rebase flow
+
+Then a couple of changes followed and each was dependent on a previous one: `adjust-reads-prec`, `block-cancel-order`,
+`change-table` and `drop-location-type`.
+
+Apart from that, also ???
+
+And `hotfix/remove-trigger` on the top of master ???
+
+Now the problem - how to quickly now which of them are in sync with their upstreams?
+Also rebasing is kind of pain and heavily error-prone.
+
 
 # Defining a structure for the branches (`edit` command)
 
+
 ??? install `git-machete` with #####.
+
+Let's first specify how we would like to organize our branches - basically, what depends on what.
 Now let's run `git machete edit` or simply open the `.git/machete` file with your favorite editor.
 
 A file like that:
@@ -25,7 +41,7 @@ develop
         full-load-gatling
     grep-errors-script
 master
-    hotfix/receipt-trigger
+    hotfix/remove-trigger
 ```
 
 Now we've given defined the structure how our branches should relate to each other.
@@ -38,8 +54,7 @@ Also, our PR for ??? received a couple of comments which we then fixed on a sepa
 And... that's exactly a _jungle_ like that where `git machete` comes to rescue.
 
 
-# What's macheting really about... `status` and `update` subcommands
-TODO maybe `go` also here
+# What's macheting really about... `status`, `go` and `update` subcommands
 
 
 Let's now run `git machete status` and see the result:
@@ -77,7 +92,7 @@ Let's now check out downstream with a handy shortcut `git machete go down` and r
 TODO pic, also include git push -f
 
 
-# A few other useful hacks... `diff`, `go`, `add`, `reapply`, `slide-out`
+# A few other useful hacks... `diff`, `add`, `reapply` and `slide-out`
 
 
 To see the changes introduced since the fork point of the current branch, run `git machete diff`.
@@ -96,13 +111,21 @@ The same effect can as well be achieved by editing the definition file `.git/mac
 
 
 `reapply` is similar to `update`, but instead of rebasing the commits onto upstream branch, it instead rebases onto fork point.
-This means that nothing changes in relation to the upstream branch - if the branches weren't in sync before, they still won't be.
+This means that rebase changes nothing in relation to the upstream branch - if the branches weren't in sync before, they still won't be.
 
 
 `slide-out` subcommand comes somewhat tricky.
 Let's assume the `edit-margin-not-allowed` was already merged to develop.
-What we most likely want to do now is to remove `edit-margin-not-allowed` from the tree ,
+What we most likely want to do now is to remove `edit-margin-not-allowed` from the tree and then rebase its downstream branch `full-load-gatling`
+onto the original upstream `develop`.
+Since that's a pretty common combination, there's a shortcut for that, `git machete slide-out`.
+Let's check out `edit-margin-not-allowed` and run the command:
 
+TODO pic
+
+and then after completing the rebase we get the following tree:
+
+TODO pic
 
 All commands supported by `git machete` can be found under `git machete help`.
 Run `git machete help <command>` for a more specific doc for the given command.
@@ -127,7 +150,7 @@ Anyway, the potentially effects of ??? are mitigated:
   This enables the user to review the list of commits that are going to be rebased before actual rebase is executed.
 * It's also possible to explicitly specify the fork point for the mentioned three commands with `--fork-point` (`reapply`, `update`) or `--down-fork-point` (`slide-out`).
 
-More git-savvy users may argue that it should be simply enough to use `--fork-point` option of `git rebase`... but reality turns out to be harder.
+More git-savvy users may argue that it should be enough to simply use `--fork-point` option of `git rebase`... but the reality turns out to be harder.
 `git merge-base --fork-point` (and thus `git rebase` with the said option) only takes reflog of the one provided upstream branch into account.
-This would work fine as long as nobody changes the structure of the tree in the definition file (i.e. doesn't change the upstream branch of any branch).
+This would work fine as long as nobody changes the structure of the tree in the definition file (i.e. the upstream branch of any branch doesn't change).
 Unfortunately, such tree modifications happen pretty often in real-life development... and thus a custom, more powerful way to find the fork point was necessary.
