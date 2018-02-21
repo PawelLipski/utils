@@ -166,3 +166,4 @@ More git-savvy users may argue that it should be enough to simply use `--fork-po
 `git merge-base --fork-point` (and thus `git rebase` with the said option) only takes reflog of the one provided upstream branch into account.
 This would work fine as long as nobody changes the structure of the tree in the definition file (i.e. the upstream branch of any branch doesn't change).
 Unfortunately, such tree modifications happen pretty often in real-life development... and thus a custom, more powerful way to find the fork point was necessary.
+
