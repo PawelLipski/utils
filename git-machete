@@ -369,7 +369,7 @@ def slide_out(b):
     go(d)
     up_branch[d] = up_branch[b]
     up_branch[b] = None
-    down_branches[u] = down_branches[b]
+    down_branches[u] = [(d if x == b else x) for x in down_branches[u]]
     down_branches[b] = None
     save_definition_file()
     update(d, opt_down_fork_point or fork_point(d))

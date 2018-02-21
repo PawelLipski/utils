@@ -1,13 +1,15 @@
-Title: Make your way through git jungle with `git-machete`!
+Title: Make your way through git (rebase) jungle with `git-machete`!
 
 <and some jungle-related picture>
 
-TL;DR: `git machete` helps you see what topic branches are out of sync with their parent (upstream) branches and automatically rebase, especially when some of them are stacked atop other ones.
+TL;DR: `git machete` helps you see what topic branches are out of sync with their parent (upstream) branches and automatically rebase them, especially when some of them are stacked atop other ones.
 
 
 # The problem
 
 
+The `machete` tool is only applicable for rebase flows - 
+It doesn't really 
 Let's imagine ??? !!!!!!!!rebase flow
 
 ?? while the pull request `adjust-reads-prec` -> `develop` was under review, you already started work on another topic branch `block-cancel-order`.
