@@ -10,15 +10,25 @@ TL;DR: `git machete` helps you see what topic branches are out of sync with thei
 
 Let's imagine ??? !!!!!!!!rebase flow
 
-Then a couple of changes followed and each was dependent on a previous one: `adjust-reads-prec`, `block-cancel-order`,
-`change-table` and `drop-location-type`.
+?? while the pull request `adjust-reads-prec` -> `develop` was under review, you already started work on another topic branch `block-cancel-order`.
+Unfortunately, the changes on `block-cancel-order` depended on what was already done on `adjust-reads-prec`...
+So you forked the new branch off `adjust-reads-prec` and when the feature was ready, you made another PR, this time `block-cancel-order` -> `adjust-reads-prec`.
+In the meantime, the reviewers posted their fixes on the first PR.
+You applied their remarks as `1st round of fixes` on the `adjust-reads-prec` branch.
+Since the review process took some time, you managed to start a couple of new refactors and bugfixes (this time on branches `change-table` and `drop-location-type`),
+but since each of them was dependent on the changes already waiting in review queue, you began stacking branches on top of each other.
+So we ended up with a couple of branches each was dependent on a previous one: `adjust-reads-prec`, `block-cancel-order`, `change-table` and `drop-location-type`.
+
+Let's get this scenario ????
+??? Uwaga zeby za duzo nie bylo tych branchy!!!!!!!!!!!!!!!!!!!!!
+Other than that, you also independently develop a feature `edit-margin-not-allowed`... but nobody really could ????
 
 Apart from that, also ???
 
 And `hotfix/remove-trigger` on the top of master ???
 
 Now the problem - how to quickly now which of them are in sync with their upstreams?
-Also rebasing is kind of pain and heavily error-prone.
+And also, how to easily rebase each of branches on the top of its parent, especially if the structure of the branch tree changes?
 
 
 # Defining a structure for the branches (`edit` command)
@@ -90,6 +100,8 @@ After push ??? but with `--force` ???, the status ???
 Let's now check out downstream with a handy shortcut `git machete go down` and rebase the downstream branch `???` on the already rebased `???`:
 
 TODO pic, also include git push -f
+
+??? TODO zmiana drzewa, pokazac ze wszystko ladnie hula!
 
 
 # A few other useful hacks... `diff`, `add`, `reapply` and `slide-out`
