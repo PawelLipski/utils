@@ -144,7 +144,7 @@ ginit() {
 }
 
 function g@ () {
-	git symbolic-ref --short HEAD
+	git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD
 }
 
 grbo() {
