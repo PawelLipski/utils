@@ -156,6 +156,9 @@ def read_definition_file():
 
 
 def render_definition_file():
+    global roots, down_branches, indent
+    if not indent:
+        indent = "\t"
     def render_dfs(u, d):
         res = [d * indent + u]
         for v in down_branches.get(u) or []:
@@ -236,20 +239,19 @@ def add(b):
         expect_in_branch_tree(onto)
     if not roots:
         roots = [b]
-        return
-
-    if not onto:
-        h = head()
-        if b != h:
-            onto = h
-        else:
-            raise MacheteException("Specify the desired upstream (parent) branch for `%s' with `--onto'" % b)
-
-    up_branch[b] = onto
-    if onto in down_branches:
-        down_branches[onto].append(b)
     else:
-        down_branches[onto] = [b]
+        if not onto:
+            h = head()
+            if b != h:
+                onto = h
+            else:
+                raise MacheteException("Specify the desired upstream (parent) branch for `%s' with `--onto'" % b)
+
+        up_branch[b] = onto
+        if onto in down_branches:
+            down_branches[onto].append(b)
+        else:
+            down_branches[onto] = [b]
     save_definition_file()
 
 
@@ -320,8 +322,8 @@ def fork_point(b):
     raise MacheteException("Cannot find fork point for branch `%s'" % b)
 
 
-def branches():
-    return map(lambda b: b[2:], non_empty_lines(popen_git("branch")))
+def branches(extra_option = None):
+    return map(lambda b: b[2:], non_empty_lines(popen_git("branch", *([extra_option] if extra_option else []))))
 
 
 def go(branch):
@@ -341,15 +343,17 @@ def diff(branch):
     run_git("diff", *params)
 
 
-def prune():
-    to_prune = excluding(branches(), all_branches)
-    if to_prune:
-        bs = ", ".join(map(lambda s: "`%s'" % s, to_prune))
-        msg = "This will remove the following branches: %s; continue? [y/n] " % bs
-        if raw_input(msg).lower() not in ('y', 'yes'):
-            return
-        opt_delete = "-D" if opt_force else "-d"
-        run_git("branch", opt_delete, *to_prune)
+def prune_branches():
+    merged_bs = excluding(branches("--merged"), all_branches)
+    unmerged_bs = excluding(branches("--no-merged"), all_branches)
+    all_to_prune = merged_bs + unmerged_bs
+    if all_to_prune:
+        for b in all_to_prune:
+            is_merged = b in merged_bs
+            msg = "Remove the branch `%s' (%s to HEAD)? [y/n] " % (b, "merged" if is_merged else "unmerged")
+            if raw_input(msg).lower() not in ('y', 'yes'):
+                continue
+            run_git("branch", "-d" if is_merged else "-D", b)
     else:
         print >> sys.stderr, "No branches to remove"
 
@@ -373,7 +377,7 @@ def slide_out(b):
     down_branches[b] = None
     save_definition_file()
     update(d, opt_down_fork_point or fork_point(d))
-    print >> sys.stderr, "Note: branch " + b + " not removed. You can now decide to remove it manually."
+    print >> sys.stderr, "Note: branch `" + b + "' not removed. You can now decide to remove it manually."
 
 
 def check_needs_sync_with_remote(b):
@@ -460,7 +464,7 @@ def usage(c=None):
         "help": "Print this overview, or print detailed help for a specified command",
         "next": "Print name of the next branch for a branch",
         "prev": "Print name of the previous branch for a branch",
-        "prune": "Remove all local branches that are not in the definition file",
+        "prune-branches": "Remove local branches that are not in the definition file",
         "reapply": "Rebase the current branch onto its computed fork point",
         "root": "Print name of the root branch of the tree where a branch is located",
         "slide-out": "Slide the current branch out and rebase its downstream (child) branch onto its upstream (parent) branch",
@@ -569,19 +573,17 @@ def usage(c=None):
 
             Outputs name of the branch that directly precedes the given branch (or current branch, if none specified) in the definition file.
         """,
-        "prune": """
-            Usage: git machete prune [-f|--force]
+        "prune-branches": """
+            Usage: git machete prune-branches
 
-            Lists the local git branches that don't exist in the definition file, and removes all of them by `git branch -d' if confirmed by the user.
+            Goes one-by-one through all the local git branches that don't exist in the definition file, and ask to remove each of them (with `git branch -d' or `git branch -D') if confirmed by user.
+            No branch will be removed unless explicitly confirmed by the user.
 
             Note: this should be used with care since removing local branches can sometimes make it impossible for `git machete' to properly compute fork points.
             See `git machete help fork-point' for more details.
-
-            Options:
-            -f, --force    Passes `-D' instead of `-d' to `git branch'; this will delete branches even if they are not merged yet.
         """,
         "reapply": """
-            Usage: git machete reapply [-p|--fork-point=<fork-point-commit>]
+            Usage: git machete reapply [-f|--fork-point=<fork-point-commit>]
 
             Interactively rebase the current branch on the top of its computed fork point.
             This is useful e.g. for squashing the commits on the current branch to make history more condensed before push to the remote.
@@ -589,7 +591,7 @@ def usage(c=None):
             See `git machete help fork-point' for more details on meaning of the "fork point".
 
             Options:
-            -p, --fork-point=<fork-point-commit>    Specifies the alternative fork point commit after which the rebased part of history is meant to start.
+            -f, --fork-point=<fork-point-commit>    Specifies the alternative fork point commit after which the rebased part of history is meant to start.
         """,
         "root": """
             Usage: git machete root [<branch>]
@@ -630,7 +632,7 @@ def usage(c=None):
             Outputs name of the branch that is the direct parent of the given branch (or current branch, if none specified).
         """,
         "update": """
-            Usage: git machete update [-p|--fork-point=<fork-point-commit>]
+            Usage: git machete update [-f|--fork-point=<fork-point-commit>]
 
             Interactively rebase the current branch on the top of its upstream (parent) branch.
             This is useful e.g. for syncing the current branch with changes introduced by an upstream branch like `develop', or changes commited on the parent branches.
@@ -638,7 +640,7 @@ def usage(c=None):
             See `git machete help fork-point' for more details on meaning of the "fork point".
 
             Options:
-            -p, --fork-point=<fork-point-commit>    Specifies the alternative fork point commit after which the rebased part of history is meant to start.
+            -f, --fork-point=<fork-point-commit>    Specifies the alternative fork point commit after which the rebased part of history is meant to start.
         """
     }
     aliases = {
@@ -653,7 +655,7 @@ def usage(c=None):
         ("Navigate between the branches", ["down", "go", "next", "prev", "root", "up"]),
         ("Determine changes specific to the given branch", ["diff", "fork-point"]),
         ("Update history in accordance with the tree of branches", ["reapply", "slide-out", "update"]),
-        ("Tidy up git branches", ["prune"])
+        ("Tidy up git branches", ["prune-branches"])
     ]
     if c and c in short_docs:
         print >> sys.stderr, textwrap.dedent(long_docs[c])
@@ -668,7 +670,7 @@ def usage(c=None):
             print >> sys.stderr, UNDERLINE + hdr + ENDC + "\n"
             for cm in cmds:
                 alias = (", " + aliases[cm]) if cm in aliases else ""
-                print >> sys.stderr, "    %s%-14s%s%s" % (BOLD, cm + alias, ENDC, short_docs[cm])
+                print >> sys.stderr, "    %s%-16s%s%s" % (BOLD, cm + alias, ENDC, short_docs[cm])
             print >> sys.stderr
         print >> sys.stderr, textwrap.dedent("""
             %sGeneral options%s\n
@@ -682,7 +684,7 @@ def short_usage():
 
 
 def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
-    global cmd, opt_down_fork_point, opt_force, opt_fork_point, opt_list_commits, opt_onto, opt_remote, opt_stat, opt_verbose
+    global cmd, opt_down_fork_point, opt_fork_point, opt_list_commits, opt_onto, opt_remote, opt_stat, opt_verbose
 
     fun = getopt.gnu_getopt if gnu else getopt.getopt
     opts, rest = fun(in_args, short_opts + "hv", long_opts + ['help', 'verbose'])
@@ -690,8 +692,8 @@ def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
     for opt, arg in opts:
         if opt in ("-d", "--down-fork-point"):
             opt_down_fork_point = arg
-        elif opt in ("-f", "--force"):
-            opt_force = True
+        elif opt in ("-f", "--fork-point"):
+            opt_fork_point = arg
         elif opt in ("-h", "--help"):
             usage(cmd)
             sys.exit()
@@ -699,8 +701,6 @@ def parse_options(in_args, short_opts="", long_opts=[], gnu=True):
             opt_list_commits = True
         elif opt in ("-o", "--onto"):
             opt_onto = arg
-        elif opt in ("-p", "--fork-point"):
-            opt_fork_point = arg
         elif opt in ("-r", "--remote"):
             opt_remote = arg
         elif opt in ("-s", "--stat"):
@@ -742,7 +742,6 @@ def check_required_param(in_args):
 try:
     cmd = None
     opt_down_fork_point = None
-    opt_force = False
     opt_fork_point = None
     opt_list_commits = False
     opt_onto = None
@@ -757,16 +756,17 @@ try:
     cmd = all_args[0]
     args = all_args[1:]
 
-    try:
-        git_root = root_dir()
-    except MacheteException:
-        raise MacheteException("Not a git repository")
+    if cmd not in ("format", "help"):
+        try:
+            git_root = root_dir()
+        except MacheteException:
+            raise MacheteException("Not a git repository")
 
-    definition_file = os.path.join(git_root, ".git", "machete")
-    if not os.path.exists(definition_file):
-        open(definition_file, 'w').close()
+        definition_file = os.path.join(git_root, ".git", "machete")
+        if not os.path.exists(definition_file):
+            open(definition_file, 'w').close()
 
-    if cmd not in ("e", "edit", "file", "help"):
+    if cmd not in ("e", "edit", "file", "format", "help"):
         read_definition_file()
 
     if cmd == "add":
@@ -815,12 +815,12 @@ try:
     elif cmd == "prev":
         param = check_optional_param(parse_options(args))
         print prev_branch(param or head())
-    elif cmd == "prune":
+    elif cmd == "prune-branches":
         expect_no_param(parse_options(args, "f", ["force"]))
-        prune()
+        prune_branches()
     elif cmd == "reapply":
-        args1 = parse_options(args, "p:", ["fork-point="])
-        expect_no_param(args1, ". Use `-p' or `--fork-point' to specify the fork point commit")
+        args1 = parse_options(args, "f:", ["fork-point="])
+        expect_no_param(args1, ". Use `-f' or `--fork-point' to specify the fork point commit")
         h = head()
         reapply(h, opt_fork_point or fork_point(h))
     elif cmd == "root":
@@ -836,8 +836,8 @@ try:
         param = check_optional_param(parse_options(args))
         print up(param or head())
     elif cmd == "update":
-        args1 = parse_options(args, "p:", ["fork-point="])
-        expect_no_param(args1, ". Use `-p' or `--fork-point' to specify the fork point commit")
+        args1 = parse_options(args, "f:", ["fork-point="])
+        expect_no_param(args1, ". Use `-f' or `--fork-point' to specify the fork point commit")
         h = head()
         update(h, opt_fork_point or fork_point(h))
     else:
