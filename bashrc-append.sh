@@ -84,6 +84,12 @@ use_java7() {
 DEVELOP=develop
 
 alias @='git machete'
+alias @d='git machete diff'
+alias @gd='git machete go down'
+alias @gu='git machete go up'
+alias @s='git machete status'
+alias @sl='git machete status -l'
+alias @u='git machete update'
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
