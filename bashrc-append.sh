@@ -85,6 +85,7 @@ DEVELOP=develop
 
 alias @='git machete'
 alias @d='git machete diff'
+alias @e='git machete edit'
 alias @gd='git machete go down'
 alias @gu='git machete go up'
 alias @s='git machete status'
