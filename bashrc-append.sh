@@ -84,12 +84,16 @@ use_java7() {
 DEVELOP=develop
 
 alias @='git machete'
+alias @a='git machete add'
+alias @csync='gpf && @gd && @s'
 alias @d='git machete diff'
 alias @e='git machete edit'
 alias @gd='git machete go down'
 alias @gu='git machete go up'
+alias @r='git machete reapply'
 alias @s='git machete status'
 alias @sl='git machete status -l'
+alias @sync='@u && gpf && @gd && @s'
 alias @u='git machete update'
 alias g=git
 alias ga='git add'
@@ -118,8 +122,8 @@ alias gl='git log'
 alias gll='git log --oneline -20'
 alias gld="git log $DEVELOP"
 alias glod="git log origin/$DEVELOP"
-alias gp='git push -u'
-alias gpf='git push -f'
+alias gp='git push -u | track-prs-bb'
+alias gpf='git push -f | track-prs-bb'
 alias gpl='git pull'
 alias gpld='gcod && gpl && gco -'
 alias grb='git rebase'
