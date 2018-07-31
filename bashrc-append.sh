@@ -85,7 +85,6 @@ DEVELOP=develop
 
 alias @='git machete'
 alias @a='git machete add'
-alias @csync='gpf && @gd && @s'
 alias @d='git machete diff'
 alias @e='git machete edit'
 alias @gd='git machete go down'
@@ -93,7 +92,7 @@ alias @gu='git machete go up'
 alias @r='git machete reapply'
 alias @s='git machete status'
 alias @sl='git machete status -l'
-alias @sync='@u && gpf && @gd && @s'
+alias @sq="GIT_SEQUENCE_EDITOR='sed -i \"1s/^pick/reword/;2,\\\$s/^pick/fixup/\"' git machete reapply" # squash
 alias @u='git machete update'
 alias g=git
 alias ga='git add'
@@ -120,10 +119,11 @@ alias gf='git fetch'
 alias ggr='git grep'
 alias gl='git log'
 alias gll='git log --oneline -20'
+alias glo='git log origin/`g@`'
 alias gld="git log $DEVELOP"
 alias glod="git log origin/$DEVELOP"
-alias gp='git push -u | track-prs-bb'
-alias gpf='git push -f | track-prs-bb'
+alias gp='git push -u 2>&1 | track-prs-bb'
+alias gpf='git push -f 2>&1 | track-prs-bb'
 alias gpl='git pull'
 alias gpld='gcod && gpl && gco -'
 alias grb='git rebase'
@@ -188,7 +188,7 @@ function dexdbrm() {
 }
 
 function dexdump() {
-	dex $1 /usr/bin/env pg_dump -h localhost -U xxx -W -d $2
+	dex $1 /usr/bin/env PGPASSWORD= pg_dump -h localhost -U xxx -d $2
 }
 
 
@@ -250,7 +250,8 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 export CDPATH='.:~'
 
 set_up_prompt() {
-    local user_and_host="\[\033[01;32m\]\u@\h"
+    #local user_and_host="\[\033[01;32m\]\u@\h"
+    local user_and_host="\[\033[01;32m\]\u"
     local cur_location="\[\033[01;34m\]\w"
     local git_branch_color="\[\033[31m\]"
     local git_branch='`git status 2>/dev/null >/dev/null && g@`'
@@ -263,5 +264,4 @@ set_up_prompt
 # sbt opts and aliases
 
 export SBT_OPTS="-Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
-export allsbt='sbt ";clean;coverage;test;it:test;coverageReport;coverageAggregate"'
 
