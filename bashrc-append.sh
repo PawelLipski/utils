@@ -117,7 +117,7 @@ alias gdx='git diff --stat'
 alias gf='git fetch'
 alias ggr='git grep'
 alias gl='git log'
-alias gll='git log --oneline -20'
+alias gll="git log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all"
 alias glo='git log origin/`g@`'
 alias gld="git log $DEVELOP"
 alias glod="git log origin/$DEVELOP"
