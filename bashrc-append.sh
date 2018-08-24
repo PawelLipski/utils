@@ -113,6 +113,7 @@ alias gdhx='git diff --stat @'
 alias gdno='git diff --name-only'
 alias gdp='git diff -M @~'
 alias gdpx='git diff --stat @~'
+alias gdw='git diff --word-diff'
 alias gdx='git diff --stat'
 alias gf='git fetch'
 alias ggr='git grep'
@@ -221,6 +222,8 @@ alias gri='grep -Ri'
 alias l='ls -CF'
 alias la='ls -A'
 alias ll='ls -alF'
+
+alias json-fmt='python -m json.tool | pygmentize -l js'
 
 alias mntdb='sudo mount -t vmhgfs .host:/Dropbox ~/Dropbox'
 
