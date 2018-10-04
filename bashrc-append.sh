@@ -124,7 +124,7 @@ alias gld="git log $DEVELOP"
 alias glod="git log origin/$DEVELOP"
 alias gp='git push -u 2>&1 | track-prs-bb'
 alias gpf='git push -f 2>&1 | track-prs-bb'
-alias gpl='git pull'
+alias gpl='git pull --ff-only'
 alias gpld='gcod && gpl && gco -'
 alias grb='git rebase'
 alias grbc='git rebase --continue'
@@ -174,13 +174,13 @@ blamestat() {
 
 alias d='docker'
 alias dcu='docker-compose up'
-alias dex='docker exec -it'
+alias dex='docker exec'
 alias dpsa='docker ps -a'
 alias drm='docker rm'
 alias drmi='docker rmi'
 
 function dexdb() {
-	dex $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2 "${@:3}"
+	dex -it $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2 "${@:3}"
 }
 
 function dexdbrm() {
@@ -188,9 +188,12 @@ function dexdbrm() {
 }
 
 function dexdump() {
-	dex $1 /usr/bin/env PGPASSWORD= pg_dump -h localhost -U xxx -d $2
+	dex -it $1 /usr/bin/env PGPASSWORD= pg_dump -h localhost -U xxx -d $2
 }
 
+function dexload() {
+	docker exec -i $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2
+}
 
 # Misc aliases
 
