@@ -93,6 +93,7 @@ alias @r='git machete reapply'
 alias @s='git machete status'
 alias @sl='git machete status -l'
 alias @sq="GIT_SEQUENCE_EDITOR='sed -i \"1s/^pick/reword/;2,\\\$s/^pick/fixup/\"' git machete reapply" # squash
+alias @t='GIT_SEQUENCE_EDITOR=: git machete traverse' # traverse without interactive editor
 alias @u='git machete update'
 alias g=git
 alias ga='git add'
@@ -103,6 +104,7 @@ alias gcamend='git commit -a --amend --no-edit'
 alias gcamende='git commit -a --amend'
 alias gco='git checkout'
 alias gcod="git checkout $DEVELOP"
+alias gcom="git checkout master"
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
 alias gd='git diff -M'
