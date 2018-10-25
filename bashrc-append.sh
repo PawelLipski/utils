@@ -182,7 +182,7 @@ alias drm='docker rm'
 alias drmi='docker rmi'
 
 function dexdb() {
-	dex -it $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2 "${@:3}"
+	dex -it $1 /usr/bin/env PGPASSWORD= psql -P pager=off -h localhost -U xxx -d $2 "${@:3}"
 }
 
 function dexdbrm() {
