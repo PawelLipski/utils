@@ -136,6 +136,12 @@ alias gs='git status'
 alias gsh='git show'
 alias gshp='git show @~'
 alias gshx='git show --stat'
+alias gx='git stash'
+alias gxa='git stash apply'
+
+g@ () {
+	git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD
+}
 
 gar() {
 	name=${1-$(basename `pwd`)}
@@ -156,10 +162,6 @@ ginit() {
 	git commit -m 'Initial commit'
 }
 
-function g@ () {
-	git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD
-}
-
 grbo() {
 	target_base_branch=${1}
 	latest_excluded_commit=${2}
@@ -177,6 +179,7 @@ blamestat() {
 alias d='docker'
 alias dcu='docker-compose up'
 alias dex='docker exec'
+alias dps='docker ps'
 alias dpsa='docker ps -a'
 alias drm='docker rm'
 alias drmi='docker rmi'
