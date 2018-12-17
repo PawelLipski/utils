@@ -138,7 +138,7 @@ alias gsh='git show'
 alias gshp='git show @~'
 alias gshx='git show --stat'
 alias gsm='git submodule'
-alias gsmu='git submodule "git fetch && git reset --hard @{upstream}"'
+alias gsmu='git submodule foreach "git fetch && git reset --hard @{upstream}"'
 alias gx='git stash'
 alias gxa='git stash apply'
 
