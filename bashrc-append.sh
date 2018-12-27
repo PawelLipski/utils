@@ -90,7 +90,7 @@ alias @e='git machete edit'
 alias @gd='git machete go down'
 alias @gu='git machete go up'
 alias @r='git machete reapply'
-alias @s='git machete status; git submodule foreach "git machete status"'
+alias @s='git machete status'
 alias @sl='git machete status -l'
 alias @sq="GIT_SEQUENCE_EDITOR='sed -i \"1s/^pick/reword/;2,\\\$s/^pick/fixup/\"' git machete reapply" # squash
 alias @t='GIT_SEQUENCE_EDITOR=: git machete traverse' # traverse without interactive editor
@@ -139,7 +139,8 @@ alias gshp='git show @~'
 alias gshx='git show --stat'
 alias gsm='git submodule'
 alias gsms='git submodule status'
-alias gsmu='git submodule foreach "git fetch && git reset --hard @{upstream}"'
+alias gsmrehu='git submodule foreach "git fetch && git reset --hard @{upstream}"'
+alias gsmu='git submodule update'
 alias gx='git stash'
 alias gxa='git stash apply'
 
