@@ -173,9 +173,11 @@ grbo() {
 	git rebase -i --onto $target_base_branch $latest_excluded_commit `g@`
 }
 
-blamestat() {
-	#git ls-tree -r --name-only | ...
-	git grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git blame | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+blamestat_() {
+	for dir in $@; do
+		where="--work-tree=$dir --git-dir=$dir/.git"
+		git $where grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git $where blame
+	done | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
 
