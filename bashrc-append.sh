@@ -92,7 +92,6 @@ alias @gu='git machete go up'
 alias @r='git machete reapply'
 alias @s='git machete status'
 alias @sl='git machete status -l'
-alias @sq="GIT_SEQUENCE_EDITOR='sed -i \"1s/^pick/reword/;2,\\\$s/^pick/fixup/\"' git machete reapply" # squash
 alias @t='GIT_SEQUENCE_EDITOR=: git machete traverse' # traverse without interactive editor
 alias @u='git machete update'
 alias g=git
@@ -140,21 +139,31 @@ alias gshp='git show @~'
 alias gshx='git show --stat'
 alias gsm='git submodule'
 alias gsms='git submodule status'
-alias gsmrehu='git submodule foreach "gco@ && git fetch && git reset --hard @{upstream}"'
 alias gsmu='git submodule update'
 alias gx='git stash'
 alias gxa='git stash apply'
 
-g@ () {
+function @sq {
+	GIT_SEQUENCE_EDITOR="sed -i '1s/^pick/reword/;2,\$s/^pick/fixup/'" git machete reapply
+}
+
+function blamestat_ {
+	for dir in $@; do
+		where="--work-tree=$dir --git-dir=$dir/.git"
+		git $where grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git $where blame
+	done | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+}
+
+function g@ {
 	git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD
 }
 
-gar() {
+function gar {
 	name=${1-$(basename `pwd`)}
 	git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
 }
 
-gcm() {
+function gcm {
 	if git status | grep Untracked > /dev/null; then
 		git status
 	else
@@ -162,23 +171,20 @@ gcm() {
 	fi
 }
 
-ginit() {
+function ginit {
 	git init
 	git add .
 	git commit -m 'Initial commit'
 }
 
-grbo() {
+function grbo {
 	target_base_branch=${1}
 	latest_excluded_commit=${2}
 	git rebase -i --onto $target_base_branch $latest_excluded_commit `g@`
 }
 
-blamestat_() {
-	for dir in $@; do
-		where="--work-tree=$dir --git-dir=$dir/.git"
-		git $where grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git $where blame
-	done | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+function gsmrehu {
+	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git log --no-walk --format=%D --decorate --decorate-refs=refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
 }
 
 
