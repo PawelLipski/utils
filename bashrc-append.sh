@@ -184,7 +184,7 @@ function grbo {
 }
 
 function gsmrehu {
-	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git log --no-walk --format=%D --decorate --decorate-refs=refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
+	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --merged @ --contains @ --count 1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
 }
 
 
