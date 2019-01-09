@@ -103,6 +103,7 @@ alias gbr='git branch -r'
 alias gcamend='git commit -a --amend --no-edit'
 alias gcamende='git commit -a --amend'
 alias gco='git checkout'
+alias gco@='git checkout "$(git log --no-walk --format=%D --decorate --decorate-refs=refs/heads)"'
 alias gcod="git checkout $DEVELOP"
 alias gcom="git checkout master"
 alias gcp='git cherry-pick'
