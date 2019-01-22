@@ -184,7 +184,7 @@ function grbo {
 }
 
 function gsmrehu {
-	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --merged @ --contains @ --count 1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
+	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
 }
 
 
@@ -273,15 +273,27 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
 export CDPATH='.:~'
 
+get_last_status() {
+	s=$?
+	[ $s -eq 0 ] && echo -ne "\033[01;32m➜" || echo -ne "\033[01;31m➜ ($s)"
+	echo -ne '\033[0m\033[1m'
+}
+
+get_git_index() {
+	git diff-index --quiet HEAD
+	[ $? -ne 0 ] && echo -ne "\033[01;33m✗"
+}
+
 set_up_prompt() {
-    #local user_and_host="\[\033[01;32m\]\u@\h"
+	local last_status='`get_last_status`'
+    # local user_and_host="\[\033[01;32m\]\u@\h"
     local user_and_host="\[\033[01;32m\]\u"
     local cur_location="\[\033[01;34m\]\w"
     local git_branch_color="\[\033[31m\]"
     local git_branch='`git status 2>/dev/null >/dev/null && g@`'
-    local prompt_tail="\[\033[35m\]$"
-    local last_color="\[\033[00m\]"
-    export PS1="$user_and_host ${cur_location} ${git_branch_color}${git_branch}${prompt_tail}${last_color} "
+    local git_index='`get_git_index`'
+    local prompt_tail="\[\033[35m\]$\[\033[00m\]"
+    export PS1="$last_status #\$\$ ${cur_location} ${git_branch_color}${git_branch}${git_index} ${prompt_tail} "
 }
 set_up_prompt
 
