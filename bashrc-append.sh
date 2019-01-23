@@ -280,6 +280,7 @@ get_last_status() {
 }
 
 get_git_index() {
+	git status &>/dev/null || exit 0
 	git diff-index --quiet HEAD
 	[ $? -ne 0 ] && echo -ne "\033[01;33m✗"
 }
@@ -290,10 +291,10 @@ set_up_prompt() {
     local user_and_host="\[\033[01;32m\]\u"
     local cur_location="\[\033[01;34m\]\w"
     local git_branch_color="\[\033[31m\]"
-    local git_branch='`git status 2>/dev/null >/dev/null && g@`'
+    local git_branch='`git status 2>/dev/null >/dev/null && echo -n " " && g@`'
     local git_index='`get_git_index`'
-    local prompt_tail="\[\033[35m\]$\[\033[00m\]"
-    export PS1="$last_status #\$\$ ${cur_location} ${git_branch_color}${git_branch}${git_index} ${prompt_tail} "
+    local prompt_tail=" \[\033[35m\]$\[\033[00m\]"
+    export PS1="$last_status #\$\$ ${cur_location}${git_branch_color}${git_branch}${git_index}${prompt_tail} "
 }
 set_up_prompt
 
