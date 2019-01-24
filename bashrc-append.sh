@@ -273,20 +273,29 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
 export CDPATH='.:~'
 
-get_last_status() {
+get_last_status_color() {
 	s=$?
-	[ $s -eq 0 ] && echo -ne "\033[01;32m➜" || echo -ne "\033[01;31m➜ ($s)"
-	echo -ne '\033[0m\033[1m'
+	[ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
+	exit $s # need to retain the status for get_last_status_content
 }
 
-get_git_index() {
-	git status &>/dev/null || exit 0
-	git diff-index --quiet HEAD
-	[ $? -ne 0 ] && echo -ne "\033[01;33m✗"
+get_last_status_content() {
+	s=$?
+	[ $s -eq 0 ] && echo -n ➜ || echo -n "➜ ($s)"
+}
+
+get_git_index_color() {
+	git diff-index --quiet HEAD &>/dev/null
+	[ $? -eq 1 ] && echo -ne "\033[01;33m" && exit 1
+	exit 0
+}
+
+get_git_index_char() {
+	# Trick: using get_git_index_color's exit code to save another call to git diff-index
+	[ $? -eq 1 ] && echo -n ✗
 }
 
 set_up_prompt() {
-	local last_status='`get_last_status`'
     # local user_and_host="\[\033[01;32m\]\u@\h"
     local user_and_host="\[\033[01;32m\]\u"
     local cur_location="\[\033[01;34m\]\w"
@@ -294,7 +303,7 @@ set_up_prompt() {
     local git_branch='`git status 2>/dev/null >/dev/null && echo -n " " && g@`'
     local git_index='`get_git_index`'
     local prompt_tail=" \[\033[35m\]$\[\033[00m\]"
-    export PS1="$last_status #\$\$ ${cur_location}${git_branch_color}${git_branch}${git_index}${prompt_tail} "
+    export PS1="\[\`get_last_status_color\`\]\`get_last_status_content\` \[\033[0m\033[1m\]#\$\$ ${cur_location}${git_branch_color}${git_branch}\\[\`get_git_index_color\`\\]\`get_git_index_char\`${prompt_tail} "
 }
 set_up_prompt
 
