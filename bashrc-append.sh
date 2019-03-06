@@ -81,8 +81,6 @@ use_java7() {
 
 # git aliases
 
-DEVELOP=develop
-
 alias @='git machete'
 alias @a='git machete add'
 alias @d='git machete diff'
@@ -92,7 +90,7 @@ alias @gu='git machete go up'
 alias @r='git machete reapply'
 alias @s='git machete status'
 alias @sl='git machete status -l'
-alias @t='GIT_SEQUENCE_EDITOR=: git machete traverse' # traverse without interactive editor
+alias @t='GIT_SEQUENCE_EDITOR=: git machete traverse' # traverse without interactive rebase
 alias @u='git machete update'
 alias g=git
 alias ga='git add'
@@ -101,15 +99,15 @@ alias gb='git branch'
 alias gbr='git branch -r'
 alias gcamend='git commit -a --amend --no-edit'
 alias gcamende='git commit -a --amend'
-alias gco='git checkout'
-alias gco@='git checkout "$(git log --no-walk --format=%D --decorate --decorate-refs=refs/heads)"'
-alias gcod="git checkout $DEVELOP"
-alias gcom="git checkout master"
+alias gco='git checkout --recurse-submodules'
+alias gco@='gco "$(git log --no-walk --format=%D --decorate --decorate-refs=refs/heads)"'
+alias gcod='gco develop'
+alias gcom='gco master'
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
 alias gd='git diff -M'
-alias gdd="git diff -M $DEVELOP"
-alias gddx="git diff --stat $DEVELOP"
+alias gdd="git diff -M develop"
+alias gddx="git diff --stat develop"
 alias gdh='git diff -M @'
 alias gdhx='git diff --stat @'
 alias gdno='git diff --name-only'
@@ -122,8 +120,10 @@ alias ggr='git grep'
 alias gl='git log'
 alias gll="git log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'"
 alias glo='git log origin/`g@`'
-alias gld="git log $DEVELOP"
-alias glod="git log origin/$DEVELOP"
+alias gld='git log develop'
+alias glm='git log master'
+alias glod='git log origin/develop'
+alias glom='git log origin/master'
 alias gp='git push -u 2>&1 | track-prs-bb'
 alias gpf='git push -u -f 2>&1 | track-prs-bb'
 alias gpl='git pull --ff-only'
@@ -184,7 +184,7 @@ function grbo {
 }
 
 function gsmrehu {
-	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
+	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || gco \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
 }
 
 
