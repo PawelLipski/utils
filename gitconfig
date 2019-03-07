@@ -7,7 +7,7 @@
 	ui = auto
 [alias]
 	cam = commit -am
-	co = checkout
+	co = checkout --recurse-submodules
 	l = log
 	s = status
 [push]
