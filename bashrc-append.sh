@@ -99,7 +99,7 @@ alias gb='git branch'
 alias gbr='git branch -r'
 alias gcamend='git commit -a --amend --no-edit'
 alias gcamende='git commit -a --amend'
-alias gco='git checkout --recurse-submodules'
+alias gco='git checkout'
 alias gco@='gco "$(git log --no-walk --format=%D --decorate --decorate-refs=refs/heads)"'
 alias gcod='gco develop'
 alias gcom='gco master'
@@ -152,6 +152,10 @@ function blamestat_ {
 		where="--work-tree=$dir --git-dir=$dir/.git"
 		git $where grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git $where blame
 	done | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
+}
+
+function cdiff {
+	colordiff -u "$@" | less -r
 }
 
 function g@ {
