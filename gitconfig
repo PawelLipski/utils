@@ -13,5 +13,3 @@
 [push]
 	default = current
 
-[submodule]
-	recurse = true
