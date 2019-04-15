@@ -150,7 +150,7 @@ function @sq {
 function blamestat_ {
 	for dir in $@; do
 		where="--work-tree=$dir --git-dir=$dir/.git"
-		git $where grep -Il '' | egrep -v '\.(pem|pub|xsd)$' | xargs -L1 git $where blame
+		git $where grep -Il '' | egrep -iv '\.(pem|pub|xsd)$|license' | xargs -L1 git $where blame
 	done | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort | uniq -c | awk '{print $0;sum+=$1} END {print sum}'
 }
 
