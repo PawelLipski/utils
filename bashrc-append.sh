@@ -237,6 +237,8 @@ copy() {
 	cp -r $1 $buf
 }
 
+alias colordiff='colordiff -u'
+
 alias cp='cp -i'
 
 alias disk-control='sudo smartctl -a /dev/sda'
