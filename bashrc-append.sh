@@ -320,3 +320,45 @@ set_up_prompt
 
 export SBT_OPTS="-Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
 
+# Command completion
+
+## aws completion
+
+if command -v aws &>/dev/null && [ -f ~/.local/bin/aws_bash_completer ]; then
+	. ~/.local/bin/aws_bash_completer
+fi
+
+## helm completion
+
+if command -v helm &>/dev/null; then
+	eval "$(helm completion bash)"
+fi
+
+## kops completion
+
+if command -v kops &>/dev/null; then
+	eval "$(kops completion bash)"
+fi
+
+## kubectl completion
+
+if command -v kubectl &>/dev/null; then
+	eval "$(kubectl completion bash)"
+fi
+
+## kubectx completion
+if command -v kubectx &>/dev/null && [ -f /opt/kubectx/completion/kubectx.bash ]; then
+	. /opt/kubectx/completion/kubectx.bash
+fi
+
+## kubens completion
+if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; then
+	. /opt/kubectx/completion/kubens.bash
+fi
+
+## minikube completion
+
+if command -v minikube &>/dev/null; then
+	eval "$(minikube completion bash)"
+fi
+
