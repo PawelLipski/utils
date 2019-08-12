@@ -320,6 +320,16 @@ set_up_prompt
 
 export SBT_OPTS="-Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
 
+# Helm helpers
+
+helmdiff() {
+	[[ $# -eq 3 ]] || { echo "usage: helmdiff <release> <chart> <values-file>" 2>&1; return 1; }
+	release=$1
+	chart=$2
+	values_file=$3
+	colordiff -u <(helm get $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
+}
+
 # Command completion
 
 ## aws completion
