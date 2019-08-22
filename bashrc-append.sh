@@ -266,7 +266,7 @@ alias mv='mv -i'
 
 alias reba='. ~/.bashrc'
 
-alias rm='rm -i'
+alias rm='rm -iv'
 
 alias sagi='sudo apt-get install'
 
@@ -320,7 +320,7 @@ set_up_prompt
 
 export SBT_OPTS="-Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
 
-# Helm helpers
+# k8s/Helm helpers
 
 helmdiff() {
 	[[ $# -eq 3 ]] || { echo "usage: helmdiff <release> <chart> <values-file>" 2>&1; return 1; }
@@ -328,6 +328,49 @@ helmdiff() {
 	chart=$2
 	values_file=$3
 	colordiff -u <(helm get $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
+}
+
+kbash() {
+	kexec "$1" bash
+}
+
+kcat() {
+	kexec "$1" cat $2
+}
+
+kcp() {
+	from_pod=$(kgetpod $1)
+	to_pod=$(kgetpod $2)
+	path=$3
+	tmp=$(mktemp -d)/$(basename $path)
+	kubectl cp $from_pod:$path $tmp
+	kubectl exec -t "$to_pod" -- rm -r $path
+	kubectl cp $tmp $to_pod:$path
+	rm -rf $tmp
+}
+
+kdiff() {
+	pod1=$(kgetpod $1)
+	pod2=$(kgetpod $2)
+	path=$3
+	tmp1=$(mktemp -d)/$pod1-$(basename $path)
+	tmp2=$(mktemp -d)/$pod2-$(basename $path)
+	kubectl cp $pod1:$path $tmp1
+	kubectl cp $pod2:$path $tmp2
+	colordiff -u $tmp1 $tmp2
+	rm -f $tmp1 $tmp2
+}
+
+kexec() {
+	kubectl exec -it "$(kgetpod $1)" -- "${@:2}"
+}
+
+kgetpod() {
+	kubectl get pods -l app="$1" -o jsonpath='{.items[0].metadata.name}'
+}
+
+kls() {
+	kexec "$1" ls $2
 }
 
 # Command completion
