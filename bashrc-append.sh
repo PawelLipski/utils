@@ -26,6 +26,7 @@ shopt -s dotglob
 # Vars
 
 export EDITOR=vim
+export HISTSIZE=-1 #
 
 
 # Marks/jumping
@@ -178,6 +179,14 @@ function gcm {
 	fi
 }
 
+function gcmlast {
+	if git status | grep Untracked > /dev/null; then
+		git status
+	else
+		git commit -am "$(git log -1 --format=%s)" --edit
+	fi
+}
+
 function ginit {
 	git init
 	git add .
@@ -273,9 +282,9 @@ alias sagi='sudo apt-get install'
 alias vimba='vim ~/.bashrc; reba'
 
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
-export HISTCONTROL=ignoredups:erasedups  # no duplicate entries
-export HISTSIZE=100000                   # big big history
-export HISTFILESIZE=100000               # big big history
+HISTCONTROL=ignoredups:erasedups  # no duplicate entries
+HISTSIZE=100000                   # big big history
+HISTFILESIZE=100000               # big big history
 shopt -s histappend                      # append to history, don't overwrite it
 # Save and reload the history after each command finishes
 export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
