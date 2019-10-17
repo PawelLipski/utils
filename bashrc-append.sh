@@ -154,8 +154,8 @@ function @sq {
 function blamestat_ {
 	for dir in $@; do
 		where="--work-tree=$dir --git-dir=$dir/.git"
-		git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license' | xargs -L1 git $where blame
-	done | grep -o '^[^()]*([^():]*201' | sed 's/.*(//g; s/ *201//g' | sort -u | awk '{print $0;sum+=$1} END {print sum}'
+		git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)'
+	done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
 }
 
 function cdiff {
