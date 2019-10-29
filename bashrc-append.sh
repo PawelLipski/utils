@@ -327,7 +327,7 @@ set_up_prompt
 
 # sbt opts and aliases
 
-export SBT_OPTS="-Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
+export SBT_OPTS="-Xmx2G -Xss2M -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:ReservedCodeCacheSize=512M"
 
 # k8s/Helm helpers
 
