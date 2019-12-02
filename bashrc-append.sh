@@ -325,9 +325,10 @@ set_up_prompt() {
 }
 set_up_prompt
 
-# sbt opts and aliases
+# sbt opts
 
-export SBT_OPTS="-Xmx2G -Xss2M -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:ReservedCodeCacheSize=512M"
+# Better set in .jvmopts directly in the project folder!
+#export SBT_OPTS="-Xmx2G -Xss2M -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:ReservedCodeCacheSize=512M"
 
 # k8s/Helm helpers
 
