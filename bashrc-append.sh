@@ -399,7 +399,7 @@ fi
 
 ## kops completion
 
-if command -v kops &>/dev/null; then
+if command kops --version &>/dev/null; then
 	eval "$(command kops completion bash)"
 fi
 
