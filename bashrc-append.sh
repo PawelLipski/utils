@@ -394,19 +394,19 @@ fi
 ## helm completion
 
 if command -v helm &>/dev/null; then
-	eval "$(helm completion bash)"
+	eval "$(command helm completion bash)"
 fi
 
 ## kops completion
 
 if command -v kops &>/dev/null; then
-	eval "$(kops completion bash)"
+	eval "$(command kops completion bash)"
 fi
 
 ## kubectl completion
 
 if command -v kubectl &>/dev/null; then
-	eval "$(kubectl completion bash)"
+	eval "$(command kubectl completion bash)"
 fi
 
 ## kubectx completion
@@ -422,6 +422,6 @@ fi
 ## minikube completion
 
 if command -v minikube &>/dev/null; then
-	eval "$(minikube completion bash)"
+	eval "$(command minikube completion bash)"
 fi
 
