@@ -1,13 +1,13 @@
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
-	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-	alias ls='ls --color=auto'
-	alias dir='dir --color=auto'
-	alias vdir='vdir --color=auto'
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias dir='dir --color=auto'
+    alias vdir='vdir --color=auto'
 
-	alias grep='grep --color=auto'
-	alias fgrep='fgrep --color=auto'
-	alias egrep='egrep --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
 fi
 
 
@@ -50,10 +50,10 @@ function marks {
 }
 
 _completemarks() {
-	local curw=${COMP_WORDS[COMP_CWORD]}
-	local wordlist=$(find $MARKPATH -type l -printf "%f\n")
-	COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
-	return 0
+    local curw=${COMP_WORDS[COMP_CWORD]}
+    local wordlist=$(find $MARKPATH -type l -printf "%f\n")
+    COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
+    return 0
 }
 
 complete -F _completemarks jump unmark
@@ -63,20 +63,20 @@ alias jmp=jump
 ## JDK setup ##
 
 setup_jdk() {
-	# Remove the current JDK from PATH
-	if [ -n "$JAVA_HOME" ] ; then
-		PATH=${PATH/$JAVA_HOME\/bin:/}
-	fi
-	export JAVA_HOME=$1
-	export PATH=$JAVA_HOME/bin:$PATH
+    # Remove the current JDK from PATH
+    if [ -n "$JAVA_HOME" ] ; then
+        PATH=${PATH/$JAVA_HOME\/bin:/}
+    fi
+    export JAVA_HOME=$1
+    export PATH=$JAVA_HOME/bin:$PATH
 }
 
 use_java6() {
-	setup_jdk /usr/lib/jvm/jdk1.6.0_45
+    setup_jdk /usr/lib/jvm/jdk1.6.0_45
 }
 
 use_java7() {
-	setup_jdk /usr/lib/jvm/java-7-openjdk-amd64
+    setup_jdk /usr/lib/jvm/java-7-openjdk-amd64
 }
 
 
@@ -148,59 +148,59 @@ alias gx='git stash'
 alias gxa='git stash apply'
 
 function @sq {
-	GIT_SEQUENCE_EDITOR="sed -i '1s/^pick/reword/;2,\$s/^pick/fixup/'" git machete reapply
+    GIT_SEQUENCE_EDITOR="sed -i '1s/^pick/reword/;2,\$s/^pick/fixup/'" git machete reapply
 }
 
 function blamestat_ {
-	for dir in $@; do
-		where="--work-tree=$dir --git-dir=$dir/.git"
-		git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)'
-	done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
+    for dir in $@; do
+        where="--work-tree=$dir --git-dir=$dir/.git"
+        git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)'
+    done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
 }
 
 function cdiff {
-	colordiff -u "$@" | less -r
+    colordiff -u "$@" | less -r
 }
 
 function g@ {
-	git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD
+    git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD
 }
 
 function gar {
-	name=${1-$(basename `pwd`)}
-	git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
+    name=${1-$(basename `pwd`)}
+    git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
 }
 
 function gcm {
-	if git status | grep Untracked > /dev/null; then
-		git status
-	else
-		git commit -am "$*"
-	fi
+    if git status | grep Untracked > /dev/null; then
+        git status
+    else
+        git commit -am "$*"
+    fi
 }
 
 function gcmlast {
-	if git status | grep Untracked > /dev/null; then
-		git status
-	else
-		git commit -am "$(git log -1 --format=%s | sed 's/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/')" --edit
-	fi
+    if git status | grep Untracked > /dev/null; then
+        git status
+    else
+        git commit -am "$(git log -1 --format=%s | sed 's/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/')" --edit
+    fi
 }
 
 function ginit {
-	git init
-	git add .
-	git commit -m 'Initial commit'
+    git init
+    git add .
+    git commit -m 'Initial commit'
 }
 
 function grbo {
-	target_base_branch=${1}
-	latest_excluded_commit=${2}
-	git rebase -i --onto $target_base_branch $latest_excluded_commit `g@`
+    target_base_branch=${1}
+    latest_excluded_commit=${2}
+    git rebase -i --onto $target_base_branch $latest_excluded_commit `g@`
 }
 
 function gsmrehu {
-	git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
+    git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
 }
 
 
@@ -215,27 +215,27 @@ alias drm='docker rm'
 alias drmi='docker rmi'
 
 function dexdb() {
-	dex -it $1 /usr/bin/env PGPASSWORD= psql -P pager=off -h localhost -U xxx -d $2 "${@:3}"
+    dex -it $1 /usr/bin/env PGPASSWORD= psql -P pager=off -h localhost -U xxx -d $2 "${@:3}"
 }
 
 function dexdbrm() {
-	dexdb $1 $2 -c 'drop schema public cascade; create schema public'
+    dexdb $1 $2 -c 'drop schema public cascade; create schema public'
 }
 
 function dexdump() {
-	dex -it $1 /usr/bin/env PGPASSWORD= pg_dump -h localhost -U xxx -d $2
+    dex -it $1 /usr/bin/env PGPASSWORD= pg_dump -h localhost -U xxx -d $2
 }
 
 function dexload() {
-	docker exec -i $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2
+    docker exec -i $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2
 }
 
 # Misc aliases
 
 function .. {
-	for i in `seq 1 ${1-1}`; do
-		cd ..;
-	done
+    for i in `seq 1 ${1-1}`; do
+        cd ..;
+    done
 }
 
 # Add an "alert" alias for long running commands.  Use like so:
@@ -243,10 +243,10 @@ function .. {
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 copy() {
-	buf=/tmp/__buffer
-	rm -rf $buf
-	mkdir $buf
-	cp -r $1 $buf
+    buf=/tmp/__buffer
+    rm -rf $buf
+    mkdir $buf
+    cp -r $1 $buf
 }
 
 alias colordiff='colordiff -u'
@@ -270,7 +270,7 @@ alias mntdb='sudo mount -t vmhgfs .host:/Dropbox ~/Dropbox'
 alias mv='mv -i'
 
 #paste() {
-#	cp -ir /tmp/__buffer/* .
+#    cp -ir /tmp/__buffer/* .
 #}
 
 alias reba='. ~/.bashrc'
@@ -292,25 +292,25 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 export CDPATH='.:~'
 
 get_last_status_color() {
-	s=$?
-	[ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
-	exit $s # need to retain the status for get_last_status_content
+    s=$?
+    [ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
+    exit $s # need to retain the status for get_last_status_content
 }
 
 get_last_status_content() {
-	s=$?
-	[ $s -eq 0 ] && echo -n ➜ || echo -n "➜ ($s)"
+    s=$?
+    [ $s -eq 0 ] && echo -n ➜ || echo -n "➜ ($s)"
 }
 
 get_git_index_color() {
-	git diff-index --quiet HEAD &>/dev/null
-	[ $? -eq 1 ] && echo -ne "\033[01;33m" && exit 1
-	exit 0
+    git diff-index --quiet HEAD &>/dev/null
+    [ $? -eq 1 ] && echo -ne "\033[01;33m" && exit 1
+    exit 0
 }
 
 get_git_index_char() {
-	# Trick: using get_git_index_color's exit code to save another call to git diff-index
-	[ $? -eq 1 ] && echo -n ✗
+    # Trick: using get_git_index_color's exit code to save another call to git diff-index
+    [ $? -eq 1 ] && echo -n ✗
 }
 
 set_up_prompt() {
@@ -321,9 +321,36 @@ set_up_prompt() {
     local git_branch='`git status 2>/dev/null >/dev/null && echo -n " " && g@`'
     local git_index='`get_git_index`'
     local prompt_tail=" \[\033[35m\]$\[\033[00m\]"
-    export PS1="\[\`get_last_status_color\`\]\`get_last_status_content\` \[\033[0m\033[1m\]#\$\$ ${cur_location}${git_branch_color}${git_branch}\\[\`get_git_index_color\`\\]\`get_git_index_char\`${prompt_tail} "
+    export PS1="\[\`get_last_status_color\`\]\`get_last_status_content\` \[\033[0m\033[1m\]\#\$\$ ${cur_location}${git_branch_color}${git_branch}\\[\`get_git_index_color\`\\]\`get_git_index_char\`${prompt_tail} "
 }
 set_up_prompt
+
+track-prs-bb() {
+    input=$(cat)
+    echo "$input"
+    current=$(grep -Po '(?<=View pull request for ).*(?= => )' <<< "$input") || exit
+    pr_upstream=$(grep -Po '(?<=View pull request for '$current' => ).*(?=:)' <<< "$input") || exit
+    # TODO: it assumes the current branch is pushed
+    machete_upstream=$(git machete show up 2>/dev/null) || exit
+    if [[ "$machete_upstream" != "$pr_upstream" ]]; then
+        echo "warning: 'git machete' shows that upstream of '$current' is '$machete_upstream', while upstream in the PR is '$pr_upstream'" >&2
+        echo "not updating annotation for '$current'" >&2
+    else
+        file=$(git machete file)
+        existing_anno=$(grep -Po "(?<=\\b$current\\b ).*$" $file)
+        pr_num=$(grep -o 'https://bitbucket\.org/britishpearl/.*/pull-requests/[0-9]\+' <<< "$input" | grep -o '[0-9]\+$')
+        new_anno="PR #$pr_num"
+        if [[ "$existing_anno" != "$new_anno" ]]; then
+            if [[ "$existing_anno" != "" ]]; then
+                echo "warning: branch '$current' is already annotated as '$existing_anno'" >&2
+                echo "not updating annotation for '$current' to '$new_anno'" >&2
+            else
+                sed -i "s@\\b$current\$@$current $new_anno@" $file
+                echo "info: set up annotation for '$current' to '$new_anno'"
+            fi
+        fi
+    fi
+}
 
 # sbt opts
 
@@ -333,54 +360,54 @@ set_up_prompt
 # k8s/Helm helpers
 
 helmdiff() {
-	[[ $# -eq 3 ]] || { echo "usage: helmdiff <release> <chart> <values-file>" 2>&1; return 1; }
-	release=$1
-	chart=$2
-	values_file=$3
-	colordiff -u <(helm get $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
+    [[ $# -eq 3 ]] || { echo "usage: helmdiff <release> <chart> <values-file>" 2>&1; return 1; }
+    release=$1
+    chart=$2
+    values_file=$3
+    colordiff -u <(helm get $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
 }
 
 kbash() {
-	kexec "$1" bash
+    kexec "$1" bash
 }
 
 kcat() {
-	kexec "$1" cat $2
+    kexec "$1" cat $2
 }
 
 kcp() {
-	from_pod=$(kgetpod $1)
-	to_pod=$(kgetpod $2)
-	path=$3
-	tmp=$(mktemp -d)/$(basename $path)
-	kubectl cp $from_pod:$path $tmp
-	kubectl exec -t "$to_pod" -- rm -r $path
-	kubectl cp $tmp $to_pod:$path
-	rm -rf $tmp
+    from_pod=$(kgetpod $1)
+    to_pod=$(kgetpod $2)
+    path=$3
+    tmp=$(mktemp -d)/$(basename $path)
+    kubectl cp $from_pod:$path $tmp
+    kubectl exec -t "$to_pod" -- rm -r $path
+    kubectl cp $tmp $to_pod:$path
+    rm -rf $tmp
 }
 
 kdiff() {
-	pod1=$(kgetpod $1)
-	pod2=$(kgetpod $2)
-	path=$3
-	tmp1=$(mktemp -d)/$pod1-$(basename $path)
-	tmp2=$(mktemp -d)/$pod2-$(basename $path)
-	kubectl cp $pod1:$path $tmp1
-	kubectl cp $pod2:$path $tmp2
-	colordiff -u $tmp1 $tmp2
-	rm -f $tmp1 $tmp2
+    pod1=$(kgetpod $1)
+    pod2=$(kgetpod $2)
+    path=$3
+    tmp1=$(mktemp -d)/$pod1-$(basename $path)
+    tmp2=$(mktemp -d)/$pod2-$(basename $path)
+    kubectl cp $pod1:$path $tmp1
+    kubectl cp $pod2:$path $tmp2
+    colordiff -u $tmp1 $tmp2
+    rm -f $tmp1 $tmp2
 }
 
 kexec() {
-	kubectl exec -it "$(kgetpod $1)" -- "${@:2}"
+    kubectl exec -it "$(kgetpod $1)" -- "${@:2}"
 }
 
 kgetpod() {
-	kubectl get pods -l app="$1" -o jsonpath='{.items[0].metadata.name}'
+    kubectl get pods -l app="$1" -o jsonpath='{.items[0].metadata.name}'
 }
 
 kls() {
-	kexec "$1" ls $2
+    kexec "$1" ls $2
 }
 
 # Command completion
@@ -388,40 +415,40 @@ kls() {
 ## aws completion
 
 if command -v aws &>/dev/null && [ -f ~/.local/bin/aws_bash_completer ]; then
-	. ~/.local/bin/aws_bash_completer
+    . ~/.local/bin/aws_bash_completer
 fi
 
 ## helm completion
 
 if command -v helm &>/dev/null; then
-	eval "$(command helm completion bash)"
+    eval "$(command helm completion bash)"
 fi
 
 ## kops completion
 
 if command kops --version &>/dev/null; then
-	eval "$(command kops completion bash)"
+    eval "$(command kops completion bash)"
 fi
 
 ## kubectl completion
 
 if command -v kubectl &>/dev/null; then
-	eval "$(command kubectl completion bash)"
+    eval "$(command kubectl completion bash)"
 fi
 
 ## kubectx completion
 if command -v kubectx &>/dev/null && [ -f /opt/kubectx/completion/kubectx.bash ]; then
-	. /opt/kubectx/completion/kubectx.bash
+    . /opt/kubectx/completion/kubectx.bash
 fi
 
 ## kubens completion
 if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; then
-	. /opt/kubectx/completion/kubens.bash
+    . /opt/kubectx/completion/kubens.bash
 fi
 
 ## minikube completion
 
 if command -v minikube &>/dev/null; then
-	eval "$(command minikube completion bash)"
+    eval "$(command minikube completion bash)"
 fi
 
