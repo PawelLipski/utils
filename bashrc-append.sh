@@ -136,7 +136,7 @@ alias grb='git rebase'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
 alias gre='git reset'
-alias grehu='git reset --hard @{upstream}'
+alias greku='git reset --keep @{upstream}'
 alias gs='git status'
 alias gsh='git show'
 alias gshp='git show @~'
@@ -199,8 +199,8 @@ function grbo {
     git rebase -i --onto $target_base_branch $latest_excluded_commit `g@`
 }
 
-function gsmrehu {
-    git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --hard @{upstream}"
+function gsmreku {
+    git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --keep @{upstream}"
 }
 
 
