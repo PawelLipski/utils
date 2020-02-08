@@ -93,7 +93,9 @@ alias @gu='git machete go up'
 alias @r='git machete reapply'
 alias @s='git machete status'
 alias @sl='git machete status -l'
-alias @t='GIT_SEQUENCE_EDITOR=: git machete traverse' # traverse without interactive rebase
+alias @t='git machete traverse'
+alias @tw='git machete traverse -w'
+alias @tW='git machete traverse -W'
 alias @u='git machete update'
 alias g=git
 alias ga='git add'
