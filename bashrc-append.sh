@@ -266,15 +266,9 @@ alias l='ls -CF'
 alias la='ls -A'
 alias ll='ls -alF'
 
-alias json-fmt='python -m json.tool | pygmentize -l js'
-
-alias mntdb='sudo mount -t vmhgfs .host:/Dropbox ~/Dropbox'
-
 alias mv='mv -i'
 
-#paste() {
-#    cp -ir /tmp/__buffer/* .
-#}
+alias ghprs='hub pr list --state=all --format "%pC%>(8)%i%Creset     %H -> %B%n"'
 
 alias reba='. ~/.bashrc'
 
