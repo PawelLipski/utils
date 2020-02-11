@@ -248,7 +248,7 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 function anno-prs() {
 	file=$(git machete file)
 	hub pr list --format "%I %H%n" | while read -r id head; do
-		sed -Ei "s|^(\s*$head)\s?.*$|\1 PR #$id|" $file
+		sed -Ei "s|^(\s*$head)(\s.*)?$|\1 PR #$id|" $file
 	done
 }
 
