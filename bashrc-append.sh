@@ -245,6 +245,10 @@ function .. {
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
+function anno-prs() {
+	hub pr list --format "%I %H%n" | while read -r id head; do sed -Ei "s|^(\s*$head)\s?.*$|\1 #$id|" $(git machete file); done
+}
+
 copy() {
     buf=/tmp/__buffer
     rm -rf $buf
@@ -266,9 +270,9 @@ alias l='ls -CF'
 alias la='ls -A'
 alias ll='ls -alF'
 
-alias mv='mv -i'
+alias ls-prs='hub pr list --format "%pC%>(8)%i%Creset     %H -> %B%n"'
 
-alias ghprs='hub pr list --state=all --format "%pC%>(8)%i%Creset     %H -> %B%n"'
+alias mv='mv -i'
 
 alias reba='. ~/.bashrc'
 
