@@ -246,7 +246,10 @@ function .. {
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 function anno-prs() {
-	hub pr list --format "%I %H%n" | while read -r id head; do sed -Ei "s|^(\s*$head)\s?.*$|\1 PR #$id|" $(git machete file); done
+	file=$(git machete file)
+	hub pr list --format "%I %H%n" | while read -r id head; do
+		sed -Ei "s|^(\s*$head)\s?.*$|\1 PR #$id|" $file
+	done
 }
 
 copy() {
