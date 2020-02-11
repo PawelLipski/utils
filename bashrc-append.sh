@@ -273,7 +273,7 @@ alias l='ls -CF'
 alias la='ls -A'
 alias ll='ls -alF'
 
-alias ls-prs='hub pr list --format "%pC%>(8)%i%Creset     %H -> %B%n"'
+alias ls-prs='hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"'
 
 alias mv='mv -i'
 
