@@ -60,26 +60,6 @@ complete -F _completemarks jump unmark
 alias jmp=jump
 
 
-## JDK setup ##
-
-setup_jdk() {
-    # Remove the current JDK from PATH
-    if [ -n "$JAVA_HOME" ] ; then
-        PATH=${PATH/$JAVA_HOME\/bin:/}
-    fi
-    export JAVA_HOME=$1
-    export PATH=$JAVA_HOME/bin:$PATH
-}
-
-use_java6() {
-    setup_jdk /usr/lib/jvm/jdk1.6.0_45
-}
-
-use_java7() {
-    setup_jdk /usr/lib/jvm/java-7-openjdk-amd64
-}
-
-
 # git aliases
 
 alias @='git machete'
