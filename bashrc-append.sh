@@ -154,7 +154,7 @@ function gar {
 }
 
 function gcm {
-    if git status | grep Untracked > /dev/null; then
+    if git diff-index --quiet HEAD; then
         git status
     else
         git commit -am "$*"
@@ -232,7 +232,16 @@ function anno-prs() {
 	done
 }
 
-copy() {
+function open-pr() {
+	[[ $1 ]] || { echo "Usage: open-pr <github-pr-number>"; return 1; }
+	number=$1
+	git diff-index --quiet HEAD || { echo "You have uncommitted changes, aborting"; return 1; }
+	branch=$(hub pr list --format "%I %H%n" | grep -Po "(?<=^$number ).*")
+	[[ $branch ]] || { echo "PR #$number not found"; return 1; }
+	git fetch && git checkout -B "$branch" "origin/$branch"
+}
+
+function copy() {
     buf=/tmp/__buffer
     rm -rf $buf
     mkdir $buf
