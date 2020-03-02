@@ -222,10 +222,10 @@ function anno-prs() {
 
 function open-pr() {
 	[[ $1 ]] || { echo "Usage: open-pr <github-pr-number>"; return 1; }
-	number=$1
+	pr_number=$1
 	git diff-index --quiet HEAD || { echo "You have uncommitted changes, aborting"; return 1; }
-	branch=$(hub pr list --format "%I %H%n" | grep -Po "(?<=^$number ).*")
-	[[ $branch ]] || { echo "PR #$number not found"; return 1; }
+	branch=$(hub pr show --format "%I %H" "$pr_number" 2>/dev/null)
+	[[ $branch ]] || { echo "PR #$pr_number not found"; return 1; }
 	git fetch && git checkout -B "$branch" "origin/$branch"
 }
 
