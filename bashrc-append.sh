@@ -77,7 +77,6 @@ alias @t='git machete traverse'
 alias @tw='git machete traverse -w'
 alias @tW='git machete traverse -W'
 alias @u='git machete update'
-alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
 alias gb='git branch'
@@ -110,6 +109,7 @@ alias glm='git log master'
 alias glod='git log origin/develop'
 alias glom='git log origin/master'
 alias glpf='git log --pretty=fuller'
+alias gm='git merge --ff-only'
 alias gp='git push -u 2>&1 | track-prs-bb'
 alias gpf='git push -u --force-with-lease 2>&1 | track-prs-bb'
 alias gpl='git pull --ff-only'
@@ -162,23 +162,11 @@ function gcm {
 }
 
 function gcmlast {
-    if git status | grep Untracked > /dev/null; then
+    if git diff-index --queit HEAD; then
         git status
     else
         git commit -am "$(git log -1 --format=%s | sed 's/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/')" --edit
     fi
-}
-
-function ginit {
-    git init
-    git add .
-    git commit -m 'Initial commit'
-}
-
-function grbo {
-    target_base_branch=${1}
-    latest_excluded_commit=${2}
-    git rebase -i --onto $target_base_branch $latest_excluded_commit `g@`
 }
 
 function gsmreku {
