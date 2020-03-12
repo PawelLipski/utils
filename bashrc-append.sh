@@ -162,7 +162,7 @@ function gcm {
 }
 
 function gcmlast {
-    if git diff-index --queit HEAD; then
+    if git diff-index --quiet HEAD; then
         git status
     else
         git commit -am "$(git log -1 --format=%s | sed 's/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/')" --edit
