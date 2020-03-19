@@ -255,6 +255,9 @@ alias ls-prs='hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"'
 
 alias mv='mv -i'
 
+alias pbcopy='xclip -selection clipboard'
+alias pbpaste='xclip -selection clipboard -o'
+
 alias reba='. ~/.bashrc'
 
 alias rm='rm -iv'
@@ -333,11 +336,6 @@ track-prs-bb() {
         fi
     fi
 }
-
-# sbt opts
-
-# Better set in .jvmopts directly in the project folder!
-#export SBT_OPTS="-Xmx2G -Xss2M -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:ReservedCodeCacheSize=512M"
 
 # k8s/Helm helpers
 
