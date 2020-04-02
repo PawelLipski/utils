@@ -219,6 +219,7 @@ function anno-prs() {
 	hub pr list --format "%I %H%n" | while read -r id head; do
 		sed -Ei "s|^(\s*$head)(\s.*)?$|\1 PR #$id|" $file
 	done
+	git machete status
 }
 
 function open-pr() {
