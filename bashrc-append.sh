@@ -184,7 +184,7 @@ alias dps='docker ps'
 alias dpsa='docker ps -a'
 alias drm='docker rm'
 alias drmi='docker rmi'
-alias gc-docker='docker rm $(docker ps --filter status=exited -q) && docker image prune'
+alias gc-docker='docker rm $(docker ps --filter status=exited --filter status=created -q) && docker image prune'
 
 function dexdb() {
     dex -it $1 /usr/bin/env PGPASSWORD= psql -P pager=off -h localhost -U xxx -d $2 "${@:3}"
@@ -222,13 +222,18 @@ function anno-prs() {
 	git machete status
 }
 
-function open-pr() {
-	[[ $1 ]] || { echo "Usage: open-pr <github-pr-number>"; return 1; }
+function view-pr() {
+	[[ $1 ]] || { echo "Usage: view-pr <github-pr-number>"; return 1; }
 	pr_number=$1
 	git diff-index --quiet HEAD || { echo "You have uncommitted changes, aborting"; return 1; }
-	branch=$(hub pr show --format=%H "$pr_number" 2>/dev/null)
-	[[ $branch ]] || { echo "PR #$pr_number not found"; return 1; }
-	git fetch && git checkout -B "$branch" "origin/$branch"
+	output=$(hub pr show --format='%B %H %au %S' "$pr_number" 2>/dev/null)
+	[[ $? -eq 0 ]] || { echo "PR #$pr_number not found"; return 1; }
+	read -r base head author state <<< "$output"
+	[[ $state == open ]] || { echo "PR #$pr_number is closed"; return 1; }
+	git fetch && git checkout -B "$head" "origin/$head" || return 1
+	grep -Eq "^\s*$head(\s.*)?$" -- "$(git machete file)" || git machete add --onto="$base"
+	git machete anno "PR #$pr_number ($author)"
+	git machete status -l
 }
 
 function copy() {
