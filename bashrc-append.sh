@@ -224,6 +224,15 @@ function anno-prs() {
 	git machete status
 }
 
+function update-pr-base() {
+	curl --silent -XPATCH \
+		-H "Content-Type: application/json" \
+		-H "Authorization: token $(cat ~/.github-token)" \
+		https://api.github.com/repos/VirtusLab/git-machete-intellij-plugin/pulls/$(hub pr show --format=%I) \
+		-d "{ \"base\": \"$(git machete show up)\" }" \
+	&& ls-prs
+}
+
 function view-pr() {
 	[[ $1 ]] || { echo "Usage: view-pr <github-pr-number>"; return 1; }
 	pr_number=$1
