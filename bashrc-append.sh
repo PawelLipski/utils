@@ -224,12 +224,16 @@ function anno-prs() {
 	git machete status
 }
 
-function update-pr-base() {
-	curl --silent -XPATCH \
+function retarget-pr() {
+	curl -XPATCH \
 		-H "Content-Type: application/json" \
 		-H "Authorization: token $(cat ~/.github-token)" \
 		https://api.github.com/repos/VirtusLab/git-machete-intellij-plugin/pulls/$(hub pr show --format=%I) \
 		-d "{ \"base\": \"$(git machete show up)\" }" \
+		--silent \
+		--head \
+		-o/dev/null \
+		-w "> %{http_code}\n" \
 	&& ls-prs
 }
 
