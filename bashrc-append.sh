@@ -131,6 +131,7 @@ alias gsms='git submodule status'
 alias gsmu='git submodule update'
 alias gx='git stash'
 alias gxa='git stash apply'
+alias hcis='hub ci-status'
 
 function @sq {
     GIT_SEQUENCE_EDITOR="sed -i '1s/^pick/reword/;2,\$s/^pick/fixup/'" git machete reapply
