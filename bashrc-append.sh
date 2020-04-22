@@ -226,12 +226,13 @@ function anno-prs() {
 
 function retarget-pr() {
 	curl -XPATCH \
-		-H "Content-Type: application/json" \
 		-H "Authorization: token $(cat ~/.github-token)" \
-		https://api.github.com/repos/VirtusLab/git-machete-intellij-plugin/pulls/$(hub pr show --format=%I) \
+		-H "Content-Type: application/vnd.github.v3+json" \
+		https://api.github.com/repos/VirtusLab/git-machete-intellij-plugin/pulls/"$(hub pr show --format=%I)" \
 		-d "{ \"base\": \"$(git machete show up)\" }" \
+		--fail \
 		--silent \
-		--head \
+		--show-error \
 		-o/dev/null \
 		-w "> %{http_code}\n" \
 	&& ls-prs
