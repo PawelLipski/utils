@@ -184,6 +184,7 @@ function gsmreku {
 alias d='docker'
 alias dcu='docker-compose up'
 alias dex='docker exec'
+alias dim='docker images'
 alias dps='docker ps'
 alias dpsa='docker ps -a'
 alias drm='docker rm'
