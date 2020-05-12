@@ -220,9 +220,8 @@ function .. {
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 function anno-prs() {
-	file=$(git machete file)
 	hub pr list --format "%I %au %H%n" | while read -r id author head; do
-		sed -Ei "s|^(\s*$head)(\s.*)?$|\1 PR #$id ($author)|" $file
+		git machete anno --branch="$head" "PR #$id ($author)"
 	done
 	git machete status
 }
@@ -250,7 +249,7 @@ function view-pr() {
 	read -r base head author state <<< "$output"
 	[[ $state == open ]] || { echo "PR #$pr_number is closed"; return 1; }
 	git fetch && git checkout -B "$head" "origin/$head" || return 1
-	grep -Eq "^\s*$head(\s.*)?$" -- "$(git machete file)" || git machete add --onto="$base"
+	git machete is-managed "$head" || git machete add --onto="$base"
 	git machete anno "PR #$pr_number ($author)"
 	git machete status -l
 }
