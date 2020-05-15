@@ -227,10 +227,15 @@ function anno-prs() {
 }
 
 function retarget-pr() {
+	org_and_repo=$(git remote get-url origin | grep 'github\.com' | grep -Eo '[^/:]+/[^/:]+\.git$' | sed 's/\.git$//')
+	# Token is used implicitly by 'hub', and explicitly for the API call.
+	# 'xargs' with no arguments trims leading and trailing whitespace from the input string.
+	hub_token=$(grep 'oauth_token:' ~/.config/hub | cut -d: -f2 | xargs)
+
 	curl -XPATCH \
-		-H "Authorization: token $(cat ~/.github-token)" \
+		-H "Authorization: token $hub_token" \
 		-H "Content-Type: application/vnd.github.v3+json" \
-		https://api.github.com/repos/VirtusLab/git-machete-intellij-plugin/pulls/"$(hub pr show --format=%I)" \
+		"https://api.github.com/repos/$org_and_repo/pulls/$(hub pr show --format=%I)" \
 		-d "{ \"base\": \"$(git machete show up)\" }" \
 		--fail \
 		--silent \
