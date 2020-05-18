@@ -226,6 +226,14 @@ function anno-prs() {
 	git machete status
 }
 
+function create-pr() {
+	[[ $# == 0 ]] || { echo "No params allowed."; exit 1; }
+	local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
+	hub pull-request --no-edit --push --base="$(git machete show up)" --assign="$me" --browse || return 1
+	read -r author pr_number < <(hub pr show --format="%au %I")
+	git machete anno "PR #$pr_number"
+}
+
 function retarget-pr() {
 	org_and_repo=$(git remote get-url origin | grep 'github\.com' | grep -Eo '[^/:]+/[^/:]+\.git$' | sed 's/\.git$//')
 	# Token is used implicitly by 'hub', and explicitly for the API call.
