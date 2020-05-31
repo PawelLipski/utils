@@ -234,6 +234,10 @@ function create-pr() {
 	git machete anno "PR #$pr_number"
 }
 
+function ls-prs() {
+	hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"
+}
+
 function retarget-pr() {
 	org_and_repo=$(git remote get-url origin | grep 'github\.com' | grep -Eo '[^/:]+/[^/:]+\.git$' | sed 's/\.git$//')
 	# Token is used implicitly by 'hub', and explicitly for the API call.
@@ -287,8 +291,6 @@ alias gri='grep -Ri'
 alias l='ls -CF'
 alias la='ls -A'
 alias ll='ls -alF'
-
-alias ls-prs='hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"'
 
 alias mv='mv -i'
 
