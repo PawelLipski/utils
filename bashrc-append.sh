@@ -221,7 +221,9 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 
 function anno-prs() {
 	hub pr list --format "%I %au %H%n" | while read -r id author head; do
-		git machete anno --branch="${head%:*}" "PR #$id ($author)"
+		local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
+		local a=$([[ $author != "$me" ]] && echo " ($author)")
+		git machete anno --branch="${head#*:}" "PR #${id}${a}"
 	done
 	git machete status
 }
