@@ -341,13 +341,14 @@ get_git_index_char() {
 
 set_up_prompt() {
     # local user_and_host="\[\033[01;32m\]\u@\h"
-    local user="\[\033[01m\]\u"
+    #local user="\[\033[01m\]\u"
+	local time='$(date +%H:%M)'
     local cur_location="\[\033[01;34m\]\w"
     local git_branch_color="\[\033[31m\]"
-    local git_branch='`git status 2>/dev/null >/dev/null && echo -n " " && g@`'
-    local git_index='`get_git_index`'
+    local git_branch='$(git status 2>/dev/null >/dev/null && echo -n " " && g@)'
+    local git_index='$(get_git_index)'
     local prompt_tail=" \[\033[35m\]$\[\033[00m\]"
-    export PS1="\[\`get_last_status_color\`\]\`get_last_status_content\` \[\033[0m\033[1m\]${user} ${cur_location}${git_branch_color}${git_branch}\\[\`get_git_index_color\`\\]\`get_git_index_char\`${prompt_tail} "
+    export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} ${cur_location}${git_branch_color}${git_branch}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${prompt_tail} "
 }
 set_up_prompt
 
