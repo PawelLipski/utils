@@ -267,9 +267,16 @@ function view-pr() {
 	[[ $? -eq 0 ]] || { echo "PR #$pr_number not found"; return 1; }
 	read -r base head author state <<< "$output"
 	[[ $state == open ]] || { echo "PR #$pr_number is closed"; return 1; }
-	git fetch && git checkout -B "$head" "origin/$head" || return 1
-	git machete is-managed "$head" || git machete add --onto="$base"
-	git machete anno "PR #$pr_number ($author)"
+	git fetch || return 1
+	git machete go "origin/$head" || return 1
+	if ! git machete is-managed; then
+		if git machete is-managed "$base"; then
+			git machete add --onto="$base" || return 1
+		elif git machete is-managed "origin/$base"; then
+			git machete add --onto="origin/$base" || return 1
+		fi
+	fi
+	git machete anno "PR #$pr_number ($author)" || return 1
 	git machete status -l
 }
 
