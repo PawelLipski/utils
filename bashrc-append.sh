@@ -274,6 +274,9 @@ function view-pr() {
 			git machete add --onto="$base" || return 1
 		elif git machete is-managed "origin/$base"; then
 			git machete add --onto="origin/$base" || return 1
+		else
+			git machete status -l
+			return 0
 		fi
 	fi
 	git machete anno "PR #$pr_number ($author)" || return 1
