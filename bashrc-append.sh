@@ -231,7 +231,13 @@ function anno-prs() {
 function create-pr() {
 	[[ $# == 0 ]] || { echo "No params allowed."; exit 1; }
 	local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
-	hub pull-request --no-edit --push --base="$(git machete show up)" --assign="$me" --reviewer="$(cat .git/info/reviewers 2>/dev/null | paste -sd, || true)" --browse || return 1
+	hub pull-request \
+		--no-edit \
+		--push \
+		--base="$(git machete show up | sed 's!^origin/!!')" \
+		--assign="$me" \
+		--reviewer="$(cat .git/info/reviewers 2>/dev/null | paste -sd, | sed 's/^,//; s/,\+/,/g; s/,$//' || true)" \
+		--browse || return 1
 	read -r author pr_number < <(hub pr show --format="%au %I")
 	git machete anno "PR #$pr_number"
 }
