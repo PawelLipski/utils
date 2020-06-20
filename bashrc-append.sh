@@ -150,7 +150,7 @@ function cdiff {
 }
 
 function g@ {
-    git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD
+    git symbolic-ref --short --quiet HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
 }
 
 function gar {
@@ -220,73 +220,73 @@ function .. {
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 function anno-prs() {
-	hub pr list --format "%I %au %H%n" | while read -r id author head; do
-		local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
-		local a=$([[ $author != "$me" ]] && echo " ($author)")
-		git machete anno --branch="${head#*:}" "PR #${id}${a}"
-	done
-	git machete status
+    hub pr list --format "%I %au %H%n" | while read -r id author head; do
+        local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
+        local a=$([[ $author != "$me" ]] && echo " ($author)")
+        git machete anno --branch="${head#*:}" "PR #${id}${a}"
+    done
+    git machete status
 }
 
 function create-pr() {
-	[[ $# == 0 ]] || { echo "No params allowed."; exit 1; }
-	local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
-	hub pull-request \
-		--no-edit \
-		--push \
-		--base="$(git machete show up | sed 's!^origin/!!')" \
-		--assign="$me" \
-		--reviewer="$(cat .git/info/reviewers 2>/dev/null | paste -sd, | sed 's/^,//; s/,\+/,/g; s/,$//' || true)" \
-		--browse || return 1
-	read -r author pr_number < <(hub pr show --format="%au %I")
-	git machete anno "PR #$pr_number"
+    [[ $# == 0 ]] || { echo "No params allowed."; exit 1; }
+    local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
+    hub pull-request \
+        --no-edit \
+        --push \
+        --base="$(git machete show up | sed 's!^origin/!!')" \
+        --assign="$me" \
+        --reviewer="$(cat .git/info/reviewers 2>/dev/null | paste -sd, | sed 's/^,//; s/,\+/,/g; s/,$//' || true)" \
+        --browse || return 1
+    read -r author pr_number < <(hub pr show --format="%au %I")
+    git machete anno "PR #$pr_number"
 }
 
 function ls-prs() {
-	hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"
+    hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"
 }
 
 function retarget-pr() {
-	org_and_repo=$(git remote get-url origin | grep 'github\.com' | grep -Eo '[^/:]+/[^/:]+\.git$' | sed 's/\.git$//')
-	# Token is used implicitly by 'hub', and explicitly for the API call.
-	# 'xargs' with no arguments trims leading and trailing whitespace from the input string.
-	hub_token=$(grep 'oauth_token:' ~/.config/hub | cut -d: -f2 | xargs)
+    org_and_repo=$(git remote get-url origin | grep 'github\.com' | grep -Eo '[^/:]+/[^/:]+\.git$' | sed 's/\.git$//')
+    # Token is used implicitly by 'hub', and explicitly for the API call.
+    # 'xargs' with no arguments trims leading and trailing whitespace from the input string.
+    hub_token=$(grep 'oauth_token:' ~/.config/hub | cut -d: -f2 | xargs)
 
-	curl -XPATCH \
-		-H "Authorization: token $hub_token" \
-		-H "Content-Type: application/vnd.github.v3+json" \
-		"https://api.github.com/repos/$org_and_repo/pulls/$(hub pr show --format=%I)" \
-		-d "{ \"base\": \"$(git machete show up)\" }" \
-		--fail \
-		--silent \
-		--show-error \
-		-o/dev/null \
-		-w "> %{http_code}\n" \
-	&& ls-prs
+    curl -XPATCH \
+        -H "Authorization: token $hub_token" \
+        -H "Content-Type: application/vnd.github.v3+json" \
+        "https://api.github.com/repos/$org_and_repo/pulls/$(hub pr show --format=%I)" \
+        -d "{ \"base\": \"$(git machete show up)\" }" \
+        --fail \
+        --silent \
+        --show-error \
+        -o/dev/null \
+        -w "> %{http_code}\n" \
+    && ls-prs
 }
 
 function view-pr() {
-	[[ $1 ]] || { echo "Usage: view-pr <github-pr-number>"; return 1; }
-	pr_number=$1
-	git diff-index --quiet HEAD || { echo "You have uncommitted changes, aborting"; return 1; }
-	output=$(hub pr show --format='%B %H %au %S' "$pr_number" 2>/dev/null)
-	[[ $? -eq 0 ]] || { echo "PR #$pr_number not found"; return 1; }
-	read -r base head author state <<< "$output"
-	[[ $state == open ]] || { echo "PR #$pr_number is closed"; return 1; }
-	git fetch || return 1
-	git machete go "origin/$head" || return 1
-	if ! git machete is-managed; then
-		if git machete is-managed "$base"; then
-			git machete add --onto="$base" || return 1
-		elif git machete is-managed "origin/$base"; then
-			git machete add --onto="origin/$base" || return 1
-		else
-			git machete status -l
-			return 0
-		fi
-	fi
-	git machete anno "PR #$pr_number ($author)" || return 1
-	git machete status -l
+    [[ $1 ]] || { echo "Usage: view-pr <github-pr-number>"; return 1; }
+    pr_number=$1
+    git diff-index --quiet HEAD || { echo "You have uncommitted changes, aborting"; return 1; }
+    output=$(hub pr show --format='%B %H %au %S' "$pr_number" 2>/dev/null)
+    [[ $? -eq 0 ]] || { echo "PR #$pr_number not found"; return 1; }
+    read -r base head author state <<< "$output"
+    [[ $state == open ]] || { echo "PR #$pr_number is closed"; return 1; }
+    git fetch || return 1
+    git machete go "origin/$head" || return 1
+    if ! git machete is-managed; then
+        if git machete is-managed "$base"; then
+            git machete add --onto="$base" || return 1
+        elif git machete is-managed "origin/$base"; then
+            git machete add --onto="origin/$base" || return 1
+        else
+            git machete status -l
+            return 0
+        fi
+    fi
+    git machete anno "PR #$pr_number ($author)" || return 1
+    git machete status -l
 }
 
 function copy() {
@@ -358,9 +358,9 @@ get_git_index_char() {
 set_up_prompt() {
     # local user_and_host="\[\033[01;32m\]\u@\h"
     #local user="\[\033[01m\]\u"
-	local time='$(date +%H:%M)'
-    local git_branch='$(git status 2>/dev/null >/dev/null && echo -n " " && g@)'
-	local git_machete_anno='$(anno=$(git machete anno 2>/dev/null); [[ $anno ]] && echo -n " $anno")'
+    local time='$(date +%H:%M)'
+    local git_branch='$(cb=$(g@); [[ $cb ]] && echo " $cb")'
+    local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=${cb}) .*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
     local git_index='$(get_git_index)'
     local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
     export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} \[\033[01;34m\]\w\[\033[31m\]${git_branch}\[\033[0m\033[2m\]${git_machete_anno}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${prompt_tail} "
