@@ -309,7 +309,7 @@ alias gri='grep -Ri'
 
 alias l='ls -CF'
 alias la='ls -A'
-alias ll='ls -alF'
+alias ll='ls -alh'
 
 alias mv='mv -i'
 
