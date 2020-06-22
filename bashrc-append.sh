@@ -64,6 +64,7 @@ alias jmp=jump
 
 alias @='git machete'
 alias @a='git machete add'
+alias @D='git machete discover'
 alias @d='git machete diff'
 alias @e='git machete edit'
 alias @gd='git machete go down'
