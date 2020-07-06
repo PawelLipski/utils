@@ -139,8 +139,8 @@ function @sq {
     GIT_SEQUENCE_EDITOR="sed -i '1s/^pick/reword/;2,\$s/^pick/fixup/'" git machete reapply
 }
 
-function blamestat_ {
-    for dir in $@; do
+function blamestat {
+    for dir in ${1-.}; do
         where="--work-tree=$dir --git-dir=$dir/.git"
         git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)'
     done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
