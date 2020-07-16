@@ -153,7 +153,7 @@ function cdiff {
 }
 
 function g@ {
-    git symbolic-ref --short --quiet HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
+    git symbolic-ref --short --quiet HEAD 2>/dev/null || git machete show current 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
 }
 
 function gar {
