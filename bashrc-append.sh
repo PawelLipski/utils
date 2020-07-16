@@ -242,7 +242,7 @@ function create-pr() {
         --milestone="$(cat .git/info/milestone 2>/dev/null | tr -d ' ' || true)" \
         --reviewer="$(cat .git/info/reviewers 2>/dev/null | paste -sd, | sed 's/^,//; s/,\+/,/g; s/,$//' || true)" \
         --browse || return 1
-    read -r author pr_number < <(hub pr show --format="%au %I")
+    read -r pr_number < <(hub pr show --format=%I)
     git machete anno "PR #$pr_number"
 }
 
