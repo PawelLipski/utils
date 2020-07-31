@@ -278,7 +278,7 @@ function view-pr() {
     read -r base head author state <<< "$output"
     [[ $state == open ]] || { echo "PR #$pr_number is closed"; return 1; }
     git fetch || return 1
-    git checkout "origin/$head" || return 1
+    git checkout "$head" || return 1
     if ! git machete is-managed; then
         if git machete is-managed "$base"; then
             git machete add --onto="$base" || return 1
