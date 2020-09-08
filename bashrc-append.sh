@@ -107,7 +107,7 @@ alias gdpx='git diff --stat @~'
 alias gdw='git diff --word-diff'
 alias gdx='git diff --stat'
 alias gf='git fetch'
-alias ggr='git grep'
+alias ggr='git grep -n'
 alias gl='git log'
 alias gld='git log develop'
 alias gll="git log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'"
