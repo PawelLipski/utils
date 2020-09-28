@@ -238,7 +238,7 @@ function create-pr() {
         --push \
         --base="$(git machete show up | sed 's!^origin/!!')" \
         --assign="$me" \
-        --message="$(git log -1 --format=%s)"$'\n\n'"$(cat .git/info/pr-description 2>/dev/null || true)" \
+        --message="$(git log -1 --format=%s)"$'\n\n'"$(cat .github/pull_request_template.md 2>/dev/null || true)" \
         --milestone="$(cat .git/info/milestone 2>/dev/null | tr -d ' ' || true)" \
         --reviewer="$(cat .git/info/reviewers 2>/dev/null | paste -sd, | sed 's/^,//; s/,\+/,/g; s/,$//' || true)" \
         --browse \
