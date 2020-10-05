@@ -409,6 +409,8 @@ helmdiff() {
     colordiff -u <(helm get $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
 }
 
+alias k=kubectl
+
 kbash() {
     kexec "$1" bash
 }
