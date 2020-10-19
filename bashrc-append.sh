@@ -406,7 +406,7 @@ helmdiff() {
     release=$1
     chart=$2
     values_file=$3
-    colordiff -u <(helm get $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
+    colordiff -u <(helm get manifest $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
 }
 
 alias k=kubectl
