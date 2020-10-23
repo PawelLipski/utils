@@ -1,9 +1,9 @@
 #!/bin/bash
 
-command cp bashrc-append.sh ~/.bashrc-append.sh
+\cp bashrc-append.sh ~/.bashrc-append.sh
 . ~/.bashrc-append.sh
-command cp gitconfig ~/.gitconfig
-command cp inputrc ~/.inputrc
-command cp vimrc ~/.vimrc
-mkdir ~/.local/bin
-command cp kubectl-* ~/.local/bin
+\cp gitconfig ~/.gitconfig
+\cp inputrc ~/.inputrc
+\cp vimrc ~/.vimrc
+mkdir -p ~/.local/bin
+\cp kubectl-* ~/.local/bin
