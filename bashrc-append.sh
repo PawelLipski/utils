@@ -185,14 +185,13 @@ function gsmreku {
 # Docker aliases
 
 alias d='docker'
-alias dcu='docker-compose up'
+alias dc='docker-compose'
 alias dex='docker exec'
 alias dim='docker images'
 alias dps='docker ps'
 alias dpsa='docker ps -a'
 alias drm='docker rm'
 alias drmi='docker rmi'
-alias gc-docker='docker rm $(docker ps --filter status=exited --filter status=created -q) && docker image prune'
 
 function dexdb() {
     dex -it $1 /usr/bin/env PGPASSWORD= psql -P pager=off -h localhost -U xxx -d $2 "${@:3}"
