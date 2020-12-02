@@ -26,38 +26,6 @@ shopt -s dotglob
 # Vars
 
 export EDITOR=vim
-export HISTSIZE=-1 #
-
-
-# Marks/jumping
-
-export MARKPATH=$HOME/.marks
-
-function jump {
-    cd -P "$MARKPATH/$1" 2>/dev/null || echo "No such mark: $1"
-}
-
-function mark {
-    mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
-}
-
-function unmark {
-    rm -i "$MARKPATH/$1"
-}
-
-function marks {
-    ls -l "$MARKPATH" | sed 's/  / /g' | cut -d' ' -f9- | sed 's/ -/\t-/g' && echo
-}
-
-_completemarks() {
-    local curw=${COMP_WORDS[COMP_CWORD]}
-    local wordlist=$(find $MARKPATH -type l -printf "%f\n")
-    COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
-    return 0
-}
-
-complete -F _completemarks jump unmark
-alias jmp=jump
 
 
 # git aliases
@@ -293,13 +261,6 @@ function view-pr() {
     git machete status -l
 }
 
-function copy() {
-    buf=/tmp/__buffer
-    rm -rf $buf
-    mkdir $buf
-    cp -r $1 $buf
-}
-
 alias colordiff='colordiff -u'
 
 alias cp='cp -i'
@@ -316,8 +277,8 @@ alias ll='ls -alh'
 
 alias mv='mv -i'
 
-alias pbcopy='xclip -selection clipboard'
-alias pbpaste='xclip -selection clipboard -o'
+alias xcopy='xclip -selection clipboard'
+alias xpaste='xclip -selection clipboard -o'
 
 alias reba='. ~/.bashrc'
 
@@ -327,10 +288,14 @@ alias sagi='sudo apt-get install'
 
 alias vimba='vim ~/.bashrc; reba'
 
+scrabblify() {
+	wget -qO- https://raw.githubusercontent.com/mkondratek/slack-scrabblifier/master/scrabblify.py | python - "$*" | xcopy
+}
+
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
 HISTCONTROL=ignoredups:erasedups  # no duplicate entries
-HISTSIZE=100000                   # big big history
-HISTFILESIZE=100000               # big big history
+HISTSIZE=10000000                   # big big history
+HISTFILESIZE=10000000               # big big history
 shopt -s histappend                      # append to history, don't overwrite it
 # Save and reload the history after each command finishes
 export PROMPT_COMMAND="history -a; history -c; history -r"
