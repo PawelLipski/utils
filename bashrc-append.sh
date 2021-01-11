@@ -289,7 +289,7 @@ alias sagi='sudo apt-get install'
 alias vimba='vim ~/.bashrc; reba'
 
 scrabblify() {
-	wget -qO- https://raw.githubusercontent.com/mkondratek/slack-scrabblifier/master/scrabblify.py | python - "$*" | xcopy
+	wget -qO- https://raw.githubusercontent.com/mkondratek/slack-scrabblifier/master/scrabblify.py | python - "$*" | xcopy && echo "Copied to clipboard"
 }
 
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
@@ -297,6 +297,7 @@ HISTCONTROL=ignoredups:erasedups  # no duplicate entries
 HISTSIZE=10000000                   # big big history
 HISTFILESIZE=10000000               # big big history
 shopt -s histappend                      # append to history, don't overwrite it
+shopt -s autocd cdspell
 # Save and reload the history after each command finishes
 export PROMPT_COMMAND="history -a; history -c; history -r"
 
