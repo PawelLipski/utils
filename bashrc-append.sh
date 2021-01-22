@@ -55,6 +55,7 @@ alias gaa='git add -A .'
 alias gb='git branch'
 alias gbr='git branch -r'
 alias gcamend='git commit -a --amend --no-edit'
+alias gcamendnv='git commit -a --amend --no-edit --no-verify'
 alias gcamendpf='gcamend && gpf'
 alias gcamende='git commit -a --amend'
 alias gco='git checkout --recurse-submodules'
@@ -134,6 +135,14 @@ function gcm {
         git status
     else
         git commit -am "$*"
+    fi
+}
+
+function gcmnv {
+    if git diff-index --quiet HEAD; then
+        git status
+    else
+        git commit --no-verify -am "$*"
     fi
 }
 
