@@ -199,15 +199,6 @@ function .. {
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-function anno-prs() {
-    hub pr list --format "%I %au %H%n" | while read -r id author head; do
-        local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
-        local a=$([[ $author != "$me" ]] && echo " ($author)")
-        git machete anno --branch="${head#*:}" "PR #${id}${a}"
-    done
-    git machete status
-}
-
 function create-pr() {
     local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
     hub pull-request \
