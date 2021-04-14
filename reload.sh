@@ -2,7 +2,7 @@
 
 grep -qxF '. ~/.bashrc-append.sh' ~/.bashrc || echo '. ~/.bashrc-append.sh' >> ~/.bashrc
 \cp bashrc-append.sh ~/.bashrc-append.sh
-. ~/.bashrc-append.sh
+. ~/.bashrc
 \cp gitconfig ~/.gitconfig
 \cp inputrc ~/.inputrc
 \cp vimrc ~/.vimrc
