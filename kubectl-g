@@ -1,3 +1,10 @@
 #!/usr/bin/env bash
 
-kubectl get "$@"
+case $1 in
+  de|dep) r=deploy ;;
+  se|sec) r=secret ;;
+  *)      r=$1 ;;
+esac
+
+shift
+kubectl get "$r" "$@"
