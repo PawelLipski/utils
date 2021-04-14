@@ -304,6 +304,8 @@ export PROMPT_COMMAND="history -a; history -c; history -r"
 
 export CDPATH='.:~'
 
+PATH="$PATH:$HOME/.local/bin"
+
 get_last_status_color() {
     s=$?
     [ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
