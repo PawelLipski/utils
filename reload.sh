@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e -o pipefail -u
+#!/usr/bin/env bash
 
 grep -qxF '. ~/.bashrc-append.sh' ~/.bashrc || echo '. ~/.bashrc-append.sh' >> ~/.bashrc
 \cp bashrc-append.sh ~/.bashrc-append.sh
