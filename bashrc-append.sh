@@ -19,13 +19,23 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 
-# Shell options
+# Shell options & vars
 
-shopt -s dotglob
+shopt -s autocd cdspell dotglob
 
-# Vars
+# http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
+HISTCONTROL=ignoredups:erasedups  # no duplicate entries
+HISTSIZE=10000000                   # big big history
+HISTFILESIZE=10000000               # big big history
+shopt -s histappend                      # append to history, don't overwrite it
+# Save and reload the history after each command finishes
+export PROMPT_COMMAND="history -a; history -c; history -r"
+
+export CDPATH='.:~'
 
 export EDITOR=vim
+
+PATH="$PATH:$HOME/.local/bin"
 
 
 # git aliases
@@ -60,7 +70,6 @@ alias gcamendnvpf='gcamendnv && gpf'
 alias gcamendpf='gcamend && gpf'
 alias gcamende='git commit -a --amend'
 alias gco='git checkout --recurse-submodules'
-alias gco@='gco "$(git log --no-walk --format=%D --decorate --decorate-refs=refs/heads)"'
 alias gcod='gco develop'
 alias gcom='gco master'
 alias gcp='git cherry-pick'
@@ -74,6 +83,7 @@ alias gdm='git diff -M master'
 alias gdno='git diff --name-only'
 alias gdp='git diff -M @~'
 alias gdpx='git diff --stat @~'
+alias gdu='git diff -M @{upstream}'
 alias gdw='git diff --word-diff'
 alias gdx='git diff --stat'
 alias gf='git fetch'
@@ -89,7 +99,7 @@ alias gm='git merge --ff-only'
 alias gp='git push -u 2>&1 | track-prs-bb'
 alias gpf='git push -u --force-with-lease 2>&1 | track-prs-bb'
 alias gpl='git pull --ff-only'
-alias gpld='gcod && gpl && gco -'
+alias gr='git remote'
 alias grb='git rebase'
 alias grbc='git rebase --continue'
 alias grbi='git rebase -i'
@@ -105,11 +115,6 @@ alias gsmu='git submodule update'
 alias gx='git stash'
 alias gxa='git stash apply'
 alias hcis='hub ci-status'
-alias hcism='hub ci-status master'
-
-function @sq {
-    GIT_SEQUENCE_EDITOR="sed -i '1s/^pick/reword/;2,\$s/^pick/fixup/'" git machete reapply
-}
 
 function blamestat {
     for dir in ${1-.}; do
@@ -159,6 +164,37 @@ function gsmreku {
     git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --keep @{upstream}"
 }
 
+function ls-prs() {
+    hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"
+}
+
+function track-prs-bb() {
+    input=$(cat)
+    echo "$input"
+    current=$(grep -Po '(?<=View pull request for ).*(?= => )' <<< "$input") || exit
+    pr_upstream=$(grep -Po '(?<=View pull request for '$current' => ).*(?=:)' <<< "$input") || exit
+    # TODO: it assumes the current branch is pushed
+    machete_upstream=$(git machete show up 2>/dev/null) || exit
+    if [[ "$machete_upstream" != "$pr_upstream" ]]; then
+        echo "warning: 'git machete' shows that upstream of '$current' is '$machete_upstream', while upstream in the PR is '$pr_upstream'" >&2
+        echo "not updating annotation for '$current'" >&2
+    else
+        file=$(git machete file)
+        existing_anno=$(grep -Po "(?<=\\b$current\\b ).*$" $file)
+        pr_num=$(grep -o 'https://bitbucket\.org/britishpearl/.*/pull-requests/[0-9]\+' <<< "$input" | grep -o '[0-9]\+$')
+        new_anno="PR #$pr_num"
+        if [[ "$existing_anno" != "$new_anno" ]]; then
+            if [[ "$existing_anno" != "" ]]; then
+                echo "warning: branch '$current' is already annotated as '$existing_anno'" >&2
+                echo "not updating annotation for '$current' to '$new_anno'" >&2
+            else
+                sed -i "s@\\b$current\$@$current $new_anno@" $file
+                echo "info: set up annotation for '$current' to '$new_anno'"
+            fi
+        fi
+    fi
+}
+
 
 # Docker aliases
 
@@ -187,6 +223,7 @@ function dexload() {
     docker exec -i $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2
 }
 
+
 # Misc aliases
 
 function .. {
@@ -199,84 +236,22 @@ function .. {
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-function create-pr() {
-    local me=$(grep -Po '(?<=user: ).*' ~/.config/hub)
-    hub pull-request \
-        --no-edit \
-        --push \
-        --base="$(git machete show up | sed 's!^origin/!!')" \
-        --assign="$me" \
-        --message="$(git log -1 --format=%s)"$'\n\n'"$(cat .github/pull_request_template.md 2>/dev/null || true)" \
-        --milestone="$(cat .git/info/milestone 2>/dev/null | tr -d ' ' || true)" \
-        --reviewer="$(cat .git/info/reviewers 2>/dev/null | paste -sd, | sed 's/^,//; s/,\+/,/g; s/,$//' || true)" \
-        --browse \
-        "$@" || return 1
-    read -r pr_number < <(hub pr show --format=%I)
-    git machete anno "PR #$pr_number"
-}
-
-function ls-prs() {
-    hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"
-}
-
-function retarget-pr() {
-    org_and_repo=$(git remote get-url origin | grep 'github\.com' | grep -Eo '[^/:]+/[^/:]+\.git$' | sed 's/\.git$//')
-    # Token is used implicitly by 'hub', and explicitly for the API call.
-    # 'xargs' with no arguments trims leading and trailing whitespace from the input string.
-    hub_token=$(grep 'oauth_token:' ~/.config/hub | cut -d: -f2 | xargs)
-
-    curl -XPATCH \
-        -H "Authorization: token $hub_token" \
-        -H "Content-Type: application/vnd.github.v3+json" \
-        "https://api.github.com/repos/$org_and_repo/pulls/$(hub pr show --format=%I)" \
-        -d "{ \"base\": \"$(git machete show up)\" }" \
-        --fail \
-        --silent \
-        --show-error \
-        -o/dev/null \
-        -w "> %{http_code}\n" \
-    && ls-prs
-}
-
-function view-pr() {
-    [[ $1 ]] || { echo "Usage: view-pr <github-pr-number>"; return 1; }
-    pr_number=$1
-    git diff-index --quiet HEAD || { echo "You have uncommitted changes, aborting"; return 1; }
-    output=$(hub pr show --format='%B %H %au %S' "$pr_number" 2>/dev/null)
-    [[ $? -eq 0 ]] || { echo "PR #$pr_number not found"; return 1; }
-    read -r base head author state <<< "$output"
-    [[ $state == open ]] || { echo "PR #$pr_number is closed"; return 1; }
-    git fetch || return 1
-    git checkout "$head" || return 1
-    if ! git machete is-managed; then
-        if git machete is-managed "$base"; then
-            git machete add --onto="$base" || return 1
-        elif git machete is-managed "origin/$base"; then
-            git machete add --onto="origin/$base" || return 1
-        else
-            git machete status -l
-            return 0
-        fi
-    fi
-    git machete anno "PR #$pr_number ($author)" || return 1
-    git machete status -l
-}
-
 alias colordiff='colordiff -u'
 
 alias cp='cp -i'
 
-alias disk-control='sudo smartctl -a /dev/sda'
+function k() {
+  __k_used=true
+  kubectl "$@"
+}
 
-alias gnuplot-colors='gnuplot -e "show palette colornames" 2>&1 | sort'
-
-alias gri='grep -Ri'
-
-alias l='ls -CF'
-alias la='ls -A'
 alias ll='ls -alh'
 
 alias mv='mv -i'
+
+function scrabblify() {
+	wget -qO- https://raw.githubusercontent.com/mkondratek/slack-scrabblifier/master/scrabblify.py | python - "$*" | xcopy && echo "Copied to clipboard"
+}
 
 alias xcopy='xclip -selection clipboard'
 alias xpaste='xclip -selection clipboard -o'
@@ -285,26 +260,10 @@ alias reba='. ~/.bashrc'
 
 alias rm='rm -iv'
 
-alias sagi='sudo apt-get install'
-
 alias vimba='vim ~/.bashrc; reba'
 
-scrabblify() {
-	wget -qO- https://raw.githubusercontent.com/mkondratek/slack-scrabblifier/master/scrabblify.py | python - "$*" | xcopy && echo "Copied to clipboard"
-}
 
-# http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
-HISTCONTROL=ignoredups:erasedups  # no duplicate entries
-HISTSIZE=10000000                   # big big history
-HISTFILESIZE=10000000               # big big history
-shopt -s histappend                      # append to history, don't overwrite it
-shopt -s autocd cdspell
-# Save and reload the history after each command finishes
-export PROMPT_COMMAND="history -a; history -c; history -r"
-
-export CDPATH='.:~'
-
-PATH="$PATH:$HOME/.local/bin"
+# PS1
 
 get_last_status_color() {
     s=$?
@@ -336,48 +295,10 @@ set_up_prompt() {
     local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=${cb}) .*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
     local git_index='$(get_git_index)'
     local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
-    export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} \[\033[01;34m\]\w\[\033[31m\]${git_branch}\[\033[0m\033[2m\]${git_machete_anno}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${prompt_tail} "
+    local kube_status='$(if [[ ${__k_used-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
+    export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} \[\033[01;34m\]\w\[\033[31m\]${git_branch}\[\033[0m\033[2m\]${git_machete_anno}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${kube_status}${prompt_tail} "
 }
 set_up_prompt
-
-track-prs-bb() {
-    input=$(cat)
-    echo "$input"
-    current=$(grep -Po '(?<=View pull request for ).*(?= => )' <<< "$input") || exit
-    pr_upstream=$(grep -Po '(?<=View pull request for '$current' => ).*(?=:)' <<< "$input") || exit
-    # TODO: it assumes the current branch is pushed
-    machete_upstream=$(git machete show up 2>/dev/null) || exit
-    if [[ "$machete_upstream" != "$pr_upstream" ]]; then
-        echo "warning: 'git machete' shows that upstream of '$current' is '$machete_upstream', while upstream in the PR is '$pr_upstream'" >&2
-        echo "not updating annotation for '$current'" >&2
-    else
-        file=$(git machete file)
-        existing_anno=$(grep -Po "(?<=\\b$current\\b ).*$" $file)
-        pr_num=$(grep -o 'https://bitbucket\.org/britishpearl/.*/pull-requests/[0-9]\+' <<< "$input" | grep -o '[0-9]\+$')
-        new_anno="PR #$pr_num"
-        if [[ "$existing_anno" != "$new_anno" ]]; then
-            if [[ "$existing_anno" != "" ]]; then
-                echo "warning: branch '$current' is already annotated as '$existing_anno'" >&2
-                echo "not updating annotation for '$current' to '$new_anno'" >&2
-            else
-                sed -i "s@\\b$current\$@$current $new_anno@" $file
-                echo "info: set up annotation for '$current' to '$new_anno'"
-            fi
-        fi
-    fi
-}
-
-# k8s/Helm helpers
-
-helmdiff() {
-    [[ $# -eq 3 ]] || { echo "usage: helmdiff <release> <chart> <values-file>" 2>&1; return 1; }
-    release=$1
-    chart=$2
-    values_file=$3
-    colordiff -u <(helm get manifest $release) <(helm upgrade --debug --dry-run $release $chart -f $values_file)
-}
-
-alias k=kubectl
 
 
 # Command completion
