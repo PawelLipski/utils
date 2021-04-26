@@ -245,6 +245,9 @@ function k() {
   kubectl "$@"
 }
 
+alias kn=kubens
+alias kx=kubectx
+
 alias ll='ls -alh'
 
 alias mv='mv -i'
