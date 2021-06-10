@@ -241,12 +241,19 @@ alias colordiff='colordiff -u'
 alias cp='cp -i'
 
 function k() {
-  __k_used=true
+  __display_kube_in_ps1=true
   kubectl "$@"
 }
 
-alias kn=kubens
-alias kx=kubectx
+function kn() {
+  __display_kube_in_ps1=true
+  kubens "$@"
+}
+
+function kx() {
+  __display_kube_in_ps1=true
+  kubectx "$@"
+}
 
 alias ll='ls -alh'
 
@@ -298,7 +305,7 @@ set_up_prompt() {
     local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=${cb}) .*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
     local git_index='$(get_git_index)'
     local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
-    local kube_status='$(if [[ ${__k_used-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
+    local kube_status='$(if [[ ${__display_kube_in_ps1-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
     export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} \[\033[01;34m\]\w\[\033[31m\]${git_branch}\[\033[0m\033[2m\]${git_machete_anno}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${kube_status}${prompt_tail} "
 }
 set_up_prompt
