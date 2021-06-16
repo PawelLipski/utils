@@ -242,12 +242,13 @@ alias cp='cp -i'
 
 function k() {
   __display_kube_in_ps1=true
-  kubectl "$@"
+  # For simplicity, AWS profiles are named in the same way as k8s contexts.
+  aws-vault exec "$(kubectx --current)" -- kubectl "$@"
 }
 
 function kn() {
   __display_kube_in_ps1=true
-  kubens "$@"
+  aws-vault exec "$(kubectx --current)" -- kubens "$@"
 }
 
 function kx() {
