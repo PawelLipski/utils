@@ -240,14 +240,27 @@ alias colordiff='colordiff -u'
 
 alias cp='cp -i'
 
-function k() {
-  __display_kube_in_ps1=true
+function _kube_ps1() {
+  if ! ${__display_kube_in_ps1-}; then
+    echo "Using kube context $(kubectx --current)..."
+  else
+    __display_kube_in_ps1=true
+  fi
+}
+
+function h() {
+  _kube_ps1
   # For simplicity, AWS profiles are named in the same way as k8s contexts.
+  aws-vault exec "$(kubectx --current)" -- helm "$@"
+}
+
+function k() {
+  _kube_ps1
   aws-vault exec "$(kubectx --current)" -- kubectl "$@"
 }
 
 function kn() {
-  __display_kube_in_ps1=true
+  _kube_ps1
   aws-vault exec "$(kubectx --current)" -- kubens "$@"
 }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 case $1 in
+  a)      r=all ;;
   de|dep) r=deploy ;;
   rb)     r=rolebinding ;;
   se|sec) r=secret ;;
