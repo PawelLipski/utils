@@ -1,3 +1,14 @@
 #!/usr/bin/env bash
 
+r=$1
+if [[ $r == ns ]] || [[ $r == namespace ]]; then
+  ns=$2
+  echo "WHOOPS are you sure you want to delete '$ns' namespace?"
+  echo -n "If so, type in '$ns' (without quotes): "
+  read -r confirmed_ns
+  if [[ $confirmed_ns != $ns ]]; then
+    echo "Aborted."
+    exit 1
+  fi
+fi
 kubectl delete "$@"
