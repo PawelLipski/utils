@@ -165,7 +165,7 @@ function gsmreku {
 }
 
 function ls-prs() {
-    hub pr list --format "%pC%<(8)%i%Creset     %<(50)%H -> %B%n"
+    hub pr list --format "%<(8)%i     %<(25)%au %<(50)%H -> %B%n"
 }
 
 function track-prs-bb() {
