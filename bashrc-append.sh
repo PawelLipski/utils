@@ -25,9 +25,9 @@ shopt -s autocd cdspell dotglob
 
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
 HISTCONTROL=ignoredups:erasedups  # no duplicate entries
-HISTSIZE=10000000                   # big big history
-HISTFILESIZE=10000000               # big big history
-shopt -s histappend                      # append to history, don't overwrite it
+HISTSIZE=10000000                 # big big history
+HISTFILESIZE=10000000             # big big history
+shopt -s histappend               # append to history, don't overwrite it
 # Save and reload the history after each command finishes
 export PROMPT_COMMAND="history -a; history -c; history -r"
 
@@ -121,10 +121,6 @@ function blamestat {
         where="--work-tree=$dir --git-dir=$dir/.git"
         git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license|yarn.lock' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)'
     done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
-}
-
-function cdiff {
-    colordiff -u "$@" | less -r
 }
 
 function g@ {
@@ -224,21 +220,7 @@ function dexload() {
 }
 
 
-# Misc aliases
-
-function .. {
-    for i in `seq 1 ${1-1}`; do
-        cd ..;
-    done
-}
-
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-
-alias colordiff='colordiff -u'
-
-alias cp='cp -i'
+# Kubernetes aliases
 
 function _kube_ps1() {
   if ! ${__display_kube_in_ps1-}; then
@@ -268,6 +250,27 @@ function kx() {
   __display_kube_in_ps1=true
   kubectx "$@"
 }
+
+
+# Misc aliases
+
+function .. {
+    for i in `seq 1 ${1-1}`; do
+        cd ..;
+    done
+}
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+function cdiff {
+    colordiff -u "$@" | less -r
+}
+
+alias colordiff='colordiff -u'
+
+alias cp='cp -i'
 
 alias ll='ls -alh'
 
@@ -362,7 +365,6 @@ if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; 
 fi
 
 ## minikube completion
-
 if command -v minikube &>/dev/null; then
     eval "$(command minikube completion bash)"
 fi

@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 case $1 in
-  a)      r=all ;;
+  a)
+    kubectl api-resources --verbs=list --namespaced -o name | sort | xargs -n 1 kubectl get --show-kind --ignore-not-found
+    exit
+    ;;
   de|dep) r=deploy ;;
   rb)     r=rolebinding ;;
   se|sec) r=secret ;;
