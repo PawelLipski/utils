@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+resource=$1
+jsonpath=$2
+if [[ $jsonpath != *{*}* ]]; then
+  jsonpath="{$jsonpath}"
+fi
+kubectl g "$resource" -o jsonpath="$jsonpath" "${@:3}" | yq eval -P

@@ -11,5 +11,4 @@ case $1 in
   *)      r=$1 ;;
 esac
 
-shift
-kubectl get "$r" "$@"
+kubectl get "$r" "${@:2}"
