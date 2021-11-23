@@ -5,9 +5,12 @@ case $1 in
     kubectl api-resources --verbs=list --namespaced -o name | sort | xargs -n 1 kubectl get --show-kind --ignore-not-found
     exit
     ;;
-  de|dep) r=deploy ;;
-  rb)     r=rolebinding ;;
-  se|sec) r=secret ;;
+  d)   r=deploy ;;
+  i)   r=ingress ;;
+  p)   r=pod ;;
+  rb)  r=rolebinding ;;
+  s)   r=service ;;
+  sec) r=secret ;;
   *)      r=$1 ;;
 esac
 
