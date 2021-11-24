@@ -203,22 +203,6 @@ alias dpsa='docker ps -a'
 alias drm='docker rm'
 alias drmi='docker rmi'
 
-function dexdb() {
-    dex -it $1 /usr/bin/env PGPASSWORD= psql -P pager=off -h localhost -U xxx -d $2 "${@:3}"
-}
-
-function dexdbrm() {
-    dexdb $1 $2 -c 'drop schema public cascade; create schema public'
-}
-
-function dexdump() {
-    dex -it $1 /usr/bin/env PGPASSWORD= pg_dump -h localhost -U xxx -d $2
-}
-
-function dexload() {
-    docker exec -i $1 /usr/bin/env PGPASSWORD= psql -h localhost -U xxx -d $2
-}
-
 
 # Kubernetes aliases
 
@@ -230,27 +214,10 @@ function _kube_ps1() {
   fi
 }
 
-function h() {
-  _kube_ps1
-  # For simplicity, AWS profiles are named in the same way as k8s contexts.
-  aws-vault exec "$(kubectx --current)" -- helm "$@"
-}
-
-function k() {
-  _kube_ps1
-  aws-vault exec "$(kubectx --current)" -- kubectl "$@"
-}
-
-function kn() {
-  _kube_ps1
-  aws-vault exec "$(kubectx --current)" -- kubens "$@"
-}
-
-function kx() {
-  __display_kube_in_ps1=true
-  kubectx "$@"
-}
-
+alias h='_kube_ps1 && helm'
+alias k='_kube_ps1 && kubectl'
+alias kn='_kube_ps1 && kubens'
+alias kx='_kube_ps1 && kubectx'
 
 # Misc aliases
 
