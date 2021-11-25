@@ -5,6 +5,7 @@ case $1 in
     kubectl api-resources --verbs=list --namespaced -o name | sort | xargs -n 1 kubectl get --show-kind --ignore-not-found
     exit
     ;;
+  app) r=application ;;
   d)   r=deploy ;;
   i)   r=ingress ;;
   p)   r=pod ;;

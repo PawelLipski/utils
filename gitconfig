@@ -9,6 +9,7 @@
 	cam = commit -am
 	co = checkout
 	l = log
+	m = machete
 	s = status
 [push]
 	default = current
