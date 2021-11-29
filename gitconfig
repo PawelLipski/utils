@@ -10,6 +10,7 @@
 	co = checkout
 	l = log
 	m = machete
+	rp = rev-parse
 	s = status
 [push]
 	default = current
