@@ -6,14 +6,14 @@
 [color]
 	ui = auto
 [alias]
-	cam = commit -am
 	co = checkout
 	l = log
 	m = machete
+	re = reset
+	rek = reset --keep
 	rp = rev-parse
 	s = status
 [push]
 	default = current
 [advice]
 	macheteEditorSelection = false
-
