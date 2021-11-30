@@ -298,6 +298,16 @@ set_up_prompt
 
 # Command completion
 
+## alias completion
+if [ -f /opt/complete_alias ]; then
+    source /opt/complete_alias
+	complete -F _complete_alias d
+	complete -F _complete_alias g
+	complete -F _complete_alias k
+	complete -F _complete_alias kn
+	complete -F _complete_alias kx
+fi
+
 ## aws completion
 
 if command -v aws &>/dev/null && [ -f ~/.local/bin/aws_bash_completer ]; then
