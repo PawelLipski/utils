@@ -1,10 +1,5 @@
-[user]
-	name = Pawel Lipski
-	email = pawel.p.lipski@gmail.com
-[core]
-	autocrlf = input
-[color]
-	ui = auto
+[advice]
+	macheteEditorSelection = false
 [alias]
 	co = checkout
 	l = log
@@ -13,7 +8,12 @@
 	rek = reset --keep
 	rp = rev-parse
 	s = status
+[color]
+	ui = auto
+[core]
+	autocrlf = input
 [push]
 	default = current
-[advice]
-	macheteEditorSelection = false
+[user]
+	name = Pawel Lipski
+	email = pawel.p.lipski@gmail.com
