@@ -120,7 +120,7 @@ alias hcis='hub ci-status'
 function blamestat {
     for dir in ${1-.}; do
         where="--work-tree=$dir --git-dir=$dir/.git"
-        git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license|yarn.lock' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)'
+        git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license|yarn.lock' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)' | sed 's/.*+//'
     done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
 }
 
