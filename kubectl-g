@@ -8,6 +8,9 @@ case $1 in
   app) r=application ;;
   d)   r=deploy ;;
   i)   r=ingress ;;
+  kc)  r=keycloak ;;
+  kcc) r=keycloakclient ;;
+  kcr) r=keycloakrealm ;;
   p)   r=pod ;;
   rb)  r=rolebinding ;;
   s)   r=service ;;
