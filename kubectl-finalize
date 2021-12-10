@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+kubectl patch \
+  --type json \
+  --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' \
+  "$@"
