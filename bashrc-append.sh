@@ -295,14 +295,18 @@ set_up_prompt() {
 }
 set_up_prompt
 
+# Java aliases
+
+alias j=./gradlew
 
 # Command completion
 
 ## alias completion
 if [ -f /opt/complete_alias ]; then
-    source /opt/complete_alias
+	source /opt/complete_alias
 	complete -F _complete_alias d
 	complete -F _complete_alias g
+	complete -F _complete_alias j
 	complete -F _complete_alias k
 	complete -F _complete_alias kn
 	complete -F _complete_alias kx
