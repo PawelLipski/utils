@@ -15,7 +15,7 @@ case $1 in
   rb)  r=rolebinding ;;
   s)   r=service ;;
   sec) r=secret ;;
-  *)      r=$1 ;;
+  *)   r=$1 ;;
 esac
 
 kubectl get "$r" "${@:2}"
