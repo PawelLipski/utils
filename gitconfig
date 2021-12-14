@@ -2,6 +2,7 @@
 	macheteEditorSelection = false
 [alias]
 	co = checkout
+	d = diff
 	l = log
 	m = machete
 	re = reset
