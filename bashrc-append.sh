@@ -351,3 +351,7 @@ if command -v minikube &>/dev/null; then
     eval "$(command minikube completion bash)"
 fi
 
+# 1Password CLI completion
+if command -v op &>/dev/null; then
+    eval "$(op completion bash)"
+fi
