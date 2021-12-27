@@ -14,14 +14,25 @@ fi
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
-if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
+  fi
 fi
 
 
 # Shell options & vars
 
-shopt -s autocd cdspell dotglob
+shopt -s autocd cdspell
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
 
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
 HISTCONTROL=ignoredups:erasedups  # no duplicate entries
@@ -241,6 +252,8 @@ alias colordiff='colordiff -u'
 alias cp='cp -i'
 
 alias ll='ls -alh'
+alias la='ls -A'
+alias l='ls -CF'
 
 alias mv='mv -i'
 
