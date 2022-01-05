@@ -164,7 +164,7 @@ function gcmlast {
     if git diff-index --quiet HEAD; then
         git status
     else
-        git commit -am "$(git log -1 --format=%s | sed 's/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/')" --edit
+        git commit --edit -am "$(git log -1 --format=%s | sed 's/8th round/9th round/; s/7th round/8th round/; s/6th round/7th round/; s/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/; s/0th round/1st round/')"
     fi
 }
 
