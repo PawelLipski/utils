@@ -327,8 +327,6 @@ if [ -f /opt/complete_alias ]; then
 	complete -F _complete_alias kn
 	complete -F _complete_alias kx
 	complete -F _complete_alias tf
-	complete -C terraform terragrunt
-	complete -F _complete_alias tg
 fi
 
 ## aws completion
