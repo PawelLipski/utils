@@ -326,7 +326,6 @@ if [ -f /opt/complete_alias ]; then
 	complete -F _complete_alias k
 	complete -F _complete_alias kn
 	complete -F _complete_alias kx
-	complete -F _complete_alias tf
 fi
 
 ## aws completion
