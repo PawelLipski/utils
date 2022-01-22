@@ -330,8 +330,8 @@ fi
 
 ## aws completion
 
-if command -v aws &>/dev/null && [ -f ~/.local/bin/aws_bash_completer ]; then
-    . ~/.local/bin/aws_bash_completer
+if command -v aws &>/dev/null && command -v aws_completer &>/dev/null; then
+    complete -C aws_completer aws
 fi
 
 ## helm completion
