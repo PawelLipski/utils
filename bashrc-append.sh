@@ -348,7 +348,7 @@ fi
 
 ## kind completion
 
-if command -v argocd &>/dev/nullthen
+if command -v argocd &>/dev/null; then
   source <(kind completion bash)
 fi
 
