@@ -330,7 +330,7 @@ fi
 
 ## argocd completion
 
-if command -v argocd &>/dev/nullthen
+if command -v argocd &>/dev/null; then
   source <(argocd completion bash)
 fi
 
