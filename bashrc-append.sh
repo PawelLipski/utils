@@ -328,46 +328,47 @@ if [ -f /opt/complete_alias ]; then
 	complete -F _complete_alias kx
 fi
 
+## argocd completion
+
+if command -v argocd &>/dev/nullthen
+  source <(argocd completion bash)
+fi
+
 ## aws completion
 
 if command -v aws &>/dev/null && command -v aws_completer &>/dev/null; then
-    complete -C aws_completer aws
+  complete -C aws_completer aws
 fi
 
 ## helm completion
 
 if command -v helm &>/dev/null; then
-    eval "$(command helm completion bash)"
+  eval "$(helm completion bash)"
 fi
 
-## kops completion
+## kind completion
 
-if command kops version &>/dev/null; then
-    eval "$(command kops completion bash)"
+if command -v argocd &>/dev/nullthen
+  source <(kind completion bash)
 fi
 
 ## kubectl completion
 
 if command -v kubectl &>/dev/null; then
-    eval "$(command kubectl completion bash)"
+  eval "$(kubectl completion bash)"
 fi
 
 ## kubectx completion
 if command -v kubectx &>/dev/null && [ -f /opt/kubectx/completion/kubectx.bash ]; then
-    . /opt/kubectx/completion/kubectx.bash
+  . /opt/kubectx/completion/kubectx.bash
 fi
 
 ## kubens completion
 if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; then
-    . /opt/kubectx/completion/kubens.bash
-fi
-
-## minikube completion
-if command -v minikube &>/dev/null; then
-    eval "$(command minikube completion bash)"
+  . /opt/kubectx/completion/kubens.bash
 fi
 
 # 1Password CLI completion
 if command -v op &>/dev/null; then
-    eval "$(op completion bash)"
+  eval "$(op completion bash)"
 fi
