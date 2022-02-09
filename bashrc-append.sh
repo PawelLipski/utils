@@ -226,14 +226,7 @@ function _kube_ps1() {
   fi
 }
 
-function a() {
-  _kube_ps1
-  case "$1 $2" in
-    a l) argocd app list ;;
-    a s) argocd app sync ;;
-    *)   argocd "$@" ;;
-  esac
-}
+alias a='_kube_ps1 && argocd'
 alias h='_kube_ps1 && helm'
 alias k='_kube_ps1 && kubectl'
 alias kn='_kube_ps1 && kubens'
@@ -328,13 +321,9 @@ alias j=./gradlew
 
 if [ -f /opt/complete_alias ]; then
 	source /opt/complete_alias
-	complete -F _complete_alias d
-	complete -F _complete_alias dc
-	complete -F _complete_alias g
-	complete -F _complete_alias j
-	complete -F _complete_alias k
-	complete -F _complete_alias kn
-	complete -F _complete_alias kx
+	for cmd in a d dc g h j k kn kx; do
+	  complete -F _complete_alias $cmd
+	done
 fi
 
 ## argocd completion
