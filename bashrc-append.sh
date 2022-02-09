@@ -226,6 +226,14 @@ function _kube_ps1() {
   fi
 }
 
+function a() {
+  _kube_ps1
+  case "$1 $2" in
+    a l) argocd app list ;;
+    a s) argocd app sync ;;
+    *)   argocd "$@" ;;
+  esac
+}
 alias h='_kube_ps1 && helm'
 alias k='_kube_ps1 && kubectl'
 alias kn='_kube_ps1 && kubens'
@@ -317,6 +325,7 @@ alias j=./gradlew
 # Command completion
 
 ## alias completion
+
 if [ -f /opt/complete_alias ]; then
 	source /opt/complete_alias
 	complete -F _complete_alias d
@@ -368,7 +377,7 @@ if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; 
   . /opt/kubectx/completion/kubens.bash
 fi
 
-# 1Password CLI completion
+# op (1Password CLI) completion
 if command -v op &>/dev/null; then
   eval "$(op completion bash)"
 fi
