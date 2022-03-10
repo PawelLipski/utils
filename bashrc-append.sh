@@ -1,13 +1,13 @@
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
-    alias dir='dir --color=auto'
-    alias vdir='vdir --color=auto'
+  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  alias ls='ls --color=auto'
+  alias dir='dir --color=auto'
+  alias vdir='vdir --color=auto'
 
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
 fi
 
 
@@ -129,78 +129,51 @@ alias gxa='git stash apply'
 alias hcis='hub ci-status'
 
 function blamestat {
-    for dir in ${1-.}; do
-        where="--work-tree=$dir --git-dir=$dir/.git"
-        git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license|yarn.lock' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)' | sed 's/.*+//'
-    done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
+  for dir in ${1-.}; do
+    where="--work-tree=$dir --git-dir=$dir/.git"
+    git $where grep --no-recurse-submodules -Il '' | egrep -iv '\.(pem|pub|xsd)$|license|yarn.lock' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)' | sed 's/.*+//'
+  done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
 }
 
 function g@ {
-    git symbolic-ref --short --quiet HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
+  git symbolic-ref --short --quiet HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
 }
 
 function gar {
-    name=${1-$(basename `pwd`)}
-    git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
+  name=${1-$(basename `pwd`)}
+  git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
 }
 
 function gcm {
-    if git diff-index --quiet HEAD; then
-        git status
-    else
-        git commit -am "$*"
-    fi
+  if git diff-index --quiet HEAD; then
+    git status
+  else
+    git commit -am "$*"
+  fi
 }
 
 function gcmnv {
-    if git diff-index --quiet HEAD; then
-        git status
-    else
-        git commit --no-verify -am "$*"
-    fi
+  if git diff-index --quiet HEAD; then
+    git status
+  else
+    git commit --no-verify -am "$*"
+  fi
 }
 
 function gcmlast {
-    if git diff-index --quiet HEAD; then
-        git status
-    else
-        git commit --edit -am "$(git log -1 --format=%s | sed 's/8th round/9th round/; s/7th round/8th round/; s/6th round/7th round/; s/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/; s/0th round/1st round/')"
-    fi
+  if git diff-index --quiet HEAD; then
+    git status
+  else
+    git commit --edit -am "$(git log -1 --format=%s | sed 's/8th round/9th round/; s/7th round/8th round/; s/6th round/7th round/; s/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/; s/0th round/1st round/')"
+  fi
 }
 
 function gsmreku {
-    git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --keep @{upstream}"
+  git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --keep @{upstream}"
 }
 
 function ls-prs() {
-    hub pr list --format "%<(8)%i     %<(25)%au %<(50)%H -> %B%n"
-}
-
-function track-prs-bb() {
-    input=$(cat)
-    echo "$input"
-    current=$(grep -Po '(?<=View pull request for ).*(?= => )' <<< "$input") || exit
-    pr_upstream=$(grep -Po '(?<=View pull request for '$current' => ).*(?=:)' <<< "$input") || exit
-    # TODO: it assumes the current branch is pushed
-    machete_upstream=$(git machete show up 2>/dev/null) || exit
-    if [[ "$machete_upstream" != "$pr_upstream" ]]; then
-        echo "warning: 'git machete' shows that upstream of '$current' is '$machete_upstream', while upstream in the PR is '$pr_upstream'" >&2
-        echo "not updating annotation for '$current'" >&2
-    else
-        file=$(git machete file)
-        existing_anno=$(grep -Po "(?<=\\b$current\\b ).*$" $file)
-        pr_num=$(grep -o 'https://bitbucket\.org/britishpearl/.*/pull-requests/[0-9]\+' <<< "$input" | grep -o '[0-9]\+$')
-        new_anno="PR #$pr_num"
-        if [[ "$existing_anno" != "$new_anno" ]]; then
-            if [[ "$existing_anno" != "" ]]; then
-                echo "warning: branch '$current' is already annotated as '$existing_anno'" >&2
-                echo "not updating annotation for '$current' to '$new_anno'" >&2
-            else
-                sed -i "s@\\b$current\$@$current $new_anno@" $file
-                echo "info: set up annotation for '$current' to '$new_anno'"
-            fi
-        fi
-    fi
+  hub pr list --format "%<(8)%i     %<(25)%au %<(50)%H -> %B%n"
 }
 
 
@@ -234,12 +207,13 @@ alias kx='_kube_ps1 && kubectx'
 alias tf=terraform
 alias tg=terragrunt
 
+
 # Misc aliases
 
 function .. {
-    for i in `seq 1 ${1-1}`; do
-        cd ..;
-    done
+  for i in `seq 1 ${1-1}`; do
+    cd ..;
+  done
 }
 
 # Add an "alert" alias for long running commands.  Use like so:
@@ -247,12 +221,14 @@ function .. {
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 function cdiff {
-    colordiff -u "$@" | less -r
+  colordiff -u "$@" | less -r
 }
 
 alias colordiff='colordiff -u'
 
 alias cp='cp -i'
+
+alias deansi='sed -r "s/\x1b\[([0-9]{1,2}(;[0-9]{1,2})?)?m//g"'
 
 alias ll='ls -alh'
 alias la='ls -A'
@@ -277,37 +253,35 @@ alias vimba='vim ~/.bashrc; reba'
 # PS1
 
 get_last_status_color() {
-    s=$?
-    [ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
-    exit $s # need to retain the status for get_last_status_content
+  s=$?
+  [ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
+  exit $s # need to retain the status for get_last_status_content
 }
 
 get_last_status_content() {
-    s=$?
-    [ $s -eq 0 ] && echo -n ➜ || echo -n "➜ ($s)"
+  s=$?
+  [ $s -eq 0 ] && echo -n ➜ || echo -n "➜ ($s)"
 }
 
 get_git_index_color() {
-    git diff-index --quiet HEAD &>/dev/null
-    [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && exit 1
-    exit 0
+  git diff-index --quiet HEAD &>/dev/null
+  [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && exit 1
+  exit 0
 }
 
 get_git_index_char() {
-    # Trick: using get_git_index_color's exit code to save another call to git diff-index
-    [ $? -eq 1 ] && echo -n ✗
+  # Trick: using get_git_index_color's exit code to save another call to git diff-index
+  [ $? -eq 1 ] && echo -n ✗
 }
 
 set_up_prompt() {
-    # local user_and_host="\[\033[01;32m\]\u@\h"
-    #local user="\[\033[01m\]\u"
-    local time='$(date +%H:%M)'
-    local git_branch='$(cb=$(g@); [[ $cb ]] && echo " $cb")'
-    local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=${cb}) .*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
-    local git_index='$(get_git_index)'
-    local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
-    local kube_status='$(if [[ ${__display_kube_in_ps1-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
-    export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} \[\033[01;36m\]\w\[\033[31m\]${git_branch}\[\033[0m\033[2m\]${git_machete_anno}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${kube_status}${prompt_tail} "
+  local time='$(date +%H:%M)'
+  local git_branch='$(cb=$(g@); [[ $cb ]] && echo " $cb")'
+  local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=${cb}) .*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
+  local git_index='$(get_git_index)'
+  local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
+  local kube_status='$(if [[ ${__display_kube_in_ps1-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
+  export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} \[\033[01;36m\]\w\[\033[31m\]${git_branch}\[\033[0m\033[2m\]${git_machete_anno}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${kube_status}${prompt_tail} "
 }
 set_up_prompt
 
