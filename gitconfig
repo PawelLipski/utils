@@ -1,12 +1,14 @@
 [advice]
 	macheteEditorSelection = false
 [alias]
+	b = branch
 	co = checkout
 	d = diff
 	l = log
 	m = machete
 	re = reset
 	rek = reset --keep
+	reku = reset --keep @{upstream}
 	rp = rev-parse
 	s = status
 [color]
