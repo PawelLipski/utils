@@ -207,6 +207,7 @@ alias kx='_kube_ps1 && kubectx'
 alias tf=terraform
 alias tg=terragrunt
 
+PATH="$PATH:$HOME/utils/kubectl-plugins"
 
 # Misc aliases
 

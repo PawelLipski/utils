@@ -2,6 +2,14 @@
 
 set -e -o pipefail -u
 
+option=$1
+if [[ $option == "--https" ]]; then
+  protocol=https
+  shift
+else
+  protocol=http
+fi
+
 namespace=$1
 service=$2
 local_port=$3
@@ -12,18 +20,19 @@ url_path=${7-}
 
 if nc -z localhost "$local_port" &>/dev/null; then
   echo "Port $local_port already bound - is $service port-forward already running?"
-  return 1
+  exit 1
 fi
 
 if [[ $password_secret_name ]] && [[ $password_secret_jsonpath ]]; then
-  kubectl get secret "$password_secret_name" -n "$namespace" -o jsonpath="{$jsonpath}" | base64 -d | xclip -selection clipboard
+  kubectl get secret "$password_secret_name" -n "$namespace" -o jsonpath="{$password_secret_jsonpath}" | base64 -d | xclip -selection clipboard
   echo Password copied to clipboard
 fi
 
+set -o monitor
 kubectl port-forward "service/$service" "$local_port:$service_port" -n "$namespace" &
 
 until nc -z localhost "$local_port" &>/dev/null; do
   sleep 0.5
 done
-xdg-open "localhost:$local_port$url" &>/dev/null
-fg
+xdg-open "$protocol://localhost:$local_port$url_path" &>/dev/null
+fg >/dev/null
