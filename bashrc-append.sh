@@ -51,26 +51,6 @@ PATH="$PATH:$HOME/.local/bin"
 
 # git aliases
 
-alias @='git machete'
-alias @a='git machete add'
-alias @D='git machete discover'
-alias @d='git machete diff'
-alias @e='git machete edit'
-alias @g='git machete go'
-alias @gd='git machete go down'
-alias @gf='git machete go first'
-alias @gl='git machete go last'
-alias @gn='git machete go next'
-alias @gp='git machete go prev'
-alias @gu='git machete go up'
-alias @r='git machete reapply'
-alias @s='git machete status'
-alias @sl='git machete status -l'
-alias @sL='git machete status -L'
-alias @t='git machete traverse'
-alias @tw='git machete traverse -w'
-alias @tW='git machete traverse -W'
-alias @u='git machete update'
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
