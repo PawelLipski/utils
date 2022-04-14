@@ -210,6 +210,8 @@ alias cp='cp -i'
 
 alias deansi='sed -r "s/\x1b\[([0-9]{1,2}(;[0-9]{1,2})?)?m//g"'
 
+alias jqr='jq -r'
+
 alias ll='ls -alh'
 alias la='ls -A'
 alias l='ls -CF'
@@ -231,6 +233,7 @@ alias vimba='vim ~/.bashrc; reba'
 alias xcopy='xclip -selection clipboard'
 alias xpaste='xclip -selection clipboard -o'
 
+alias yqp='yq -P'
 
 # PS1
 
