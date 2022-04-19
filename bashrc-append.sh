@@ -155,6 +155,13 @@ function ls-prs() {
   hub pr list --format "%<(8)%i     %<(25)%au %<(50)%H -> %B%n"
 }
 
+function update-github-token() {
+  (( $# == 1 )) || { echo "usage: update-github-token <new-token>"; return 1; }
+  token=$1
+  echo "$token" > ~/.github-token
+  yq --inplace '.hosts."github.com".oauth_token = "'$token'"' ~/.config/gh/config.yml
+  yq --inplace '."github.com"[0].oauth_token = "'$token'"' ~/.config/hub
+}
 
 # Docker aliases
 
