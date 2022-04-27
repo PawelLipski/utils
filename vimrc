@@ -145,3 +145,5 @@ cabbr Wq wq
 autocmd BufRead,BufNewFile *.rb set filetype=ruby
 autocmd BufRead,BufNewFile Vagrantfile set filetype=ruby
 
+au FileType gitcommit setlocal tw=9999
+
