@@ -191,7 +191,6 @@ alias k='_kube_ps1 && kubectl'
 alias kn='_kube_ps1 && kubens'
 alias kx='_kube_ps1 && kubectx'
 alias tf=terraform
-alias tg=twingate
 
 PATH="$PATH:$HOME/utils/kubectl-plugins"
 
@@ -295,7 +294,7 @@ alias j=./gradlew
 
 if [ -f /opt/complete_alias ]; then
 	source /opt/complete_alias
-	for cmd in a d dc g h j k kn kx tg; do
+	for cmd in a d dc g h j k kn kx; do
 	  complete -F _complete_alias $cmd
 	done
 fi
