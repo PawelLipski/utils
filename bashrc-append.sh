@@ -163,6 +163,7 @@ function update-github-token() {
   yq --inplace '."github.com"[0].oauth_token = "'$token'"' ~/.config/hub
 }
 
+
 # Docker aliases
 
 alias d='docker'
@@ -193,6 +194,7 @@ alias kx='_kube_ps1 && kubectx'
 alias tf=terraform
 
 PATH="$PATH:$HOME/utils/kubectl-plugins"
+
 
 # Misc aliases
 
@@ -249,6 +251,11 @@ alias xpaste='xclip -selection clipboard -o'
 
 alias yqp='yq -P'
 
+function z() {
+  zipinfo -1 "$1" | sort
+}
+
+
 # PS1
 
 get_last_status_color() {
@@ -284,9 +291,11 @@ set_up_prompt() {
 }
 set_up_prompt
 
+
 # Java aliases
 
 alias j=./gradlew
+
 
 # Command completion
 
