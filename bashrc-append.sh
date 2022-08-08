@@ -124,7 +124,7 @@ function gar {
 }
 
 function gcm {
-  if git diff-index --quiet HEAD; then
+  if git diff --quiet HEAD; then
     git status
   else
     git commit -am "$*"
@@ -132,7 +132,7 @@ function gcm {
 }
 
 function gcmnv {
-  if git diff-index --quiet HEAD; then
+  if git diff --quiet HEAD; then
     git status
   else
     git commit --no-verify -am "$*"
@@ -140,7 +140,7 @@ function gcmnv {
 }
 
 function gcmlast {
-  if git diff-index --quiet HEAD; then
+  if git diff --quiet HEAD; then
     git status
   else
     git commit --edit -am "$(git log -1 --format=%s | sed 's/8th round/9th round/; s/7th round/8th round/; s/6th round/7th round/; s/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/; s/0th round/1st round/')"
@@ -270,13 +270,13 @@ get_last_status_content() {
 }
 
 get_git_index_color() {
-  git diff-index --quiet HEAD &>/dev/null
+  git diff --quiet HEAD &>/dev/null
   [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && exit 1
   exit 0
 }
 
 get_git_index_char() {
-  # Trick: using get_git_index_color's exit code to save another call to git diff-index
+  # Trick: using get_git_index_color's exit code to save another call to git diff
   [ $? -eq 1 ] && echo -n ✗
 }
 

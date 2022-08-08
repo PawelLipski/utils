@@ -20,3 +20,5 @@
 [user]
 	name = Pawel Lipski
 	email = pawel.p.lipski@gmail.com
+[safe]
+	directory = /home/plipski/git-machete-intellij-plugin
