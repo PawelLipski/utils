@@ -168,9 +168,16 @@ function update-github-token() {
 alias set-java-home='export JAVA_HOME=$(which java | xargs readlink -f | xargs dirname | xargs dirname)'
 set-java-home
 
-alias use-java8=' sudo alternatives --set java java-1.8.0-openjdk.x86_64 && sudo alternatives --set javac java-1.8.0-openjdk.x86_64 && java -version && set-java-home'
-alias use-java11='sudo alternatives --set java java-11-openjdk.x86_64    && sudo alternatives --set javac java-11-openjdk.x86_64    && java -version && set-java-home'
-alias use-java17='sudo alternatives --set java java-17-openjdk.x86_64    && sudo alternatives --set javac java-17-openjdk.x86_64    && java -version && set-java-home'
+function use-java() {
+  version=$1
+  sudo alternatives --set java java-$version-openjdk.x86_64 \
+  && sudo alternatives --set javac java-$version-openjdk.x86_64 \
+  && java -version \
+  && set-java-home
+}
+alias use-java8='use-java 1.8.0'
+alias use-java11='use-java 11'
+alias use-java17='use-java 17'
 
 
 # Docker aliases
