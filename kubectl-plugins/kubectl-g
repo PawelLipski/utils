@@ -6,6 +6,8 @@ case $1 in
     exit
     ;;
   app) r=application ;;
+  cr)  r=clusterrole ;;
+  crb) r=clusterrolebinding ;;
   d)   r=deploy ;;
   i)   r=ingress ;;
   kc)  r=keycloak ;;
