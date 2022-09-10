@@ -370,5 +370,5 @@ fi
 # pulumi completion
 
 if command -v op &>/dev/null; then
-  source <(op completion bash)"
+  source <(op completion bash)
 fi
