@@ -6,6 +6,7 @@
 	d = diff
 	l = log
 	m = machete
+	r = remote
 	re = reset
 	rek = reset --keep
 	reku = reset --keep @{upstream}
