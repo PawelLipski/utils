@@ -10,6 +10,7 @@ case $1 in
   crb) r=clusterrolebinding ;;
   d)   r=deploy ;;
   i)   r=ingress ;;
+  j)   r=job ;;
   kc)  r=keycloak ;;
   kcc) r=keycloakclient ;;
   kcr) r=keycloakrealm ;;
