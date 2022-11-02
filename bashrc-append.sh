@@ -44,7 +44,7 @@ export PROMPT_COMMAND="history -a; history -c; history -r"
 
 export EDITOR=vim
 
-PATH="$PATH:$HOME/.local/bin"
+PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 
 
 # git aliases
