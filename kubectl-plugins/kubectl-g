@@ -14,6 +14,7 @@ case $1 in
   kc)  r=keycloak ;;
   kcc) r=keycloakclient ;;
   kcr) r=keycloakrealm ;;
+  np)  r=networkpolicy ;;
   p)   r=pod ;;
   rb)  r=rolebinding ;;
   s)   r=service ;;
