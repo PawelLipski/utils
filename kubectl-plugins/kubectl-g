@@ -9,6 +9,7 @@ case $1 in
   cr)  r=clusterrole ;;
   crb) r=clusterrolebinding ;;
   d)   r=deploy ;;
+  gnp) r=globalnetworkpolicy ;;
   i)   r=ingress ;;
   j)   r=job ;;
   kc)  r=keycloak ;;
