@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+kubectl gj "$@" | jq -cr '.. | objects | with_entries(select(.key == "image")) | select(. != {}) | .image' | sort -u
