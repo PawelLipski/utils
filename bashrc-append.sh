@@ -372,3 +372,8 @@ fi
 if command -v op &>/dev/null; then
   source <(op completion bash)
 fi
+
+# Mac OS specific
+
+export BASH_SILENCE_DEPRECATION_WARNING=1
+
