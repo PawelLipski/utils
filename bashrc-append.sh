@@ -28,7 +28,7 @@ fi
 
 # Shell options & vars
 
-shopt -s autocd cdspell
+shopt -s cdspell
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
