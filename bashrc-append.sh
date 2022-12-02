@@ -250,15 +250,13 @@ alias mv='mv -i'
 
 alias py=python
 
-alias reba='. ~/.bashrc'
+alias reba='. ~/.bash_profile'
 
 alias rm='rm -iv'
 
 function scrabblify() {
 	wget -qO- https://raw.githubusercontent.com/mkondratek/slack-scrabblifier/master/scrabblify.py | python - "$*" | xcopy && echo "Copied to clipboard"
 }
-
-alias vimba='vim ~/.bashrc; reba'
 
 alias xcopy='xclip -selection clipboard'
 alias xpaste='xclip -selection clipboard -o'

@@ -16,6 +16,8 @@
 	ui = auto
 [core]
 	autocrlf = input
+	precomposeunicode = true
+	excludesfile = /Users/pawel_pawellipski/.gitignore_global
 [push]
 	default = current
 [user]
@@ -23,3 +25,5 @@
 	email = pawel.p.lipski@gmail.com
 [safe]
 	directory = /home/plipski/git-machete-intellij-plugin
+[rerere]
+	enabled = true
