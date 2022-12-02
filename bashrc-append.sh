@@ -278,18 +278,22 @@ get_last_status_color() {
 
 get_last_status_content() {
   s=$?
-  [ $s -eq 0 ] && echo -n ➜ || echo -n "➜ ($s)"
+  [ $s -eq 0 ] && echo -n "➜" || echo -n "➜ ($s)"
 }
 
 get_git_index_color() {
+  [[ $PWD = $SKIP_GIT_DIFF_IN_PS1_FOR_PATH_GLOB ]] && echo -ne "\033[0m\033[01;33m" && return 2
   git diff --quiet HEAD &>/dev/null
-  [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && exit 1
-  exit 0
+  [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && return 1
+  return 0
 }
 
 get_git_index_char() {
   # Trick: using get_git_index_color's exit code to save another call to git diff
-  [ $? -eq 1 ] && echo -n ✗
+  case $? in
+    1) echo -n " ✗" ;;
+    2) echo -n " ?" ;;
+  esac
 }
 
 set_up_prompt() {
