@@ -200,13 +200,13 @@ function _kube_ps1() {
   fi
 }
 
-if command -v kubectl &>/dev/null; then
-  alias a='_kube_ps1 && argocd'
-  alias h='_kube_ps1 && helm'
+alias a='_kube_ps1 && argocd'
+alias h='_kube_ps1 && helm'
+if [[ $ALIAS_K_AS_KUBECTL != false ]]; then
   alias k='_kube_ps1 && kubectl'
-  alias kn='_kube_ps1 && kubens'
-  alias kx='_kube_ps1 && kubectx'
 fi
+alias kn='_kube_ps1 && kubens'
+alias kx='_kube_ps1 && kubectx'
 alias tf=terraform
 
 PATH="$PATH:$HOME/utils/kubectl-plugins"
