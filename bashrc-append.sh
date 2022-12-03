@@ -101,6 +101,7 @@ alias gshx='git show --stat'
 alias gsm='git submodule'
 alias gsms='git submodule status'
 alias gsmu='git submodule update'
+alias gsu='git status -uno'  # don't show untracked files, speeds up operations on large repos
 alias gx='git stash'
 alias gxa='git stash apply'
 alias hcis='hub ci-status'
