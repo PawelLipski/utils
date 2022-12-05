@@ -322,6 +322,16 @@ if command -v aws &>/dev/null && command -v aws_completer &>/dev/null; then
   complete -C aws_completer aws
 fi
 
+# git completions
+
+if [ -f ~/.git.completion.bash ]; then
+  . ~/.git.completion.bash
+fi
+
+if [ -f ~/.git-machete.completion.bash ]; then
+  . ~/.git-machete.completion.bash
+fi
+
 ## helm completion
 
 if command -v helm &>/dev/null; then
