@@ -294,9 +294,15 @@ set_up_prompt() {
 set_up_prompt
 
 
-# Java aliases
+# Java
 
-alias j=./gradlew
+function j() {
+  dir=$PWD
+  until [[ -f "$dir/gradlew" ]]; do
+    dir=$(realpath "$dir/..")
+  done
+  "$dir/gradlew" "$@"
+}
 
 
 # Command completion
