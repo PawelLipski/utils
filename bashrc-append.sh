@@ -277,7 +277,7 @@ get_git_index_color() {
 get_git_index_char() {
   # Trick: using get_git_index_color's exit code to save another call to git diff
   case $? in
-    1) echo -n "✗" ;;
+    1) echo -n " ✗" ;;
     2) echo -n " ?" ;;
   esac
 }
@@ -285,7 +285,7 @@ get_git_index_char() {
 set_up_prompt() {
   local time='$(date +%H:%M)'
   local git_branch='$(cb=$(g@); [[ $cb ]] && echo " $cb")'
-  local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=${cb}) .*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
+  local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=^${cb} ).*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
   local git_index='$(get_git_index)'
   local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
   local kube_status='$(if [[ ${__display_kube_in_ps1-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
