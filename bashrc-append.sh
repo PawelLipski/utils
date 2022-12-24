@@ -277,7 +277,7 @@ get_git_index_color() {
 get_git_index_char() {
   # Trick: using get_git_index_color's exit code to save another call to git diff
   case $? in
-    1) echo -n " ✗" ;;
+    1) echo -n "✗" ;;
     2) echo -n " ?" ;;
   esac
 }
