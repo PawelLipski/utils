@@ -49,6 +49,13 @@ PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 
 # git aliases
 
+__git_complete g   __git_main
+__git_complete gco _git_checkout
+__git_complete gd  _git_diff
+__git_complete gl  _git_log
+__git_complete gp  _git_push
+__git_complete gpl _git_pull
+
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
