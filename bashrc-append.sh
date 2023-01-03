@@ -149,7 +149,12 @@ function gcmlast {
   if git diff --quiet HEAD; then
     git status
   else
-    git commit --edit -am "$(git log -1 --format=%s | sed 's/8th round/9th round/; s/7th round/8th round/; s/6th round/7th round/; s/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/; s/0th round/1st round/')"
+    old_message=$(git log -1 --format=%s)
+    new_message=$(echo "$old_message" | sed 's/8th round/9th round/; s/7th round/8th round/; s/6th round/7th round/; s/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/; s/0th round/1st round/')
+    if [[ $new_message == "$old_message" ]]; then
+      new_message="$old_message - 1st round of fixes"
+    fi
+    git commit --edit -am "$new_message"
   fi
 }
 
