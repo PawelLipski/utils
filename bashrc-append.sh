@@ -49,13 +49,6 @@ PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 
 # git aliases
 
-__git_complete g   __git_main
-__git_complete gco _git_checkout
-__git_complete gd  _git_diff
-__git_complete gl  _git_log
-__git_complete gp  _git_push
-__git_complete gpl _git_pull
-
 alias g=git
 alias ga='git add'
 alias gaa='git add -A .'
@@ -268,25 +261,25 @@ function z() {
 
 # PS1
 
-get_last_status_color() {
+function get_last_status_color() {
   s=$?
   [ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
   exit $s # need to retain the status for get_last_status_content
 }
 
-get_last_status_content() {
+function get_last_status_content() {
   s=$?
   [ $s -eq 0 ] && echo -n "➜" || echo -n "➜ ($s)"
 }
 
-get_git_index_color() {
+function get_git_index_color() {
   [[ $PWD = $SKIP_GIT_DIFF_IN_PS1_FOR_PATH_GLOB ]] && echo -ne "\033[0m\033[01;33m" && return 2
   git diff --quiet HEAD &>/dev/null
   [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && return 1
   return 0
 }
 
-get_git_index_char() {
+function get_git_index_char() {
   # Trick: using get_git_index_color's exit code to save another call to git diff
   case $? in
     1) echo -n " ✗" ;;
@@ -294,7 +287,7 @@ get_git_index_char() {
   esac
 }
 
-set_up_prompt() {
+function set_up_prompt() {
   local time='$(date +%H:%M)'
   local git_branch='$(cb=$(g@); [[ $cb ]] && echo " $cb")'
   local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=^${cb} ).*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
@@ -344,6 +337,12 @@ fi
 
 if [ -f ~/.git.completion.bash ]; then
   . ~/.git.completion.bash
+  __git_complete g   __git_main
+  __git_complete gco _git_checkout
+  __git_complete gd  _git_diff
+  __git_complete gl  _git_log
+  __git_complete gp  _git_push
+  __git_complete gpl _git_pull
 fi
 
 if [ -f ~/.git-machete.completion.bash ]; then
