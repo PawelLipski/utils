@@ -152,6 +152,26 @@ function gcmlast {
   fi
 }
 
+function git-remote-ssh-to-https-with-token() {
+  local remote orig_url host org proj token url
+  remote=${1-origin}
+  orig_url=$(git remote get-url "$remote")
+  if [[ $orig_url != git@*:*/* ]]; then
+    echo "URL for $remote isn't an SSH URL, aborting"
+    return 1
+  fi
+  host=${orig_url#git@}
+  host=${host%:*}
+  org=${orig_url#*:}
+  org=${org%/*}
+  proj=${orig_url#*/}
+  proj=${proj%.*}
+
+  token=$(gh auth token -h "$host") || return 1
+  url=https://${token}@${host}/${org}/${proj}.git
+  git remote set-url "$remote" "$url"
+}
+
 function gsmreku {
   git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --keep @{upstream}"
 }
