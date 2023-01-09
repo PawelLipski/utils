@@ -324,10 +324,15 @@ set_up_prompt
 
 function j() {
   dir=$PWD
-  until [[ -f "$dir/gradlew" ]]; do
+  until [[ -f "$dir/gradlew" ]] || [[ $dir = "/" ]]; do
     dir=$(realpath "$dir/..")
   done
-  "$dir/gradlew" "$@"
+  if [[ $dir != "/" ]]; then
+    "$dir/gradlew" "$@"
+  else
+    echo "gradlew not found in any directory up to filesystem root" >&2
+    return 1
+  fi
 }
 
 
