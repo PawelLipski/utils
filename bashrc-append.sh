@@ -406,18 +406,29 @@ if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; 
   . /opt/kubectx/completion/kubens.bash
 fi
 
-# op (1Password CLI) completion
+## op (1Password CLI) completion
 if command -v op &>/dev/null; then
   eval "$(op completion bash)"
 fi
 
-# pulumi completion
+## pulumi completion
 
 if command -v op &>/dev/null; then
   source <(op completion bash)
 fi
 
+
+# sdkman
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+
 # Mac OS specific
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 
+## iterm2
+
+test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
