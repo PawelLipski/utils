@@ -10,6 +10,9 @@ if [ -x /usr/bin/dircolors ]; then
   alias egrep='egrep --color=auto'
 else
   export CLICOLOR=YES
+  # Change the directory color (first character) from the default blue (e) to cyan (g)
+  # See https://ss64.com/osx/ls-env.html
+  export LSCOLORS=gxfxcxdxbxegedabagacad
 fi
 
 # enable programmable completion features (you don't need to enable
