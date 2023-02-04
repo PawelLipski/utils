@@ -33,6 +33,7 @@ fi
 # Shell options & vars
 
 shopt -s cdspell
+shopt -s globstar  # requires Bash 4+; on Mac OS, you'll need to `brew install bash` and then `chsh`
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
