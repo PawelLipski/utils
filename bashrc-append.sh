@@ -315,7 +315,7 @@ function get_git_index_char() {
 
 function set_up_prompt() {
   local time='$(date +%H:%M)'
-  local git_branch='$(cb=$(g@); [[ $cb ]] && echo " $cb")'
+  local git_branch='$(cb=$(g@); [[ $cb ]] && echo " <git:$cb>")'
   local git_machete_anno='$(cb=$(g@); [[ $cb ]] && grep -Po "(?<=^${cb} ).*" $([[ -f .git/machete ]] && echo .git/machete || git machete file))'
   local git_index='$(get_git_index)'
   local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
