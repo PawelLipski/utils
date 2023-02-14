@@ -325,7 +325,7 @@ function set_up_prompt() {
 set_up_prompt
 
 
-# Java
+# Gradle
 
 function j() {
   dir=$PWD
@@ -339,6 +339,9 @@ function j() {
     return 1
   fi
 }
+
+alias ji='j --info'
+alias jb='j build'
 
 
 # Command completion
