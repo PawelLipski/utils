@@ -112,13 +112,6 @@ alias gx='git stash'
 alias gxa='git stash apply'
 alias hcis='hub ci-status'
 
-function blamestat {
-  for dir in ${1-.}; do
-    where="--work-tree=$dir --git-dir=$dir/.git"
-    git $where grep --no-recurse-submodules -Il '' | egrep -ivx '.*\.(pem|pub|xsd)|go\.sum|license|yarn.lock' | xargs -L1 git $where blame --line-porcelain | grep -Po '(?<=^author-mail <).*(?=@)' | sed 's/.*+//'
-  done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
-}
-
 function g@ {
   git symbolic-ref --short --quiet HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
 }
@@ -155,6 +148,17 @@ function gcmlast {
     fi
     git commit --edit -am "$new_message"
   fi
+}
+
+function git-blamestat() {
+  for dir in ${1-.}; do
+    where=("--work-tree=$dir" "--git-dir=$dir/.git")
+    git "${where[@]}" grep --no-recurse-submodules -Il '' \
+    | grep -Eivx '.*\.(pem|pub|svg|xsd)|go\.sum|license|yarn\.lock' \
+    | xargs -L1 git "${where[@]}" blame --line-porcelain \
+    | grep -Po '(?<=^author-mail <).*(?=@)' \
+    | sed 's/.*+//'
+  done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
 }
 
 function git-remote-ssh-to-https-with-token() {
