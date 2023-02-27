@@ -39,6 +39,8 @@ shopt -s globstar  # requires Bash 4+; on Mac OS, you'll need to `brew install b
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
+CDPATH='.:~'
+
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
 HISTCONTROL=ignoredups:erasedups  # no duplicate entries
 HISTSIZE=10000000                 # big big history
