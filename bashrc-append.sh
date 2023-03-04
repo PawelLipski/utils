@@ -39,7 +39,7 @@ shopt -s globstar  # requires Bash 4+; on Mac OS, you'll need to `brew install b
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
-CDPATH='.:~'
+CDPATH=".:$HOME"
 
 # http://unix.stackexchange.com/questions/1288/preserve-bash-history-in-multiple-terminal-windows
 HISTCONTROL=ignoredups:erasedups  # no duplicate entries
@@ -322,7 +322,7 @@ function get_git_index_char() {
 function set_up_prompt() {
   local time='$(date +%H:%M)'
   local git_branch='$(cb=$(g@); [[ $cb ]] && echo " <git:$cb>")'
-  local git_machete_anno='$(cb=$(g@); [[ $cb && -f .git/machete ]] && { echo " "; grep -Po "(?<=${cb} ).*" .git/machete })'
+  local git_machete_anno='$(cb=$(g@); [[ $cb && -f .git/machete ]] && { echo -n " "; grep -Po "(?<=${cb} ).*" .git/machete; })'
   local git_index='$(get_git_index)'
   local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
   local kube_status='$(if [[ ${__display_kube_in_ps1-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
