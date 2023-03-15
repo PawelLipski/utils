@@ -71,7 +71,6 @@ alias gcod='gco develop || gco dev'
 alias gcom='gco master || gco main'
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
-alias gd='git diff -M @'
 alias gdd="git diff -M develop"
 alias gddx="git diff --stat develop"
 alias gdhx='git diff --stat @'
@@ -149,6 +148,14 @@ function gcmlast {
       new_message="$old_message - 1st round of fixes"
     fi
     git commit --edit -am "$new_message"
+  fi
+}
+
+function gd() {
+  if [[ $# -eq 0 ]]; then
+    git diff -M @
+  else
+    git diff -M "$@"
   fi
 }
 
