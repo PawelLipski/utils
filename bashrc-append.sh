@@ -67,8 +67,8 @@ alias gcamendnvpf='gcamendnv && gpf'
 alias gcamendpf='gcamend && gpf'
 alias gcamende='git commit -a --amend'
 alias gco='git checkout'
-alias gcod='gco develop || gco dev'
-alias gcom='gco master || gco main'
+alias gcod='gco develop'
+alias gcom='gco master'
 alias gcp='git cherry-pick'
 alias gcpc='git cherry-pick --continue'
 alias gdd="git diff -M develop"
@@ -104,6 +104,7 @@ alias greku='git reset --keep @{upstream}'
 alias gs='git status'
 alias gsh='git show'
 alias gshp='git show @~'
+alias gshu='git show @{upstream}'
 alias gshx='git show --stat'
 alias gsm='git submodule'
 alias gsms='git submodule status'
@@ -112,6 +113,7 @@ alias gsu='git status -uno'  # don't show untracked files, speeds up operations 
 alias gx='git stash'
 alias gxa='git stash apply'
 alias hcis='hub ci-status'
+alias hps='hub pr show'
 
 function g@ {
   git symbolic-ref --short --quiet HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
