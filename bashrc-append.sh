@@ -236,6 +236,7 @@ if [[ $ALIAS_K_AS_KUBECTL != false ]]; then
   alias k='_kube_ps1 && kubectl'
 fi
 alias kn='_kube_ps1 && kubens'
+alias ku='_kube_ps1 && kubectl'
 alias kx='_kube_ps1 && kubectx'
 alias tf=terraform
 
