@@ -133,6 +133,11 @@ function gcm {
   fi
 }
 
+function gcmp {
+  gcm "$@"
+  gp
+}
+
 function gcmnv {
   if git diff --quiet HEAD; then
     git status
