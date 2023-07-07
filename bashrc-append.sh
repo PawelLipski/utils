@@ -404,9 +404,9 @@ if [ -f ~/.git.completion.bash ]; then
   __git_complete gpl  _git_pull
 fi
 
-if [ -f ~/.git-machete.completion.bash ]; then
-  . ~/.git-machete.completion.bash
-fi
+#if [ -f ~/.git-machete.completion.bash ]; then
+#  . ~/.git-machete.completion.bash
+#fi
 
 ## helm completion
 
