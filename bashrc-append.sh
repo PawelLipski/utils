@@ -285,6 +285,10 @@ alias ll='ls -alh'
 alias la='ls -A'
 alias l='ls -CF'
 
+function mcd() {
+  mkdir -p "$1" && cd "$1"
+}
+
 alias mv='mv -i'
 
 alias py=python
