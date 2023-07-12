@@ -375,8 +375,6 @@ alias jb='j build'
 
 # Command completion
 
-## alias completion
-
 if [ -f /opt/complete_alias ]; then
 	source /opt/complete_alias
 	for cmd in a d dc g h j k kn kx; do
@@ -384,19 +382,9 @@ if [ -f /opt/complete_alias ]; then
 	done
 fi
 
-## argocd completion
-
-if command -v argocd &>/dev/null; then
-  source <(argocd completion bash)
-fi
-
-## aws completion
-
 if command -v aws &>/dev/null && command -v aws_completer &>/dev/null; then
   complete -C aws_completer aws
 fi
-
-# git completions
 
 if [ -f ~/.git.completion.bash ]; then
   . ~/.git.completion.bash
@@ -410,47 +398,28 @@ if [ -f ~/.git.completion.bash ]; then
   __git_complete gpl  _git_pull
 fi
 
-#if [ -f ~/.git-machete.completion.bash ]; then
-#  . ~/.git-machete.completion.bash
-#fi
-
-## helm completion
+if command -v git-machete &>/dev/null; then
+  source <(git machete completion bash)
+fi
 
 if command -v helm &>/dev/null; then
   eval "$(helm completion bash)"
 fi
 
-## kind completion
-
-if command -v argocd &>/dev/null; then
+if command -v kind &>/dev/null; then
   source <(kind completion bash)
 fi
-
-## kubectl completion
 
 if command -v kubectl &>/dev/null; then
   eval "$(kubectl completion bash)"
 fi
 
-## kubectx completion
 if command -v kubectx &>/dev/null && [ -f /opt/kubectx/completion/kubectx.bash ]; then
   . /opt/kubectx/completion/kubectx.bash
 fi
 
-## kubens completion
 if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; then
   . /opt/kubectx/completion/kubens.bash
-fi
-
-## op (1Password CLI) completion
-if command -v op &>/dev/null; then
-  eval "$(op completion bash)"
-fi
-
-## pulumi completion
-
-if command -v op &>/dev/null; then
-  source <(op completion bash)
 fi
 
 
