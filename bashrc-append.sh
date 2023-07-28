@@ -399,7 +399,7 @@ if [ -f ~/.git.completion.bash ]; then
 fi
 
 if command -v git-machete &>/dev/null; then
-  source <(git machete completion bash)
+  eval "$(git machete completion bash)"
 fi
 
 if command -v helm &>/dev/null; then
