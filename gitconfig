@@ -10,6 +10,7 @@
 	re = reset
 	rek = reset --keep
 	reku = reset --keep @{upstream}
+	rl = reflog --date=iso
 	rp = rev-parse
 	s = status
 [color]
