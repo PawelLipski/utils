@@ -11,6 +11,7 @@
 	rek = reset --keep
 	reku = reset --keep @{upstream}
 	rl = reflog --date=iso
+	rlp = reflog --patch
 	rp = rev-parse
 	s = status
 [color]

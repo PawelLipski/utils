@@ -3,6 +3,7 @@ asciinema
 bash
 bat
 colordiff
+comby
 cowsay
 fish
 gawk
