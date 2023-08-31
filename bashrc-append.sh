@@ -53,6 +53,7 @@ export EDITOR=vim
 
 PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
 
 # git aliases
 
