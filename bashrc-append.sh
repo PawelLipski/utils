@@ -308,6 +308,8 @@ function scrabblify() {
 	wget -qO- https://raw.githubusercontent.com/mkondratek/slack-scrabblifier/master/scrabblify.py | python - "$*" | xcopy && echo "Copied to clipboard"
 }
 
+alias v=vim
+
 alias xcopy='xclip -selection clipboard'
 alias xpaste='xclip -selection clipboard -o'
 
