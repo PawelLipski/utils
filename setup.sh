@@ -2,9 +2,7 @@
 
 set -e -u
 
-u=$HOME/utils
-git clone https://github.com/PawelLipski/utils.git $u
-echo -e "\nsource $u/bashrc-append.sh" >> ~/.bashrc
-ln -s $u/gitconfig ~/.gitconfig
-ln -s $u/inputrc ~/.inputrc
-ln -s $u/vimrc ~/.vimrc
+echo -e "\nsource $PWD/bashrc-append.sh" >> ~/.bashrc
+ln -s $PWD/gitconfig ~/.gitconfig
+ln -s $PWD/inputrc ~/.inputrc
+ln -s $PWD/vimrc ~/.vimrc
