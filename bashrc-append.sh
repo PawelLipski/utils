@@ -368,7 +368,11 @@ function j() {
     dir=$(realpath "$dir/..")
   done
   if [[ $dir != "/" ]]; then
-    "$dir/gradlew" "$@"
+    if [[ $# -eq 1 ]]; then
+      "$dir/gradlew" "${1//\//:}"
+    else
+      "$dir/gradlew" "$@"
+    fi
   else
     echo "gradlew not found in any directory up to filesystem root" >&2
     return 1
