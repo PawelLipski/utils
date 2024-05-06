@@ -406,7 +406,7 @@ if command -v gh &>/dev/null; then
 fi
 
 if command -v git-machete &>/dev/null; then
-  eval "$(git machete completion bash)"
+  eval "$(GIT_MACHETE_MEASURE_COMMAND_TIME=false git machete completion bash)"
 fi
 
 if command -v helm &>/dev/null; then
