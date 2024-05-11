@@ -2,19 +2,9 @@
 	detachedHead = false
 	macheteEditorSelection = false
 [alias]
-	b = branch
 	co = checkout
-	d = diff
-	l = log
 	m = machete
-	r = remote
-	re = reset
-	rek = reset --keep
-	reku = reset --keep @{upstream}
-	rl = reflog --date=iso
-	rlp = reflog --patch
 	rp = rev-parse
-	s = status
 [color]
 	ui = auto
 [core]
