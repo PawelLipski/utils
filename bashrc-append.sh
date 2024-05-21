@@ -94,6 +94,7 @@ alias gll="git log --graph --abbrev-commit --decorate --date=relative --format=f
 alias glm='git log master'
 alias glod='git log origin/develop'
 alias glom='git log origin/master'
+alias glp='git log --patch'
 alias glpf='git log --pretty=fuller'
 alias glu='git log @{upstream}'
 alias gp='git push -u'
