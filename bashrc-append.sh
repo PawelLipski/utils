@@ -139,11 +139,6 @@ function gcm {
   fi
 }
 
-function gcmp {
-  gcm "$@"
-  gp
-}
-
 function gcmnv {
   if git diff --quiet HEAD; then
     git status
@@ -163,6 +158,18 @@ function gcmlast {
     fi
     git commit --edit -am "$new_message"
   fi
+}
+
+function gcmp {
+  gcm "$@" && gp
+}
+
+function gcmpf {
+  gcm "$@" && gpf
+}
+
+function gcmpff {
+  gcm "$@" && gpff
 }
 
 function gd() {
