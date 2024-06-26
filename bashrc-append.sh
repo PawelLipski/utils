@@ -319,6 +319,17 @@ alias xpaste='xclip -selection clipboard -o'
 
 alias yqp='yq -P'
 
+function vim() {
+  if [[ $# = 1 ]]; then
+    arg=${1#//}
+    arg=${arg#a/}
+    arg=${arg#b/}
+    command vim "$arg"
+  else
+    command vim "$@"
+  fi
+}
+
 function z() {
   zipinfo -1 "$1" | sort
 }
