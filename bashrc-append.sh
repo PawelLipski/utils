@@ -290,6 +290,27 @@ alias cp='cp -i'
 
 alias deansi='sed -r "s/\x1b\[([0-9]{1,2}(;[0-9]{1,2})?)?m//g"'
 
+function extract_matching_file_from_url_zip() {
+  local zip_url file_regex zip file_path file_count
+  zip_url=$1
+  file_regex=$2
+  zip=$(mktemp)
+  wget -q -O "$zip" "$zip_url"
+  file_path=$(zipinfo -1 "$zip" | grep -E "$file_regex")
+  if ! [[ $file_path ]]; then
+    echo "No class whose path in jar matches $file_regex regex found" >&2
+    return 1
+  fi
+  file_count=$(wc -l <<< "$file_path" | sed 's/^\s*//')
+  if [[ $file_count -ne 1 ]]; then
+    echo "Expected exactly 1 file whose path in zip matches $file_regex regex, found $file_count" >&2
+    echo "$file_path" >&2
+    return 1
+  fi
+  #echo "$file_path"
+  unzip -p "$zip" "$file_path"
+}
+
 alias jqr='jq -r'
 
 alias ll='ls -alh'
