@@ -1,4 +1,5 @@
 bash
+bash-completion@2
 bat
 bazelisk
 colordiff
