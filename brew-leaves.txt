@@ -30,6 +30,7 @@ sbt
 scala@2.13
 shellcheck
 sponge
+tox
 watchman
 wget
 yq
