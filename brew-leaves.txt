@@ -15,6 +15,7 @@ gh
 git
 git-machete
 gnu-sed
+golang
 gradle-completion
 graphviz
 grep
