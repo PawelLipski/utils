@@ -119,7 +119,7 @@ alias gs='git status'
 alias gsh='git show --pretty=fuller'
 alias gshx='git show --stat'
 alias gsu='git status -uno'  # don't show untracked files, speeds up operations on large repos
-alias gx='git stash'
+alias gx='git stash push'
 alias gxa='git stash apply'
 alias hcis='hub ci-status'
 alias hps='hub pr show'
@@ -129,7 +129,7 @@ function g@ {
 }
 
 function gar {
-  name=${1-$(basename `pwd`)}
+  name=${1-$(basename $(pwd))}
   git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
 }
 
@@ -267,7 +267,7 @@ PATH="$PATH:$HOME/utils/kubectl-plugins"
 # Misc aliases
 
 function .. {
-  for i in `seq 1 ${1-1}`; do
+  for i in $(seq 1 ${1-1}); do
     cd ..;
   done
 }
