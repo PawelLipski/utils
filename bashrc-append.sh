@@ -426,7 +426,7 @@ alias jb='j build'
 
 if [ -f /opt/complete_alias ]; then
 	source /opt/complete_alias
-	for cmd in a d dc g h j k kn kx; do
+	for cmd in a d dc g h k kn kx; do
 	  complete -F _complete_alias $cmd
 	done
 fi
