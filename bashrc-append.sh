@@ -315,9 +315,11 @@ function extract_matching_file_from_url_zip() {
 
 alias jqr='jq -r'
 
-alias ll='ls -alh'
-alias la='ls -A'
 alias l='ls -CF'
+alias la='ls -A'
+alias ll='ls -alh'
+
+alias less='less -r'
 
 function mcd() {
   mkdir -p "$1" && cd "$1"
