@@ -374,7 +374,7 @@ function get_last_status_content() {
 }
 
 function get_git_index_color() {
-  [[ $PWD = $SKIP_GIT_DIFF_IN_PS1_FOR_PATH_GLOB ]] && echo -ne "\033[0m\033[01;33m" && return 2
+  [[ -f .git/skip-git-diff-in-ps1 ]] && echo -ne "\033[0m\033[01;33m" && return 2
   git diff --quiet HEAD &>/dev/null
   [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && return 1
   return 0
