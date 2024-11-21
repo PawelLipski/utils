@@ -197,11 +197,11 @@ function git-remote-ssh-to-https-with-token() {
   local remote orig_url host org proj token url
   remote=${1-origin}
   orig_url=$(git remote get-url "$remote")
-  if [[ $orig_url != git@*:*/* ]]; then
+  if [[ $orig_url != *@*:*/* ]]; then
     echo "URL for $remote isn't an SSH URL, aborting"
     return 1
   fi
-  host=${orig_url#git@}
+  host=${orig_url#*@}
   host=${host%:*}
   org=${orig_url#*:}
   org=${org%/*}
