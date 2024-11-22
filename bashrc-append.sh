@@ -125,11 +125,13 @@ alias hcis='hub ci-status'
 alias hps='hub pr show'
 
 function g@ {
-  git symbolic-ref --short --quiet HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
+  git symbolic-ref --short --quiet HEAD 2>/dev/null \
+    || { local tags; tags=$(git tag --points-at HEAD 2>/dev/null); [ -n "$tags" ] && paste -sd "," - <<< "$tags"; } \
+    || git rev-parse --short HEAD 2>/dev/null
 }
 
 function gar {
-  name=${1-$(basename $(pwd))}
+  name=${1-$(basename "$(pwd)")}
   git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
 }
 
