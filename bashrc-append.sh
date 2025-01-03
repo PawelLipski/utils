@@ -280,6 +280,10 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 
 alias cdiff='colordiff -u'
 
+function cat-latest-download() {
+  cat ~/Downloads/"$(ls -thr ~/Downloads/ | tail -1)"
+}
+
 function check-links() {
   git ls-files \
   | xargs -i grep -ho "https://[^]')\" \`\\\\\$>,]*" "{}" \
