@@ -223,13 +223,6 @@ function ls-prs() {
   hub pr list --format "%<(8)%i     %<(25)%au %<(50)%H -> %B%n"
 }
 
-function update-github-token() {
-  (( $# == 1 )) || { echo "usage: update-github-token <new-token>"; return 1; }
-  token=$1
-  echo "$token" > ~/.github-token
-  yq --inplace '.hosts."github.com".oauth_token = "'$token'"' ~/.config/gh/config.yml
-  yq --inplace '."github.com"[0].oauth_token = "'$token'"' ~/.config/hub
-}
 
 # Docker aliases
 
@@ -297,6 +290,12 @@ alias colordiff='colordiff -u'
 alias cp='cp -i'
 
 alias deansi='sed -r "s/\x1b\[([0-9]{1,2}(;[0-9]{1,2})?)?m//g"'
+
+# https://stackoverflow.com/a/15515152
+function _exists() {
+  # e.g. _exists *.kt
+  [ -e "$1" ]
+}
 
 function extract_matching_file_from_url_zip() {
   local zip_url file_regex zip file_path file_count
@@ -366,6 +365,93 @@ function z() {
 }
 
 
+function exclude() {
+  comm -23 /dev/stdin "$1"
+}
+
+function add_prefix() {
+  sed -E "s!^!$1!"
+}
+
+function drop_prefix() {
+  sed -E "s!^$1!!"
+}
+
+function add_suffix() {
+  sed -E "s!\$!$1!"
+}
+
+function drop_suffix() {
+  sed -E "s!$1\$!!"
+}
+
+function prepend() {
+  what=$1
+  shift
+  files=()
+  if [ $# -gt 0 ]; then
+      files=("$@")
+  else
+      while IFS= read -r line; do
+          files+=("$line")
+      done
+  fi
+  for file in "${files[@]}"; do
+    { echo "$what"; cat $file; } | sponge $file
+  done
+}
+
+function remove_matching_lines_from_files() {
+  regex=$1
+  git grep -E -l "$regex" -- "${@:2}" | xargs gsed -E -i "/${regex//\//\\/}/ d"
+}
+
+# e.g. replace_in_files 'import org.scalatestplus.junit.FilterableJUnitRunner' 'import org.scalatest.junit.FilterableJUnitRunner' '*.scala'
+function replace_in_files() {
+  from=$1
+  to=$2
+  git grep -E -l "$from" -- "${@:3}" | xargs gsed -E -i "s!$from!$to!g"
+}
+
+# e.g. files_with_but_not scala_library scala_version '*.bazel'
+function files_with_but_not() {
+  with=$1
+  but_not=$2
+  git grep -l "$with" -- "${@:3}" | xargs git grep --files-without-match "$but_not"
+}
+
+function files_with_both() {
+  with1=$1
+  with2=$2
+  git grep -l --all-match -e "$with1" --or -e "$with2" -- "${@:3}"
+}
+
+# e.g. bazel query "allpaths(//:t1, //:t2)" --notool_deps --output graph | open_graph_svg
+function open_graph_svg() {
+  outdir=$(mktemp -d)
+  dot -Tsvg > $outdir/graph.svg
+  open $outdir/graph.svg
+}
+
+function modify_every_matching_file() {
+  pattern="$1"
+  for file in $(git ls-files "$pattern"); do
+    echo "// $RANDOM" >> "$file"
+  done
+}
+
+
+function is_it_in_scala_library() {
+  class_pattern=$1
+  method_pattern=$2
+  for scala in 2.11.12 2.12.18 2.13.12; do
+    echo "$scala:"
+    javap_from_lib org.scala-lang:scala-library:$scala $class_pattern | grep -E "\{$|^\}$|($method_pattern)"
+    echo
+  done
+}
+
+
 # PS1
 
 function get_last_status_color() {
@@ -429,6 +515,9 @@ function j() {
 alias ji='j --info'
 alias jb='j build'
 
+source ~/.utils/lib/bazel.sh
+source ~/.utils/lib/github.sh
+source ~/.utils/lib/stats.sh
 
 # Command completion
 
