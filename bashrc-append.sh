@@ -579,6 +579,7 @@ export BASH_SILENCE_DEPRECATION_WARNING=1
 
 PATH="/opt/homebrew/bin:$PATH"
 PATH="/opt/homebrew/opt/grep/libexec/gnubin:$PATH"
+PATH="$(echo /Users/pawel.lipski/Library/Python/3.*/bin):$PATH"
 
 alias pip=pip3
 alias python=python3
