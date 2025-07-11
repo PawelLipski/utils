@@ -1,3 +1,5 @@
+[include]
+  path = /Users/pawel_lipski/.utils/gitconfig
 [advice]
 	detachedHead = false
 	macheteEditorSelection = false
