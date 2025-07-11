@@ -1,5 +1,3 @@
-[include]
-  path = /Users/pawel_lipski/.utils/gitconfig
 [advice]
 	detachedHead = false
 	macheteEditorSelection = false
@@ -19,7 +17,3 @@
 [user]
 	name = Pawel Lipski
 	email = pawel.p.lipski@gmail.com
-[safe]
-	directory = /home/plipski/git-machete-intellij-plugin
-[maintenance]
-	repo = /Users/pawel_lipski/airlab/repos/treehouse
