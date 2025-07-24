@@ -516,6 +516,7 @@ alias ji='j --info'
 alias jb='j build'
 
 source ~/.utils/lib/bazel.sh
+source ~/.utils/lib/complete-alias.sh
 source ~/.utils/lib/github.sh
 source ~/.utils/lib/stats.sh
 
@@ -617,12 +618,9 @@ alias jbp='j buildPlugin'
 
 # Command completion
 
-if [ -f /opt/complete_alias ]; then
-	source /opt/complete_alias
-	for cmd in a d dc g h k kn kx; do
-	  complete -F _complete_alias $cmd
-	done
-fi
+for cmd in a d dc g h k kn kx; do
+  complete -F _complete_alias $cmd
+done
 
 if command -v aws &>/dev/null && command -v aws_completer &>/dev/null; then
   complete -C aws_completer aws
