@@ -113,3 +113,13 @@ function _jar_for_lib() {
   lib=$1
   coursier fetch --repository=https://us-east-1.artifactory.musta.ch/artifactory/maven --quiet --intransitive $lib | head -1
 }
+
+function is_it_in_scala_library() {
+  class_pattern=$1
+  method_pattern=$2
+  for scala in 2.11.12 2.12.18 2.13.12; do
+    echo "$scala:"
+    javap_from_lib org.scala-lang:scala-library:$scala $class_pattern | grep -E "\{$|^\}$|($method_pattern)"
+    echo
+  done
+}

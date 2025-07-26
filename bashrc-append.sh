@@ -441,17 +441,6 @@ function modify_every_matching_file() {
 }
 
 
-function is_it_in_scala_library() {
-  class_pattern=$1
-  method_pattern=$2
-  for scala in 2.11.12 2.12.18 2.13.12; do
-    echo "$scala:"
-    javap_from_lib org.scala-lang:scala-library:$scala $class_pattern | grep -E "\{$|^\}$|($method_pattern)"
-    echo
-  done
-}
-
-
 # PS1
 
 function get_last_status_color() {
@@ -519,7 +508,7 @@ source ~/.utils/lib/bazel.sh
 source ~/.utils/lib/complete-alias.sh
 source ~/.utils/lib/github.sh
 source ~/.utils/lib/stats.sh
-
+source ~/.utils/lib/unzip-jars-and-javap.sh
 
 # mac os
 
