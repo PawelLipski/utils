@@ -178,9 +178,9 @@ function gcmpff {
 
 function gd() {
   if [[ $# -eq 0 ]]; then
-    git diff -M @
+    git diff --no-prefix -M @
   else
-    git diff -M "$@"
+    git diff --no-prefix -M "$@"
   fi
 }
 
