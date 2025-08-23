@@ -545,6 +545,7 @@ alias ash='cd ~/akka-serialization-helper'
 # git-machete
 
 #export GIT_MACHETE_MEASURE_COMMAND_TIME=true
+export GIT_MACHETE_DIFF_OPTS='--no-prefix'
 
 alias erasecov='tox -e coverage-erase'
 alias gm='cd ~/git-machete'
