@@ -71,7 +71,7 @@ alias gcamendepf='gcamende && gpf'
 alias gcl=' git clean -dn'
 alias gclf='git clean -df'
 alias gclx=' git clean -e .idea -e .sdkmanrc -dxn'
-alias gclxf='git clean -e .idea -e .sdkmanrc -dxf'
+# no gclxf, on purpose - so that it isn't executed by accident (confused with gclf)
 alias gco='git checkout'
 alias gcod='gco develop'
 alias gcom='gco master'
