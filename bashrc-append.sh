@@ -32,7 +32,10 @@ fi
 # Shell options & vars
 
 shopt -s cdspell
-shopt -s globstar  # requires Bash 4+; on Mac OS, you'll need to `brew install bash` and then `chsh`
+# Enable globstar if supported (requires Bash 4+)
+if ((BASH_VERSINFO[0] >= 4)); then
+  shopt -s globstar
+fi
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -54,204 +57,10 @@ PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
 
-# git aliases
-
-alias g=git
-alias ga='git add'
-alias gaa='git add -A .'
-alias gb='git branch'
-alias gbr='git branch -r'
-alias gcamend='git commit -a --amend --no-edit'
-alias gcamendnv='gcamend --no-verify'
-alias gcamendnvpf='gcamendnv && gpf'
-alias gcamendpf='gcamend && gpf'
-alias gcamendpff='gcamend && gpff'
-alias gcamende='git commit -a --amend'
-alias gcamendepf='gcamende && gpf'
-alias gcl=' git clean -dn'
-alias gclf='git clean -df'
-alias gclx=' git clean -e .idea -e .sdkmanrc -dxn'
-# no gclxf, on purpose - so that it isn't executed by accident (confused with gclf)
-alias gco='git checkout'
-alias gcod='gco develop'
-alias gcom='gco master'
-alias gcp='git cherry-pick'
-alias gcpc='git cherry-pick --continue'
-alias gdd="gd develop"
-alias gddx="gd --stat develop"
-alias gdhx='gd --stat @'
-alias gdm='gd master'
-alias gdno='gd --name-only'
-alias gdp='gd @~'
-alias gdpx='gd --stat @~'
-alias gdu='gd @{upstream}'
-alias gdw='gd --word-diff'
-alias gdx='gd --stat'
-alias gf='git fetch --prune'
-alias ggr='git grep -n'
-alias ggri='git grep -ni'
-alias gl='git log'
-alias gld='git log develop'
-alias gll="git log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'"
-alias glm='git log master'
-alias glod='git log origin/develop'
-alias glom='git log origin/master'
-alias glp='git log --patch'
-alias glpf='git log --pretty=fuller'
-alias glu='git log @{upstream}'
-alias gp='git push -u'
-alias gpf='git push -u --force-with-lease --force-if-includes'
-alias gpff='git push -u --force'
-alias gpl='git pull --ff-only --prune'
-alias gr='git remote'
-alias grb='git rebase'
-alias grbc='git rebase --continue'
-alias gre='git reset --soft'
-alias grek='git reset --keep'
-alias greku='git reset --keep @{upstream}'
-alias	grl='git reflog --date=iso'
-alias	grlp='git reflog --patch'
-alias grs@='git restore -s @'
-alias grs@~='git restore -s @~'
-alias grsd='git restore -s develop'
-alias grsm='git restore -s master'
-alias gs='git status'
-alias gsh='git show --pretty=fuller --no-prefix'
-alias gshx='git show --stat'
-alias gsu='git status -uno'  # don't show untracked files, speeds up operations on large repos
-alias gx='git stash push'
-alias gxa='git stash apply'
-alias hcis='hub ci-status'
-alias hps='hub pr show'
-
-function g@ {
-  git symbolic-ref --short --quiet HEAD 2>/dev/null \
-    || { local tags; tags=$(git tag --points-at HEAD 2>/dev/null); [ -n "$tags" ] && paste -sd "," - <<< "$tags"; } \
-    || git rev-parse --short HEAD 2>/dev/null
-}
-
-function gar {
-  name=${1-$(basename "$(pwd)")}
-  git archive --format=zip --output=../$name.zip --prefix=$name/ -v @
-}
-
-function gcm {
-  if git diff --quiet HEAD; then
-    git status
-  else
-    git commit -am "$*"
-  fi
-}
-
-function gcmnv {
-  if git diff --quiet HEAD; then
-    git status
-  else
-    git commit --no-verify -am "$*"
-  fi
-}
-
-function gcmlast {
-  if git diff --quiet HEAD; then
-    git status
-  else
-    old_message=$(git log -1 --format=%s)
-    new_message=$(echo "$old_message" | sed 's/10th round/11th round/; s/9th round/10th round/; s/8th round/9th round/; s/7th round/8th round/; s/6th round/7th round/; s/5th round/6th round/; s/4th round/5th round/; s/3rd round/4th round/; s/2nd round/3rd round/; s/1st round/2nd round/')
-    if [[ $new_message == "$old_message" ]]; then
-      new_message="$old_message - 1st round of fixes"
-    fi
-    git commit --edit -am "$new_message"
-  fi
-}
-
-function gcmp {
-  gcm "$@" && gp
-}
-
-function gcmpf {
-  gcm "$@" && gpf
-}
-
-function gcmpff {
-  gcm "$@" && gpff
-}
-
-function gd() {
-  if [[ $# -eq 0 ]]; then
-    git diff --no-prefix -M @
-  else
-    git diff --no-prefix -M "$@"
-  fi
-}
-
-function git-blamestat() {
-  for dir in ${1-.}; do
-    where=("--work-tree=$dir" "--git-dir=$dir/.git")
-    git "${where[@]}" grep --no-recurse-submodules -Il '' \
-    | grep -Eivx '.*\.(pem|pub|svg|xsd)|go\.sum|license|yarn\.lock' \
-    | xargs -L1 git "${where[@]}" blame --line-porcelain \
-    | grep -Po '(?<=^author-mail <).*(?=@)' \
-    | sed 's/.*+//'
-  done | sort | uniq -c | awk '{ print; sum += $1 } END { print sum }'
-}
-
-function git-remote-ssh-to-https-with-token() {
-  local remote orig_url host org proj token url
-  remote=${1-origin}
-  orig_url=$(git remote get-url "$remote")
-  if [[ $orig_url != *@*:*/* ]]; then
-    echo "URL for $remote isn't an SSH URL, aborting"
-    return 1
-  fi
-  host=${orig_url#*@}
-  host=${host%:*}
-  org=${orig_url#*:}
-  org=${org%/*}
-  proj=${orig_url#*/}
-  proj=${proj%.*}
-
-  token=$(gh auth token -h "$host") || return 1
-  url=https://${token}@${host}/${org}/${proj}.git
-  git remote set-url "$remote" "$url"
-}
-
-function gsmreku {
-  git submodule foreach "{ git symbolic-ref --quiet HEAD >/dev/null || git checkout \"\$(git for-each-ref --format='%(refname:short)' --points-at=@ --count=1 refs/heads)\"; } && git fetch && git reset --keep @{upstream}"
-}
-
-function ls-prs() {
-  hub pr list --format "%<(8)%i     %<(25)%au %<(50)%H -> %B%n"
-}
 
 
-# Docker aliases
-
-alias d='docker'
-alias dc='docker-compose'
-alias dex='docker exec'
-alias dim='docker images'
-alias dps='docker ps'
-alias dpsa='docker ps -a'
-alias drm='docker rm'
-alias drmi='docker rmi'
 
 
-# Kubernetes aliases
-
-function _kube_ps1() {
-  if ! ${__display_kube_in_ps1-}; then
-    echo "Using kube context $(kubectx --current)..."
-  else
-    __display_kube_in_ps1=true
-  fi
-}
-
-alias kn='_kube_ps1 && kubens'
-alias ku='_kube_ps1 && kubectl'
-alias kx='_kube_ps1 && kubectx'
-alias tf=terraform
-
-PATH="$PATH:$HOME/utils/kubectl-plugins"
 
 
 # Misc aliases
@@ -396,31 +205,6 @@ function prepend() {
   done
 }
 
-function remove_matching_lines_from_files() {
-  regex=$1
-  git grep -E -l "$regex" -- "${@:2}" | xargs gsed -E -i "/${regex//\//\\/}/ d"
-}
-
-# e.g. replace_in_files 'import org.scalatestplus.junit.FilterableJUnitRunner' 'import org.scalatest.junit.FilterableJUnitRunner' '*.scala'
-function replace_in_files() {
-  from=$1
-  to=$2
-  git grep -E -l "$from" -- "${@:3}" | xargs gsed -E -i "s!$from!$to!g"
-}
-
-# e.g. files_with_but_not scala_library scala_version '*.bazel'
-function files_with_but_not() {
-  with=$1
-  but_not=$2
-  git grep -l "$with" -- "${@:3}" | xargs git grep --files-without-match "$but_not"
-}
-
-function files_with_both() {
-  with1=$1
-  with2=$2
-  git grep -l --all-match -e "$with1" --or -e "$with2" -- "${@:3}"
-}
-
 # e.g. bazel query "allpaths(//:t1, //:t2)" --notool_deps --output graph | open_graph_svg
 function open_graph_svg() {
   outdir=$(mktemp -d)
@@ -435,182 +219,20 @@ function modify_every_matching_file() {
   done
 }
 
-
-# PS1
-
-
-
-# Gradle
-
-function j() {
-  dir=$PWD
-  until [[ -f "$dir/gradlew" ]] || [[ $dir = "/" ]]; do
-    dir=$(realpath "$dir/..")
-  done
-  if [[ $dir != "/" ]]; then
-    if [[ $# -eq 1 ]]; then
-      "$dir/gradlew" "${1//\//:}"
-    else
-      "$dir/gradlew" "$@"
-    fi
-  else
-    echo "gradlew not found in any directory up to filesystem root" >&2
-    return 1
-  fi
+function _import() {
+  source ~/.utils/lib/$1.sh
 }
 
-alias ji='j --info'
-alias jb='j build'
-
-source ~/.utils/lib/bazel.sh
-source ~/.utils/lib/complete-alias.sh
-source ~/.utils/lib/github.sh
-source ~/.utils/lib/prompt.sh
-source ~/.utils/lib/stats.sh
-source ~/.utils/lib/unzip-jars-and-javap.sh
-
-# mac os
-
-export BASH_SILENCE_DEPRECATION_WARNING=1
-
-PATH="/opt/homebrew/bin:$PATH"
-PATH="/opt/homebrew/opt/grep/libexec/gnubin:$PATH"
-PATH="$(echo /Users/pawel.lipski/Library/Python/3.*/bin):$PATH"
-
-alias pip=pip3
-alias python=python3
-
-function scr() {
-  echo ~/Library/"Application Support"/JetBrains/IntelliJIdea202*/scratches/scratch_$1.*
-}
-
-function scrcat() {
-  cat "$(scr $1)"
-}
-
-function screx() {
-  (
-    source ~/.virtuslab-commons/bazel-migration-utils.sh
-    source "$(scr $1)"
-  )
-}
-
-
-# akka-serialization-helper
-
-alias ash='cd ~/akka-serialization-helper'
-
-
-# git-machete
-
-#export GIT_MACHETE_MEASURE_COMMAND_TIME=true
-export GIT_MACHETE_DIFF_OPTS='--no-prefix'
-
-alias erasecov='tox -e coverage-erase'
-alias gm='cd ~/git-machete'
-alias isort='tox -e isort'
-alias mypy='tox -e mypy'
-alias pep8='tox -e pep8'
-alias vulture='tox -e vulture-check'
-
-function build-machete-snap() {
-	rm -f ./*.snap
-	rm-machete
-	sudo snap remove git-machete
-	sudo -H PATH="$PATH" sh -c "snapcraft ${1-snap} $2" && sudo snap install --classic --dangerous *.snap && git machete --version && git machete status
-}
-
-function cov() {
-  if [ $# -gt 0 ]; then
-    tox -e coverage -- -k "$@"
-  else
-    tox -e coverage-erase
-    tox -e coverage
-  fi
-}
-
-function m() {
-	(cd ~/git-machete \
-	&& pip install --break-system-packages --user . \
-	&& git machete --version)
-}
-
-function p() {
-  cd ~/git-machete || return 1
-  if [ $# -gt 0 ]; then
-    tox -e py -- -k "$@"
-  else
-    tox -e py
-  fi
-}
-
-function pc() {
-  cd ~/git-machete || return 1
-  if [ $# -gt 0 ]; then
-    tox -e test-completions -- -vv -k "not zsh and $*"
-  else
-    tox -e test-completions -- -vv -k "not zsh"
-  fi
-}
-
-function rm-machete() {
-	pip uninstall --yes git-machete
-}
-
-
-# git-machete-intellij-plugin
-
-alias gmip='cd ~/git-machete-intellij-plugin'
-alias ide='./gradlew runIde'
-alias jbp='j buildPlugin'
-
-
-# Command completion
-
-for cmd in a d dc g h k kn kx; do
-  complete -F _complete_alias $cmd
-done
-
-if command -v aws &>/dev/null && command -v aws_completer &>/dev/null; then
-  complete -C aws_completer aws
-fi
-
-if [ -f ~/.git.completion.bash ]; then
-  . ~/.git.completion.bash
-  __git_complete g    __git_main
-  __git_complete gco  _git_checkout
-  __git_complete gd   _git_diff
-  __git_complete ggr  _git_grep
-  __git_complete ggri _git_grep
-  __git_complete gl   _git_log
-  __git_complete gp   _git_push
-  __git_complete gpl  _git_pull
-fi
-
-if command -v gh &>/dev/null; then
-  eval "$(gh completion -s bash)"
-fi
-
-if command -v git-machete &>/dev/null; then
-  eval "$(GIT_MACHETE_MEASURE_COMMAND_TIME=false git machete completion bash)"
-fi
-
-if command -v helm &>/dev/null; then
-  eval "$(helm completion bash)"
-fi
-
-if command -v kind &>/dev/null; then
-  source <(kind completion bash)
-fi
-
-if command -v kubectl &>/dev/null; then
-  eval "$(kubectl completion bash)"
-fi
-
-if command -v kubectx &>/dev/null && [ -f /opt/kubectx/completion/kubectx.bash ]; then
-  . /opt/kubectx/completion/kubectx.bash
-fi
-
-if command -v kubens &>/dev/null && [ -f /opt/kubectx/completion/kubens.bash ]; then
-  . /opt/kubectx/completion/kubens.bash
-fi
+_import bazel
+_import complete-alias
+_import completion
+_import docker
+_import git
+_import github
+_import gradle
+_import kubernetes
+_import macos
+_import projects
+_import prompt
+_import stats
+_import unzip-jars-and-javap
