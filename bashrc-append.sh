@@ -438,43 +438,6 @@ function modify_every_matching_file() {
 
 # PS1
 
-function get_last_status_color() {
-  s=$?
-  [ $s -eq 0 ] && echo -ne "\033[01;32m" || echo -ne "\033[01;31m"
-  exit $s # need to retain the status for get_last_status_content
-}
-
-function get_last_status_content() {
-  s=$?
-  [ $s -eq 0 ] && echo -n "➜" || echo -n "➜ ($s)"
-}
-
-function get_git_index_color() {
-  [[ -f .git/skip-git-diff-in-ps1 ]] && echo -ne "\033[0m\033[01;33m" && return 2
-  git diff --quiet HEAD &>/dev/null
-  [ $? -eq 1 ] && echo -ne "\033[0m\033[01;33m" && return 1
-  return 0
-}
-
-function get_git_index_char() {
-  # Trick: using get_git_index_color's exit code to save another call to git diff
-  case $? in
-    1) echo -n " ✗" ;;
-    2) echo -n " ?" ;;
-  esac
-}
-
-function set_up_prompt() {
-  local time='$(date +%H:%M)'
-  local git_branch='$(cb=$(g@); [[ $cb ]] && echo " <git:$cb>")'
-  local git_machete_anno='$(cb=$(g@); [[ $cb && -f .git/machete ]] && { echo -n " "; grep -Po "(?<=${cb} ).*" .git/machete; })'
-  local git_index='$(get_git_index)'
-  local prompt_tail=" \[\033[0m\033[01;35m\]\\$\[\033[0m\]"
-  local kube_status='$(if [[ ${__display_kube_in_ps1-} ]]; then echo " \[\033[0m\033[1m\]$(kubectx -c):$(kubens -c)"; fi)'
-  export PS1="\[\$(get_last_status_color)\]\$(get_last_status_content) \[\033[0m\033[1m\]${time} \[\033[01;36m\]\w\[\033[31m\]${git_branch}\[\033[0m\033[2m\]${git_machete_anno}\\[\$(get_git_index_color)\\]\$(get_git_index_char)${kube_status}${prompt_tail} "
-  export PS4='$0.$LINENO: '
-}
-set_up_prompt
 
 
 # Gradle
@@ -502,6 +465,7 @@ alias jb='j build'
 source ~/.utils/lib/bazel.sh
 source ~/.utils/lib/complete-alias.sh
 source ~/.utils/lib/github.sh
+source ~/.utils/lib/prompt.sh
 source ~/.utils/lib/stats.sh
 source ~/.utils/lib/unzip-jars-and-javap.sh
 
