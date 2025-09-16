@@ -35,6 +35,7 @@ alias ggr='git grep -n'
 alias ggri='git grep -ni'
 alias gl='git log'
 alias gld='git log develop'
+alias glf='git ls-files'
 alias gll="git log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'"
 alias glm='git log master'
 alias glod='git log origin/develop'
