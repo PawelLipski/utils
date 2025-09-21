@@ -47,10 +47,12 @@ function _ps1_get_kube_status() {
   fi
 }
 
+PROMPT_TIME_ZONE=Europe/Warsaw
+
 function set_up_prompt() {
   # Build PS1 directly with proper escaping - variables that need to be expanded at setup time use ${},
   # while command substitutions that need to run each time the prompt displays use \$(...)
-  export PS1="\[\$(_ps1_get_last_status_color)\]\$(_ps1_get_last_status_content) \[\033[0m\033[1m\]\$(date +%H:%M) \[\033[01;36m\]\w\[\033[31m\]\$(_ps1_get_git_branch)\[\033[0m\033[2m\]\$(_ps1_get_git_machete_annotation)\[\$(_ps1_get_git_index_color)\]\$(_ps1_get_git_index_char)\$(_ps1_get_kube_status) \[\033[0m\033[01;35m\]\$\[\033[0m\] "
+  export PS1="${PROMPT_HOSTNAME-}\[\$(_ps1_get_last_status_color)\]\$(_ps1_get_last_status_content) \[\033[0m\033[1m\]\$(TZ=$PROMPT_TIME_ZONE date +%H:%M) \[\033[01;36m\]\w\[\033[31m\]\$(_ps1_get_git_branch)\[\033[0m\033[2m\]\$(_ps1_get_git_machete_annotation)\[\$(_ps1_get_git_index_color)\]\$(_ps1_get_git_index_char)\$(_ps1_get_kube_status) \[\033[0m\033[01;35m\]\$\[\033[0m\] "
   export PS4='$0.$LINENO: '
 }
 
