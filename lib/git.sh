@@ -161,14 +161,14 @@ function git-remote-ssh-to-https-with-token() {
 
 function remove_matching_lines_from_files() {
   regex=$1
-  git grep -E -l "$regex" -- "${@:2}" | xargs gsed -E -i "/${regex//\//\\/}/ d"
+  git grep -E -l "$regex" -- "${@:2}" | xargs sed -E -i "/${regex//\//\\/}/ d"
 }
 
 # e.g. replace_in_files 'import org.scalatestplus.junit.FilterableJUnitRunner' 'import org.scalatest.junit.FilterableJUnitRunner' '*.scala'
 function replace_in_files() {
   from=$1
   to=$2
-  git grep -E -l "$from" -- "${@:3}" | xargs gsed -E -i "s!$from!$to!g"
+  git grep -E -l "$from" -- "${@:3}" | xargs sed -E -i "s!$from!$to!g"
 }
 
 # e.g. files_with_but_not scala_library scala_version '*.bazel'
