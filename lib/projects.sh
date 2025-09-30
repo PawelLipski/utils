@@ -48,9 +48,9 @@ function p() {
 function pc() {
   cd ~/git-machete || return 1
   if [ $# -gt 0 ]; then
-    tox -e test-completions -- -vv -k "not zsh and $*"
+    tox -e test-completions -- -vv -k "$*"
   else
-    tox -e test-completions -- -vv -k "not zsh"
+    tox -e test-completions -- -vv
   fi
 }
 
