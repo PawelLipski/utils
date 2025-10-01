@@ -58,11 +58,6 @@ PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
 
 
-
-
-
-
-
 # Misc aliases
 
 function .. {
@@ -112,17 +107,14 @@ function extract_matching_file_from_url_zip() {
     echo "No class whose path in jar matches $file_regex regex found" >&2
     return 1
   fi
-  file_count=$(wc -l <<< "$file_path" | sed 's/^\s*//')
+  file_count=$(echo "$file_path" | wc -l | sed "s/^\s*//")
   if [[ $file_count -ne 1 ]]; then
     echo "Expected exactly 1 file whose path in zip matches $file_regex regex, found $file_count" >&2
     echo "$file_path" >&2
     return 1
   fi
-  #echo "$file_path"
   unzip -p "$zip" "$file_path"
 }
-
-alias jqr='jq -r'
 
 alias l='ls -CF'
 alias la='ls -A'
@@ -225,7 +217,6 @@ function _import() {
 
 _import bazel
 _import complete-alias
-_import completion
 _import docker
 _import git
 _import github
@@ -236,3 +227,6 @@ _import projects
 _import prompt
 _import stats
 _import unzip-jars-and-javap
+
+# Completion at the end, once all commands are set up
+_import completion
