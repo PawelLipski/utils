@@ -159,6 +159,11 @@ function git-remote-ssh-to-https-with-token() {
   git remote set-url "$remote" "$url"
 }
 
+function git-set-ssh-key() {
+  key_path=$1  # e.g. /Users/pawel.lipski/.ssh/id_rsa
+  git config core.sshCommand "/usr/bin/ssh -i $key_path"  # sets on a per-repo basis
+}
+
 function remove_matching_lines_from_files() {
   regex=$1
   git grep -E -l "$regex" -- "${@:2}" | xargs sed -E -i "/${regex//\//\\/}/ d"
