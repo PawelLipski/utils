@@ -1,0 +1,12 @@
+# Build Guidelines
+- Never run `bazel clean` - it's very expensive and time-consuming
+- Always use `bazel run` not language-specific test runners for supported languages
+- Use absolute paths when possible in tool arguments
+
+# Communication
+- Don't use `| tail` or `| head` on commands - show full output
+- Show all command output live, not truncated
+
+# Code Style
+- Follow existing patterns in the codebase
+- Don't create unnecessary wrapper targets or abstractions
