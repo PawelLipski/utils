@@ -2,6 +2,7 @@
 - Don't ever work on Cursor-created worktrees in ~/.cursor/worktrees - don't even create them at all, I don't need them
 
 # Build Guidelines
+- Don't check for linting issues
 - Never run `bazel clean` - it's very expensive and time-consuming
 - Always use `bazel run` not language-specific test runners for supported languages
 - Use absolute paths when possible in tool arguments
