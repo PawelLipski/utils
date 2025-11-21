@@ -10,3 +10,4 @@
 # Code Style
 - Follow existing patterns in the codebase
 - Don't create unnecessary wrapper targets or abstractions
+- Never keep whitespace at the end of lines in actual code files, keep just single newline at the end of each file
