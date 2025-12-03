@@ -1,4 +1,5 @@
-# General
+# Git branching
+- Always check if you're on a right branch before you start applying changes - I sometimes switch branches mid-chat and forget to switch them back, leaving the repo in a different state. Don't proceed at all costs if there's unexpected code at the disk
 - Don't ever work on Cursor-created worktrees in ~/.cursor/worktrees - don't even create them at all, I don't need them
 
 # Build Guidelines
