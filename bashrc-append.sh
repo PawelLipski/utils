@@ -53,7 +53,7 @@ export PROMPT_COMMAND="history -a; history -c; history -r"
 
 export EDITOR=vim
 
-PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
+PATH="$PATH:/usr/local/bin:$HOME/.local/bin:$HOME/go/bin"
 
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
 
