@@ -211,6 +211,10 @@ function modify_every_matching_file() {
   done
 }
 
+if [[ -f ~/.sdkman/bin/sdkman-init.sh ]]; then
+  source ~/.sdkman/bin/sdkman-init.sh
+fi
+
 function _import() {
   source ~/.utils/lib/$1.sh
 }

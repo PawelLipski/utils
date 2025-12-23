@@ -3,6 +3,6 @@
 set -e -u
 
 echo -e "\nsource $PWD/bashrc-append.sh" >> ~/.bashrc
-git config set --global include.path $PWD/gitconfig
+git config --global include.path $PWD/gitconfig
 ln -s $PWD/inputrc ~/.inputrc
 ln -s $PWD/vimrc ~/.vimrc
