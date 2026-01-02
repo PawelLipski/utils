@@ -95,6 +95,14 @@ function gcmnv {
   fi
 }
 
+function gcmnvp {
+  if git diff --quiet HEAD; then
+    git status
+  else
+    git commit --no-verify -am "$*" && gp
+  fi
+}
+
 function gcmlast {
   if git diff --quiet HEAD; then
     git status
