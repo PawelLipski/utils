@@ -32,7 +32,11 @@ function cov() {
 
 function m() {
 	(cd ~/git-machete \
-	&& pip install --break-system-packages --user . \
+	&& if pip3 install --help 2>&1 | grep -q -- '--break-system-packages'; then
+		pip3 install --break-system-packages --user .
+	else
+		pip3 install --user .
+	fi \
 	&& git machete --version)
 }
 
