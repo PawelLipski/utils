@@ -1,0 +1,18 @@
+{
+    "window.commandCenter": true,
+    "remote.SSH.remotePlatform": {
+      "arca.ssh": "linux"
+    },
+    "files.watcherExclude": {
+      "**/.bloop": true,
+      "**/.metals": true
+    },
+    "files.autoSave": "onWindowChange",
+    "remote.autoForwardPortsSource": "hybrid",
+    "window.openFoldersInNewWindow": "on",
+    "go.toolsManagement.autoUpdate": true,
+    "python.languageServer": "None",
+    "accessibility.verbosity.inlineCompletions": false,
+    "editor.inlineSuggest.enabled": false,
+    "editor.snippetSuggestions": "none"
+}
