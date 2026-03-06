@@ -262,6 +262,10 @@ function match() {
   grep -Ex "$grep_pattern" ~/slowa.txt
 }
 
+function permute() {
+  "$HOME/.utils/lib/permute.py" "$@"
+}
+
 if [[ -f ~/.sdkman/bin/sdkman-init.sh ]]; then
   source ~/.sdkman/bin/sdkman-init.sh
 fi
