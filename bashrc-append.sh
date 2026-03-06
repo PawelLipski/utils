@@ -211,6 +211,57 @@ function modify_every_matching_file() {
   done
 }
 
+function match() {
+  # Predefined character classes
+  local V="[aąeęioóuy]"
+  local C="[bcćdfghjklłmnńprsśtwzźż]"
+  
+  # Parse arguments - separate variable definitions from pattern
+  local vars=()
+  local pattern=""
+  
+  for arg in "$@"; do
+    if [[ "$arg" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+      # It's a variable definition (e.g., X=lnow)
+      vars+=("$arg")
+    else
+      # It's the pattern (should be exactly one)
+      if [[ -z "$pattern" ]]; then
+        pattern="$arg"
+      else
+        echo "Error: Multiple patterns found. Expected exactly one pattern." >&2
+        return 1
+      fi
+    fi
+  done
+  
+  if [[ -z "$pattern" ]]; then
+    echo "Error: No pattern provided." >&2
+    return 1
+  fi
+  
+  # Build the grep pattern by replacing variables
+  local grep_pattern="$pattern"
+  
+  # Replace user-defined variables first (before predefined ones)
+  for var_def in "${vars[@]}"; do
+    local var_name="${var_def%%=*}"
+    local var_value="${var_def#*=}"
+    # Replace the variable name with [value] in the pattern
+    grep_pattern="${grep_pattern//$var_name/[$var_value]}"
+  done
+  
+  # Replace predefined V and C
+  grep_pattern="${grep_pattern//V/$V}"
+  grep_pattern="${grep_pattern//C/$C}"
+  
+  # Print the generated pattern
+  echo "grep pattern: $grep_pattern"
+  
+  # Run grep
+  grep -x "$grep_pattern" ~/slowa.txt
+}
+
 if [[ -f ~/.sdkman/bin/sdkman-init.sh ]]; then
   source ~/.sdkman/bin/sdkman-init.sh
 fi
