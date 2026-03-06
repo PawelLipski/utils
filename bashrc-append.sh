@@ -259,7 +259,7 @@ function match() {
   echo "grep pattern: $grep_pattern"
   
   # Run grep
-  grep -x "$grep_pattern" ~/slowa.txt
+  grep -Ex "$grep_pattern" ~/slowa.txt
 }
 
 if [[ -f ~/.sdkman/bin/sdkman-init.sh ]]; then
