@@ -259,7 +259,7 @@ function match() {
   echo "grep pattern: $grep_pattern"
   
   # Run grep
-  grep -Ex "$grep_pattern" ~/slowa.txt
+  grep -Ex "$grep_pattern" ~/slowa.txt | sort -u
 }
 
 function permute() {
