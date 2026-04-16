@@ -90,6 +90,10 @@ alias cp='cp -i'
 
 alias deansi='sed -r "s/\x1b\[([0-9]{1,2}(;[0-9]{1,2})?)?m//g"'
 
+function diffsorted() {
+  diff -u <(sort "$1") <(sort "$2")
+}
+
 # https://stackoverflow.com/a/15515152
 function _exists() {
   # e.g. _exists *.kt
