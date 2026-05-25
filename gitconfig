@@ -1,19 +1,20 @@
 [advice]
-	detachedHead = false
-	macheteEditorSelection = false
+  detachedHead = false
+  macheteEditorSelection = false
 [alias]
-	co = checkout
-	m = machete
-	rp = rev-parse
+  co = checkout
+  m = machete
+  rp = rev-parse
+  wt = worktree
 [color]
-	ui = auto
+  ui = auto
 [core]
-	autocrlf = input
-	precomposeunicode = true
+  autocrlf = input
+  precomposeunicode = true
 [push]
-	default = current
+  default = current
 [rerere]
-	enabled = true
+  enabled = true
 [user]
-	name = Pawel Lipski
-	email = pawel.p.lipski@gmail.com
+  name = Pawel Lipski
+  email = pawel.p.lipski@gmail.com
